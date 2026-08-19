@@ -24,3 +24,19 @@ ehthumbs.db
 .env.development.local
 .env.test.local
 .env.production.local
+
+# AI Plans, Prompts, Task & Workflow docs
+*PLAN*.md
+*plan*.md
+*PROMPT*.md
+*prompt*.md
+*TASK*.md
+*task*.md
+*WALKTHROUGH*.md
+*walkthrough*.md
+plans/
+prompts/
+.ai/
+.gemini/
+brain/
+scratch/
