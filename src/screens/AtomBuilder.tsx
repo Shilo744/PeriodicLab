@@ -5,6 +5,7 @@ import { getElement, getStableNeutrons, ELEMENTS } from '../data/elements';
 import { COLORS, SHADOWS, RADIUS, getCategoryColor } from '../theme';
 import { isElementUnlocked } from '../data/storage';
 import Atom3D from '../components/Atom3D';
+import { triggerHaptic, playSound } from '../services/feedback';
 
 const H = Dimensions.get('window').height;
 
@@ -87,6 +88,8 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
 
   const changeProtons = useCallback((d: number) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    triggerHaptic('light');
+    playSound('click');
     const nextP = Math.max(1, Math.min(118, p + d));
     setP(nextP);
     const stableN = getStableNeutrons(nextP);
@@ -97,15 +100,21 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
   }, [p]);
 
   const changeNeutrons = useCallback((d: number) => {
+    triggerHaptic('light');
+    playSound('click');
     setN(x => Math.max(0, Math.min(Math.round(p * 2.5), x + d)));
   }, [p]);
 
   const changeElectrons = useCallback((d: number) => {
+    triggerHaptic('light');
+    playSound('click');
     setE(x => Math.max(0, Math.min(Math.round(p * 2), x + d)));
   }, [p]);
 
   const handleSynthesize = useCallback(() => {
     if (isBalanced && !isFound) {
+      triggerHaptic('success');
+      playSound('synthesize');
       onDiscover(p);
       setShowCongrats(p);
     }
@@ -115,6 +124,8 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
   const isFusionValid = (fusionA + fusionB === p) && found.includes(fusionA) && found.includes(fusionB);
   const handleFusionSynthesize = useCallback(() => {
     if (isFusionValid && !isFound) {
+      triggerHaptic('success');
+      playSound('synthesize');
       onDiscover(p);
       setShowCongrats(p);
     }

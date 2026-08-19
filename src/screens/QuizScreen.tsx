@@ -5,6 +5,7 @@ import { COLORS, RADIUS, getCategoryColor, SHADOWS } from '../theme';
 import Atom3D from '../components/Atom3D';
 import { LinearGradient } from 'expo-linear-gradient';
 import { QUIZZES, Question } from '../data/quiz';
+import { triggerHaptic, playSound } from '../services/feedback';
 
 const { height: H } = Dimensions.get('window');
 
@@ -94,6 +95,8 @@ export default function QuizScreen({
     if (timerRef.current) clearInterval(timerRef.current);
 
     if (guessZ === z) {
+      triggerHaptic('success');
+      playSound('success');
       setState('correct');
       setStreak(s => s + 1);
       setTimeout(() => {
@@ -103,6 +106,8 @@ export default function QuizScreen({
         setState('playing');
       }, 2200);
     } else {
+      triggerHaptic('error');
+      playSound('error');
       setState('wrong');
       setStreak(0);
       setTimeout(() => {
@@ -122,6 +127,8 @@ export default function QuizScreen({
     if (timerRef.current) clearInterval(timerRef.current);
 
     if (optionIdx === currentTrivia.correctIndex) {
+      triggerHaptic('success');
+      playSound('success');
       setState('correct');
       setStreak(s => s + 1);
       setTimeout(() => {
@@ -132,6 +139,8 @@ export default function QuizScreen({
         setState('playing');
       }, 2400);
     } else {
+      triggerHaptic('error');
+      playSound('error');
       setState('wrong');
       setStreak(0);
       setTimeout(() => {
