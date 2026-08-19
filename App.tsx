@@ -9,7 +9,17 @@ import StudyScreen from './src/screens/StudyScreen';
 import QuizScreen from './src/screens/QuizScreen';
 import AtomBuilder from './src/screens/AtomBuilder';
 import { COLORS, SHADOWS, RADIUS, getCategoryColor } from './src/theme';
-import { saveXP, loadXP, saveLevels, loadLevels, saveStudyPool, loadStudyPool } from './src/data/storage';
+import { 
+  saveXP, loadXP, 
+  saveLevels, loadLevels, 
+  saveStudyPool, loadStudyPool,
+  saveAchievements, loadAchievements,
+  saveDailyStreak, loadDailyStreak
+} from './src/data/storage';
+import { 
+  ACHIEVEMENTS_LIST, CHAPTERS, 
+  checkAchievements, getDailyFeaturedElement 
+} from './src/data/achievements';
 
 type Tab = 'home' | 'table' | 'study' | 'builder' | 'quiz';
 
@@ -102,32 +112,37 @@ function pickFromPool(pool: number[], levels: Record<number, number>): number {
   const total = weights.reduce((s, x) => s + x.w, 0);
   let r = Math.random() * total;
   for (const { z, w } of weights) { r -= w; if (r <= 0) return z; }
-  return candidates[0];
+  return candidates[0] || 1;
 }
 
 function xpForLevel(level: number): number { return 10 + level * 5; }
 
-function HomeScreen({ xp, discovered, levels, studyPool, onGoStudy, onGoQuiz, onGoBuilder, onGoTable }: {
+function HomeScreen({ 
+  xp, discovered, levels, studyPool, unlockedAchievements, dailyStreak,
+  onGoStudy, onGoQuiz, onGoBuilder, onGoTable, onSelectElement
+}: {
   xp: number; discovered: number[]; levels: Record<number, number>; studyPool: number[];
+  unlockedAchievements: string[]; dailyStreak: number;
   onGoStudy: () => void; onGoQuiz: () => void; onGoBuilder: () => void; onGoTable: () => void;
+  onSelectElement: (z: number) => void;
 }) {
   const league = getLeague(xp);
-  const pct = Math.round((discovered.length / 118) * 100);
   const nextXP = xp < 100 ? 100 : xp < 500 ? 500 : xp < 1500 ? 1500 : xp < 5000 ? 5000 : 0;
   const nextPct = nextXP ? Math.round((xp / nextXP) * 100) : 100;
   const poolDone = studyPool.filter(z => (levels[z] || 0) >= 2).length;
-  const poolPct = Math.round((poolDone / studyPool.length) * 100);
-  const topEls = Object.entries(levels).filter(([_, l]) => l > 0).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  const poolPct = Math.round((poolDone / Math.max(1, studyPool.length)) * 100);
+  const daily = getDailyFeaturedElement();
+  const dailyEl = getElement(daily.z);
 
   return (
     <ScrollView style={HS.scroll} contentContainerStyle={HS.container} showsVerticalScrollIndicator={false}>
       <LinearGradient colors={['rgba(99, 102, 241, 0.08)', 'rgba(10, 14, 26, 0.2)']} style={HS.hero}>
         <View style={HS.headerTop}>
           <Text style={HS.title}>Periodic Lab</Text>
-          <Text style={HS.subtitle}>Quantum Mechanics & Atom Synthesis</Text>
+          <Text style={HS.subtitle}>Quantum Mechanics & Element Synthesis</Text>
         </View>
 
-        {/* Sleek Gamified Status Panel */}
+        {/* Status Panel */}
         <View style={HS.profileCard}>
           <LinearGradient colors={['rgba(255,255,255,0.03)', 'rgba(255,255,255,0.01)']} style={StyleSheet.absoluteFill} />
           <View style={HS.avatarGlow}>
@@ -138,8 +153,11 @@ function HomeScreen({ xp, discovered, levels, studyPool, onGoStudy, onGoQuiz, on
           <View style={{ flex: 1, marginLeft: 16 }}>
             <View style={HS.profileHeader}>
               <Text style={HS.leagueName}>{league.name.toUpperCase()}</Text>
-              <Text style={HS.xpVal}>{xp} <Text style={HS.xpLabel}>XP</Text></Text>
+              <View style={HS.streakPill}>
+                <Text style={HS.streakText}>🔥 {dailyStreak}d Streak</Text>
+              </View>
             </View>
+            <Text style={HS.xpVal}>{xp} <Text style={HS.xpLabel}>XP</Text></Text>
             {nextXP > 0 && (
               <View style={HS.leagueProg}>
                 <View style={HS.leagueBar}>
@@ -156,6 +174,25 @@ function HomeScreen({ xp, discovered, levels, studyPool, onGoStudy, onGoQuiz, on
         </View>
       </LinearGradient>
 
+      {/* Daily Quest Banner */}
+      <View style={HS.dailyCard}>
+        <LinearGradient colors={['rgba(251, 191, 36, 0.12)', 'rgba(10, 14, 26, 0.4)']} style={StyleSheet.absoluteFill} />
+        <View style={HS.dailyContent}>
+          <View style={HS.dailyLeft}>
+            <Text style={HS.dailyTag}>DAILY RESEARCH QUEST</Text>
+            <Text style={HS.dailyTitle}>Synthesize {dailyEl.nameEn} ({dailyEl.sym})</Text>
+            <Text style={HS.dailySub}>Earn +{daily.bonusXP} bonus XP today!</Text>
+          </View>
+          <TouchableOpacity 
+            style={HS.dailyBtn} 
+            onPress={() => onSelectElement(daily.z)}
+            activeOpacity={0.8}
+          >
+            <Text style={HS.dailyBtnTxt}>Launch</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
       {/* Main Actions Panel */}
       <Text style={HS.sectionLabel}>LABORATORY MODULES</Text>
       <View style={HS.actionRow}>
@@ -166,7 +203,7 @@ function HomeScreen({ xp, discovered, levels, studyPool, onGoStudy, onGoQuiz, on
           </View>
           <View style={HS.moduleTextContainer}>
             <Text style={HS.moduleLabel}>Study</Text>
-            <Text style={HS.moduleDesc}>Analyze 3D structures</Text>
+            <Text style={HS.moduleDesc}>3D Shells & Isotopes</Text>
           </View>
         </TouchableOpacity>
         <TouchableOpacity style={HS.moduleCard} onPress={onGoBuilder} activeOpacity={0.85}>
@@ -176,7 +213,7 @@ function HomeScreen({ xp, discovered, levels, studyPool, onGoStudy, onGoQuiz, on
           </View>
           <View style={HS.moduleTextContainer}>
             <Text style={HS.moduleLabel}>Builder</Text>
-            <Text style={HS.moduleDesc}>Assemble atoms manually</Text>
+            <Text style={HS.moduleDesc}>Fusion & Particle Tuning</Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -189,7 +226,7 @@ function HomeScreen({ xp, discovered, levels, studyPool, onGoStudy, onGoQuiz, on
           </View>
           <View style={HS.moduleTextContainer}>
             <Text style={HS.moduleLabel}>Quiz</Text>
-            <Text style={HS.moduleDesc}>Test your knowledge</Text>
+            <Text style={HS.moduleDesc}>Speed Bonus & Streaks</Text>
           </View>
         </TouchableOpacity>
         <TouchableOpacity style={HS.moduleCard} onPress={onGoTable} activeOpacity={0.85}>
@@ -199,55 +236,58 @@ function HomeScreen({ xp, discovered, levels, studyPool, onGoStudy, onGoQuiz, on
           </View>
           <View style={HS.moduleTextContainer}>
             <Text style={HS.moduleLabel}>Table</Text>
-            <Text style={HS.moduleDesc}>Explore element matrix</Text>
+            <Text style={HS.moduleDesc}>Search & Filters</Text>
           </View>
         </TouchableOpacity>
       </View>
 
-      {/* Study Pool Details */}
-      <View style={[HS.poolCard, HS.card]}>
-        <Text style={HS.sectionLabelInside}>CURRENT STUDY POOL</Text>
-        <View style={HS.poolHeader}>
-          <View>
-            <Text style={HS.poolStatus}>{poolDone} of {studyPool.length} Mastered ({poolPct}%)</Text>
-            <Text style={HS.poolSub}>Achieve level 2+ in quizzes to master elements</Text>
-          </View>
-        </View>
-        <View style={HS.poolBar}>
-          <LinearGradient colors={['#6366f1', '#a855f7']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-            style={[HS.poolFill, { width: `${poolPct}%` }]} />
-        </View>
-        <View style={HS.poolEls}>
-          {studyPool.map(z => {
-            const el = getElement(z);
-            const lvl = levels[z] || 0;
-            const elColor = getCategoryColor(el.category);
-            return (
-              <View key={z} style={[HS.poolElPill, { borderColor: lvl >= 2 ? elColor : 'rgba(255,255,255,0.06)' }]}>
-                <View style={[HS.poolDot, { backgroundColor: lvl >= 2 ? elColor : '#475569' }]} />
-                <Text style={[HS.poolSymText, { color: lvl >= 2 ? '#f8fafc' : '#94a3b8' }]}>{el.sym}</Text>
-                <Text style={HS.poolLvlText}>L{lvl}</Text>
-              </View>
-            );
-          })}
-        </View>
-      </View>
+      {/* Chapters & Mastery Progression */}
+      <Text style={HS.sectionLabel}>RESEARCH CHAPTERS</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={HS.chapterScroll}>
+        {CHAPTERS.map(ch => {
+          const chDiscovered = ch.elements.filter(z => discovered.includes(z)).length;
+          const chPct = Math.round((chDiscovered / ch.elements.length) * 100);
+          const isUnlocked = xp >= ch.requiredXP;
 
-      {/* Top Elements List */}
-      <View style={HS.sectionHead}><Text style={HS.sectionLabel}>TOP ELEMENTS</Text></View>
-      <View style={HS.topGrid}>
-        {topEls.length > 0 ? topEls.map(([zStr, lvl]) => {
-          const z = parseInt(zStr); const el = getElement(z); const cc = getCategoryColor(el.category);
           return (
-            <View key={z} style={[HS.topItem, HS.card]}>
-              <Text style={[HS.topSym, { color: cc }]}>{el.sym}</Text>
-              <Text style={HS.topName}>{el.nameEn}</Text>
-              <View style={[HS.topLvl, { backgroundColor: cc + '15' }]}>
-                <Text style={[HS.topLvlTxt, { color: cc }]}>Lv.{lvl}</Text>
+            <View key={ch.id} style={[HS.chapterCard, !isUnlocked && HS.chapterCardLocked]}>
+              <Text style={HS.chapterNum}>{ch.title.toUpperCase()}</Text>
+              <Text style={HS.chapterSubtitle}>{ch.subtitle}</Text>
+              <View style={HS.chapterBar}>
+                <LinearGradient 
+                  colors={isUnlocked ? ['#6366f1', '#a855f7'] : ['#475569', '#334155']} 
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={[HS.chapterFill, { width: `${chPct}%` }]} 
+                />
+              </View>
+              <Text style={HS.chapterMeta}>
+                {isUnlocked ? `${chDiscovered}/${ch.elements.length} Discovered (${chPct}%)` : `Requires ${ch.requiredXP} XP`}
+              </Text>
+            </View>
+          );
+        })}
+      </ScrollView>
+
+      {/* Achievements Showcase */}
+      <Text style={HS.sectionLabel}>RESEARCH ACHIEVEMENTS ({unlockedAchievements.length}/{ACHIEVEMENTS_LIST.length})</Text>
+      <View style={HS.achievementsGrid}>
+        {ACHIEVEMENTS_LIST.map(ach => {
+          const isUnlocked = unlockedAchievements.includes(ach.id);
+          return (
+            <View key={ach.id} style={[HS.achCard, isUnlocked && HS.achCardUnlocked]}>
+              <Text style={HS.achIcon}>{ach.icon}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[HS.achTitle, isUnlocked && { color: '#fbbf24' }]}>{ach.title}</Text>
+                <Text style={HS.achDesc}>{ach.description}</Text>
+              </View>
+              <View style={[HS.achBadge, isUnlocked ? HS.achBadgeDone : HS.achBadgeLock]}>
+                <Text style={[HS.achBadgeTxt, isUnlocked ? { color: '#34d399' } : { color: COLORS.textTertiary }]}>
+                  {isUnlocked ? '✓' : `+${ach.xpReward} XP`}
+                </Text>
               </View>
             </View>
           );
-        }) : <Text style={HS.empty}>Play quizzes or build atoms to level up elements!</Text>}
+        })}
       </View>
     </ScrollView>
   );
@@ -258,6 +298,8 @@ export default function App() {
   const [elementLevels, setElementLevels] = useState<Record<number, number>>({});
   const [totalXP, setTotalXP] = useState(0);
   const [studyPool, setStudyPool] = useState<number[]>(INITIAL_POOL);
+  const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
+  const [dailyStreak, setDailyStreak] = useState(1);
   const [studyZ, setStudyZ] = useState(6);
   const [quizZ, setQuizZ] = useState(() => pickFromPool(INITIAL_POOL, {}));
 
@@ -267,18 +309,39 @@ export default function App() {
       const savedXP = await loadXP();
       const savedLevels = await loadLevels();
       const savedPool = await loadStudyPool(INITIAL_POOL);
+      const savedAch = await loadAchievements();
+      const savedDaily = await loadDailyStreak();
       
       setTotalXP(savedXP);
       setElementLevels(savedLevels);
       setStudyPool(savedPool);
+      setUnlockedAchievements(savedAch);
+      setDailyStreak(savedDaily.streak);
       
-      // Select appropriate quiz element based on loaded pool/levels
       setQuizZ(pickFromPool(savedPool, savedLevels));
     }
     loadSavedData();
   }, []);
 
   const discovered = Object.entries(elementLevels).filter(([_, l]) => l > 0).map(([z]) => parseInt(z));
+
+  // Check achievements whenever discovered or totalXP updates
+  useEffect(() => {
+    if (discovered.length === 0 && totalXP === 0) return;
+    const { newUnlocked, totalBonusXP } = checkAchievements(discovered, totalXP, unlockedAchievements);
+    if (newUnlocked.length > 0) {
+      const updated = [...unlockedAchievements, ...newUnlocked];
+      setUnlockedAchievements(updated);
+      saveAchievements(updated);
+      if (totalBonusXP > 0) {
+        setTotalXP(prev => {
+          const nx = prev + totalBonusXP;
+          saveXP(nx);
+          return nx;
+        });
+      }
+    }
+  }, [discovered.length, totalXP, unlockedAchievements]);
 
   const handleCorrect = useCallback((z: number) => {
     const currentLevel = elementLevels[z] || 0;
@@ -335,12 +398,24 @@ export default function App() {
   }, []);
 
   const screen = {
-    home: <HomeScreen xp={totalXP} discovered={discovered} levels={elementLevels} studyPool={studyPool}
-      onGoStudy={() => setTab('study')} onGoQuiz={() => setTab('quiz')} onGoBuilder={() => setTab('builder')} onGoTable={() => setTab('table')} />,
+    home: (
+      <HomeScreen 
+        xp={totalXP} 
+        discovered={discovered} 
+        levels={elementLevels} 
+        studyPool={studyPool}
+        unlockedAchievements={unlockedAchievements}
+        dailyStreak={dailyStreak}
+        onGoStudy={() => setTab('study')} 
+        onGoQuiz={() => setTab('quiz')} 
+        onGoBuilder={() => setTab('builder')} 
+        onGoTable={() => setTab('table')} 
+        onSelectElement={(z) => { setStudyZ(z); setTab('builder'); }}
+      />
+    ),
     study: <StudyScreen z={studyZ} onChange={setStudyZ} xp={totalXP} levels={elementLevels} discovered={discovered} onGoBuilder={(z) => { setStudyZ(z); setTab('builder'); }} />,
     builder: <AtomBuilder z={studyZ} found={discovered} onDiscover={handleDiscover} xp={totalXP} levels={elementLevels} />,
-    quiz: <QuizScreen z={quizZ} elementLevels={elementLevels} discovered={discovered}
-      pool={studyPool} onCorrect={handleCorrect} onNext={handleNextQuiz} />,
+    quiz: <QuizScreen z={quizZ} elementLevels={elementLevels} discovered={discovered} pool={studyPool} onCorrect={handleCorrect} onNext={handleNextQuiz} />,
     table: <PeriodicTable discovered={discovered} levels={elementLevels} xp={totalXP} onSelect={handleSelectTableElement} onGoBuilder={(z) => { setStudyZ(z); setTab('builder'); }} />,
   }[tab];
 
@@ -404,14 +479,6 @@ const S = StyleSheet.create({
   tabInnerActive: {
     backgroundColor: 'rgba(99, 102, 241, 0.12)',
   },
-  tabIcon: {
-    fontSize: 20,
-    color: COLORS.tabInactive,
-    textAlign: 'center',
-  },
-  tabIconActive: {
-    color: COLORS.tabActive,
-  },
   tabLabelActive: {
     fontSize: 11,
     fontWeight: '800',
@@ -423,17 +490,17 @@ const S = StyleSheet.create({
 const HS = StyleSheet.create({
   scroll: { flex: 1 },
   container: { paddingBottom: 160 },
-  hero: { paddingHorizontal: 20, paddingTop: 28, paddingBottom: 22 },
-  headerTop: { marginBottom: 18 },
-  title: { fontSize: 28, fontWeight: '800', color: COLORS.text, letterSpacing: -0.6 },
-  subtitle: { fontSize: 13, color: COLORS.textSecondary, letterSpacing: 0.2, marginTop: 3 },
+  hero: { paddingHorizontal: 20, paddingTop: 28, paddingBottom: 16 },
+  headerTop: { marginBottom: 14 },
+  title: { fontSize: 26, fontWeight: '900', color: COLORS.text, letterSpacing: -0.6 },
+  subtitle: { fontSize: 12.5, color: COLORS.textSecondary, letterSpacing: 0.2, marginTop: 2 },
 
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.02)',
     borderRadius: RADIUS.lg,
-    padding: 16,
+    padding: 14,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)',
     overflow: 'hidden',
@@ -447,14 +514,14 @@ const HS = StyleSheet.create({
     elevation: 4,
   },
   avatarCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
     color: '#ffffff',
   },
@@ -462,127 +529,239 @@ const HS = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   leagueName: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: '800',
     color: '#a78bfa',
     letterSpacing: 0.8,
   },
+  streakPill: {
+    backgroundColor: 'rgba(251, 191, 36, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.3)',
+  },
+  streakText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#fbbf24',
+  },
   xpVal: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
     color: COLORS.text,
   },
   xpLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: COLORS.textSecondary,
     fontWeight: 'normal',
   },
   leagueProg: {
-    marginTop: 2,
+    marginTop: 4,
   },
   leagueBar: {
-    height: 6,
+    height: 5,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 3,
+    borderRadius: 2.5,
     overflow: 'hidden',
   },
   leagueFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 2.5,
   },
   leagueMetaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 5,
+    marginTop: 4,
   },
   leagueMeta: {
-    fontSize: 10,
+    fontSize: 9.5,
     color: COLORS.textSecondary,
   },
 
-  card: { backgroundColor: COLORS.bgCard, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: COLORS.border, overflow: 'hidden' },
+  // Daily quest card
+  dailyCard: {
+    marginHorizontal: 16,
+    marginTop: 10,
+    marginBottom: 16,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.25)',
+    overflow: 'hidden',
+    padding: 12,
+  },
+  dailyContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dailyLeft: {
+    flex: 1,
+  },
+  dailyTag: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: '#fbbf24',
+    letterSpacing: 0.8,
+    marginBottom: 2,
+  },
+  dailyTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: COLORS.text,
+  },
+  dailySub: {
+    fontSize: 10.5,
+    color: COLORS.textSecondary,
+    marginTop: 1,
+  },
+  dailyBtn: {
+    backgroundColor: '#fbbf24',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: RADIUS.sm,
+    marginLeft: 10,
+  },
+  dailyBtnTxt: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#0a0e1a',
+  },
 
-  actionRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 12, marginBottom: 12 },
+  sectionLabel: { fontSize: 9.5, fontWeight: '800', color: COLORS.textSecondary, letterSpacing: 1.0, marginHorizontal: 20, marginBottom: 8, marginTop: 4 },
+
+  actionRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 10, marginBottom: 10 },
   moduleCard: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    padding: 10,
     borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.07)',
     backgroundColor: 'rgba(17, 24, 45, 0.45)',
     overflow: 'hidden',
-    minHeight: 72,
+    minHeight: 64,
     ...SHADOWS.card,
   },
   iconWrapper: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+    width: 34,
+    height: 34,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 8,
   },
   moduleTextContainer: {
     flex: 1,
     justifyContent: 'center',
   },
   moduleLabel: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
     color: COLORS.text,
   },
   moduleDesc: {
-    fontSize: 9.5,
+    fontSize: 9,
     color: COLORS.textSecondary,
-    marginTop: 2,
+    marginTop: 1,
   },
 
-  poolCard: { marginHorizontal: 16, padding: 18, marginBottom: 16 },
-  sectionLabel: { fontSize: 10, fontWeight: '800', color: COLORS.textSecondary, letterSpacing: 1.0, marginHorizontal: 20, marginBottom: 10, marginTop: 8 },
-  sectionLabelInside: { fontSize: 10, fontWeight: '800', color: COLORS.textSecondary, letterSpacing: 1.0, marginBottom: 12 },
-  poolHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  poolStatus: { fontSize: 16, fontWeight: '800', color: COLORS.text },
-  poolSub: { fontSize: 11, color: COLORS.textSecondary, marginTop: 2 },
-  poolBar: { height: 5, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 2.5, overflow: 'hidden', marginBottom: 14 },
-  poolFill: { height: '100%', borderRadius: 2.5 },
-  poolEls: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-
-  poolElPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
+  // Chapters horizontal scroll
+  chapterScroll: {
+    paddingLeft: 16,
+    marginBottom: 16,
+  },
+  chapterCard: {
+    width: 200,
     backgroundColor: 'rgba(255, 255, 255, 0.02)',
-    gap: 6,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    padding: 12,
+    marginRight: 10,
   },
-  poolDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+  chapterCardLocked: {
+    opacity: 0.6,
   },
-  poolSymText: {
-    fontSize: 13,
+  chapterNum: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: COLORS.primaryLight,
+    letterSpacing: 0.5,
+  },
+  chapterSubtitle: {
+    fontSize: 11,
     fontWeight: '700',
+    color: COLORS.text,
+    marginTop: 2,
+    marginBottom: 8,
   },
-  poolLvlText: {
+  chapterBar: {
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginBottom: 6,
+  },
+  chapterFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  chapterMeta: {
     fontSize: 9,
     color: COLORS.textTertiary,
-    fontWeight: '600',
   },
 
-  sectionHead: { paddingHorizontal: 20, marginBottom: 8 },
-  topGrid: { flexDirection: 'row', paddingHorizontal: 16, gap: 8, marginBottom: 16, flexWrap: 'wrap' },
-  topItem: { width: '23%', padding: 12, alignItems: 'center' },
-  topSym: { fontSize: 20, fontWeight: '800', marginBottom: 3 },
-  topName: { fontSize: 9, color: COLORS.textSecondary, textAlign: 'center', marginBottom: 4 },
-  topLvl: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  topLvlTxt: { fontSize: 8, fontWeight: '800' },
-  empty: { color: COLORS.textTertiary, fontSize: 12, textAlign: 'center', width: '100%', padding: 24 },
+  // Achievements
+  achievementsGrid: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  achCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: RADIUS.md,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.04)',
+    gap: 10,
+  },
+  achCardUnlocked: {
+    borderColor: 'rgba(251, 191, 36, 0.3)',
+    backgroundColor: 'rgba(251, 191, 36, 0.03)',
+  },
+  achIcon: {
+    fontSize: 22,
+  },
+  achTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: COLORS.text,
+  },
+  achDesc: {
+    fontSize: 9.5,
+    color: COLORS.textSecondary,
+    marginTop: 1,
+  },
+  achBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.sm,
+  },
+  achBadgeDone: {
+    backgroundColor: 'rgba(52, 211, 153, 0.15)',
+  },
+  achBadgeLock: {
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+  },
+  achBadgeTxt: {
+    fontSize: 9,
+    fontWeight: '800',
+  },
 });

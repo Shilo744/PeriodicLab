@@ -4,6 +4,8 @@ const KEYS = {
   XP: 'periodic_lab_xp',
   LEVELS: 'periodic_lab_levels',
   POOL: 'periodic_lab_pool',
+  ACHIEVEMENTS: 'periodic_lab_achievements',
+  DAILY: 'periodic_lab_daily',
 };
 
 // In-memory fallback if storage fails
@@ -70,6 +72,46 @@ export async function loadStudyPool(defaultPool: number[]): Promise<number[]> {
     if (memoryCache[KEYS.POOL]) return JSON.parse(memoryCache[KEYS.POOL]);
   }
   return defaultPool;
+}
+
+export async function saveAchievements(unlockedIds: string[]): Promise<void> {
+  try {
+    const val = JSON.stringify(unlockedIds);
+    await AsyncStorage.setItem(KEYS.ACHIEVEMENTS, val);
+  } catch (err) {
+    console.warn('Failed to save achievements to storage:', err);
+    memoryCache[KEYS.ACHIEVEMENTS] = JSON.stringify(unlockedIds);
+  }
+}
+
+export async function loadAchievements(): Promise<string[]> {
+  try {
+    const val = await AsyncStorage.getItem(KEYS.ACHIEVEMENTS);
+    if (val !== null) return JSON.parse(val);
+  } catch (err) {
+    console.warn('Failed to load achievements:', err);
+    if (memoryCache[KEYS.ACHIEVEMENTS]) return JSON.parse(memoryCache[KEYS.ACHIEVEMENTS]);
+  }
+  return [];
+}
+
+export async function saveDailyStreak(streak: number, lastDate: string): Promise<void> {
+  try {
+    const val = JSON.stringify({ streak, lastDate });
+    await AsyncStorage.setItem(KEYS.DAILY, val);
+  } catch (err) {
+    memoryCache[KEYS.DAILY] = JSON.stringify({ streak, lastDate });
+  }
+}
+
+export async function loadDailyStreak(): Promise<{ streak: number; lastDate: string }> {
+  try {
+    const val = await AsyncStorage.getItem(KEYS.DAILY);
+    if (val !== null) return JSON.parse(val);
+  } catch (err) {
+    if (memoryCache[KEYS.DAILY]) return JSON.parse(memoryCache[KEYS.DAILY]);
+  }
+  return { streak: 1, lastDate: new Date().toISOString().split('T')[0] };
 }
 
 export function isElementUnlocked(z: number, xp: number, levels: Record<number, number>): boolean {
