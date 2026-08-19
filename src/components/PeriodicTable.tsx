@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Dimensions, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { getElement } from '../data/elements';
+import { getElement, ELEMENTS } from '../data/elements';
 import { COLORS, RADIUS, getCategoryColor, SHADOWS } from '../theme';
 import { isElementUnlocked } from '../data/storage';
 
-
-const CS = 32;
+const CS = 34;
 const GAP = 3;
 
 const ROWS = [
@@ -19,10 +18,25 @@ const ROWS = [
   [87,88,89,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118],
 ];
 
-const CATS = [
-  'Nonmetal', 'Noble gas', 'Alkali metal', 'Alkaline earth',
-  'Metalloid', 'Post-transition', 'Transition metal', 'Halogen',
-  'Actinide', 'Lanthanide', 'Unknown',
+const LANTHANIDES = [57,58,59,60,61,62,63,64,65,66,67,68,69,70,71];
+const ACTINIDES = [89,90,91,92,93,94,95,96,97,98,99,100,101,102,103];
+
+const FILTER_TAGS = [
+  'All',
+  'Discovered',
+  'Nonmetal',
+  'Noble gas',
+  'Alkali metal',
+  'Alkaline earth',
+  'Metalloid',
+  'Transition metal',
+  'Post-transition',
+  'Halogen',
+  'Lanthanide',
+  'Actinide',
+  'Solid',
+  'Liquid',
+  'Gas'
 ];
 
 interface PeriodicTableProps {
@@ -34,109 +48,198 @@ interface PeriodicTableProps {
 }
 
 export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBuilder }: PeriodicTableProps) {
-  const [modalEl, setModalEl] = useState<number | null>(null);
+  const [search, setSearch] = useState('');
+  const [activeFilter, setActiveFilter] = useState('All');
+  const [selectedEl, setSelectedEl] = useState<number | null>(null);
+
+  // Check matching criteria for any element Z
+  const matchesSearchAndFilter = (z: number): boolean => {
+    if (z === 0) return false;
+    const el = getElement(z);
+
+    // Search query filter
+    if (search.trim().length > 0) {
+      const q = search.trim().toLowerCase();
+      const matchSym = el.sym.toLowerCase().includes(q);
+      const matchName = el.nameEn.toLowerCase().includes(q);
+      const matchZ = el.z.toString() === q;
+      if (!matchSym && !matchName && !matchZ) return false;
+    }
+
+    // Category / State filter
+    if (activeFilter === 'All') return true;
+    if (activeFilter === 'Discovered') return discovered.includes(z);
+    if (activeFilter === 'Solid') return el.state === 'solid';
+    if (activeFilter === 'Liquid') return el.state === 'liquid';
+    if (activeFilter === 'Gas') return el.state === 'gas';
+    return el.category.toLowerCase() === activeFilter.toLowerCase();
+  };
 
   const handleCellPress = (z: number) => {
-    const unlocked = isElementUnlocked(z, xp, levels);
-    const found = discovered.includes(z);
-
-    if (!unlocked || !found) {
-      setModalEl(z);
-    } else {
-      onSelect?.(z);
+    if (z > 0) {
+      setSelectedEl(z);
     }
   };
 
-  const renderModal = () => {
-    if (!modalEl) return null;
-    const el = getElement(modalEl);
-    const unlocked = isElementUnlocked(modalEl, xp, levels);
-    const prevEl = modalEl > 1 ? getElement(modalEl - 1) : null;
-    const prevLvl = modalEl > 1 ? (levels[modalEl - 1] || 0) : 0;
-    const reqXP = (modalEl - 3) * 120;
+  const renderQuickCardModal = () => {
+    if (!selectedEl) return null;
+    const el = getElement(selectedEl);
+    const unlocked = isElementUnlocked(selectedEl, xp, levels);
+    const isFound = discovered.includes(selectedEl);
     const catColor = getCategoryColor(el.category);
+    const lvl = levels[selectedEl] || 0;
+    const prevEl = selectedEl > 1 ? getElement(selectedEl - 1) : null;
+    const prevLvl = selectedEl > 1 ? (levels[selectedEl - 1] || 0) : 0;
+    const reqXP = (selectedEl - 3) * 120;
 
     return (
-      <View style={T.modalOverlay}>
-        <View style={T.modalBox}>
-          <LinearGradient colors={['rgba(11, 15, 38, 0.96)', 'rgba(5, 7, 20, 0.99)']} style={StyleSheet.absoluteFill} />
-          
-          <Text style={T.modalHeader}>{unlocked ? 'ELEMENT UNLOCKED' : 'ELEMENT LOCKED'}</Text>
-          
-          <View style={[T.modalSymBox, { borderColor: unlocked ? catColor + '80' : 'rgba(255,255,255,0.08)' }]}>
-            <Text style={[T.modalSym, { color: unlocked ? catColor : '#475569' }]}>
-              {unlocked ? el.sym : '?'}
-            </Text>
-          </View>
-          
-          <Text style={T.modalName}>
-            {unlocked ? el.nameEn : `Element Z = ${modalEl}`}
-          </Text>
+      <Modal transparent animationType="fade" visible={selectedEl !== null}>
+        <View style={T.modalOverlay}>
+          <View style={T.modalBox}>
+            <LinearGradient colors={['rgba(10, 14, 26, 0.98)', 'rgba(10, 14, 26, 1.0)']} style={StyleSheet.absoluteFill} />
 
-          {unlocked ? (
-            <View style={{ alignItems: 'center', width: '100%' }}>
-              <Text style={T.modalDesc}>
-                This element is unlocked! Build and synthesize its atom in the Builder to register its properties and add it to study lists.
+            {/* Header / Category Pill */}
+            <View style={T.modalHeaderRow}>
+              <View style={[T.modalCatPill, { backgroundColor: catColor + '18', borderColor: catColor + '40' }]}>
+                <Text style={[T.modalCatText, { color: catColor }]}>{el.category.toUpperCase()}</Text>
+              </View>
+              <Text style={T.modalStatePill}>{el.state.toUpperCase()}</Text>
+            </View>
+
+            {/* Big Symbol & Name */}
+            <View style={[T.modalSymBox, { borderColor: catColor, backgroundColor: catColor + '10' }]}>
+              <Text style={[T.modalSym, { color: catColor }]}>{unlocked ? el.sym : '?'}</Text>
+              <Text style={T.modalZ}>Z = {selectedEl}</Text>
+            </View>
+
+            <Text style={T.modalName}>{unlocked ? el.nameEn : `Element #${selectedEl}`}</Text>
+            <Text style={T.modalMass}>Standard Atomic Mass: {el.mass.toFixed(3)} u</Text>
+
+            {/* Status & Mastery Bar */}
+            <View style={T.masteryRow}>
+              <Text style={T.masteryText}>
+                {isFound ? `✓ Discovered (Level ${lvl}/3)` : unlocked ? '⚡ Unlocked (Ready to synthesize)' : '🔒 Locked'}
               </Text>
-              {onGoBuilder && (
-                <TouchableOpacity 
-                  style={[T.actionBtn, { backgroundColor: catColor }]}
+            </View>
+
+            {/* Properties Grid */}
+            <View style={T.propsGrid}>
+              <View style={T.propCell}>
+                <Text style={T.propLabel}>Configuration</Text>
+                <Text style={T.propVal}>{el.electronConfig}</Text>
+              </View>
+              <View style={T.propCell}>
+                <Text style={T.propLabel}>Stable Neutrons</Text>
+                <Text style={T.propVal}>{el.stableNeutrons}</Text>
+              </View>
+              <View style={T.propCell}>
+                <Text style={T.propLabel}>Discovered</Text>
+                <Text style={T.propVal}>{el.discovered}</Text>
+              </View>
+              <View style={T.propCell}>
+                <Text style={T.propLabel}>Melting / Boiling</Text>
+                <Text style={T.propVal}>{el.meltingPoint !== undefined ? `${el.meltingPoint}°C` : 'N/A'}</Text>
+              </View>
+            </View>
+
+            {/* Lock Requirements if locked */}
+            {!unlocked && (
+              <View style={T.lockReqCard}>
+                <Text style={T.lockReqTitle}>UNLOCK REQUIREMENTS</Text>
+                <Text style={T.lockReqText}>• Master {prevEl?.nameEn} ({prevEl?.sym}) to Lvl 2 (Current: {prevLvl}/2)</Text>
+                <Text style={T.lockReqText}>• Reach {reqXP} total XP (Current: {xp} XP)</Text>
+              </View>
+            )}
+
+            {/* Action Buttons */}
+            <View style={T.modalActions}>
+              {onSelect && (
+                <TouchableOpacity
+                  style={[T.actionBtn, { backgroundColor: 'rgba(99, 102, 241, 0.2)', borderColor: 'rgba(99, 102, 241, 0.4)' }]}
                   onPress={() => {
-                    setModalEl(null);
-                    onGoBuilder(modalEl);
+                    setSelectedEl(null);
+                    onSelect(selectedEl);
                   }}
+                  activeOpacity={0.8}
                 >
-                  <Text style={T.actionBtnTxt}>Go to Builder</Text>
+                  <Text style={[T.actionBtnTxt, { color: COLORS.primaryLight }]}>🔍 Study in 3D</Text>
+                </TouchableOpacity>
+              )}
+
+              {onGoBuilder && (
+                <TouchableOpacity
+                  style={[T.actionBtn, { backgroundColor: catColor + '30', borderColor: catColor + '60' }]}
+                  onPress={() => {
+                    setSelectedEl(null);
+                    onGoBuilder(selectedEl);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[T.actionBtnTxt, { color: catColor }]}>⚡ Builder & Fusion</Text>
                 </TouchableOpacity>
               )}
             </View>
-          ) : (
-            <View style={{ width: '100%' }}>
-              <Text style={T.modalDescLocked}>
-                To unlock this element, complete one of the following requirements:
-              </Text>
-              
-              <View style={T.reqRow}>
-                <Text style={T.reqDot}>•</Text>
-                <Text style={T.reqText}>
-                  Master {prevEl?.nameEn} ({prevEl?.sym}) to Level 2 (Current: Level {prevLvl})
-                </Text>
-              </View>
 
-              <View style={T.reqRow}>
-                <Text style={T.reqDot}>•</Text>
-                <Text style={T.reqText}>
-                  Earn {reqXP} total XP (Current XP: {xp})
-                </Text>
-              </View>
-            </View>
-          )}
-
-          <TouchableOpacity style={T.closeBtn} onPress={() => setModalEl(null)}>
-            <Text style={T.closeBtnTxt}>Close</Text>
-          </TouchableOpacity>
+            {/* Close Button */}
+            <TouchableOpacity style={T.closeBtn} onPress={() => setSelectedEl(null)}>
+              <Text style={T.closeBtnTxt}>Close</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </Modal>
     );
   };
 
   return (
     <View style={T.wrap}>
-      <LinearGradient colors={['rgba(99, 102, 241, 0.1)', 'transparent']} style={T.headGrad}>
-        <Text style={T.title}>Periodic Table</Text>
-        <Text style={T.sub}>{discovered.length}/118 discovered</Text>
-        <View style={T.legend}>
-          {CATS.map(cat => (
-            <View key={cat} style={T.legItem}>
-              <View style={[T.legDot, { backgroundColor: getCategoryColor(cat) }]} />
-              <Text style={T.legLabel}>{cat}</Text>
-            </View>
-          ))}
+      {/* Header with Title & Stats */}
+      <View style={T.headerSection}>
+        <View style={T.titleRow}>
+          <Text style={T.title}>Periodic Table</Text>
+          <View style={T.statsBadge}>
+            <Text style={T.statsText}>{discovered.length} / 118 Discovered</Text>
+          </View>
         </View>
-      </LinearGradient>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+        {/* Search Bar */}
+        <View style={T.searchContainer}>
+          <TextInput
+            style={T.searchInput}
+            placeholder="Search by symbol (Fe), name (Iron), or Z (26)..."
+            placeholderTextColor={COLORS.textTertiary}
+            value={search}
+            onChangeText={setSearch}
+            autoCapitalize="none"
+          />
+          {search.length > 0 && (
+            <TouchableOpacity style={T.clearBtn} onPress={() => setSearch('')}>
+              <Text style={T.clearBtnTxt}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Filter Chips ScrollView */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={T.filterScroll}>
+          {FILTER_TAGS.map(tag => {
+            const isActive = activeFilter === tag;
+            return (
+              <TouchableOpacity
+                key={tag}
+                style={[T.filterChip, isActive && T.filterChipActive]}
+                onPress={() => setActiveFilter(tag)}
+                activeOpacity={0.8}
+              >
+                <Text style={[T.filterChipText, isActive && T.filterChipTextActive]}>{tag}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* Interactive Matrix Grid ScrollViews */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={T.matrixScroll}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={T.matrixContent}>
+          {/* Main 7 Periods */}
           <View style={T.table}>
             {ROWS.map((row, ri) => (
               <View key={ri} style={T.row}>
@@ -147,54 +250,33 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
                   const found = discovered.includes(z);
                   const unlocked = isElementUnlocked(z, xp, levels);
                   const cat = getCategoryColor(el.category);
-                  const lvl = levels[z] || 0;
-                  
+                  const isMatch = matchesSearchAndFilter(z);
+
                   return (
                     <TouchableOpacity
                       key={ci}
                       onPress={() => handleCellPress(z)}
                       activeOpacity={0.7}
+                      style={{ opacity: isMatch ? 1.0 : 0.2 }}
                     >
                       <View style={[
-                        T.cell, 
+                        T.cell,
                         found ? {
-                          backgroundColor: cat + '15',
-                          borderColor: cat + '80',
-                          shadowColor: cat,
-                          shadowOffset: { width: 0, height: 0 },
-                          shadowOpacity: 0.15,
-                          shadowRadius: 4,
+                          backgroundColor: cat + '22',
+                          borderColor: isMatch && search ? '#fbbf24' : cat + '66',
+                          borderWidth: isMatch && search ? 2 : 1,
                         } : unlocked ? {
-                          backgroundColor: 'rgba(6, 182, 212, 0.04)',
-                          borderColor: 'rgba(6, 182, 212, 0.5)',
-                          borderStyle: 'dashed',
+                          backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                          borderColor: isMatch && search ? '#fbbf24' : 'rgba(255, 255, 255, 0.15)',
                         } : {
-                          backgroundColor: 'rgba(255,255,255,0.02)',
-                          borderColor: 'rgba(255,255,255,0.06)',
+                          backgroundColor: 'rgba(255, 255, 255, 0.01)',
+                          borderColor: 'rgba(255, 255, 255, 0.04)',
                         }
                       ]}>
-                        {found ? (
-                          <>
-                            <Text style={[T.num, { color: cat }]}>{z}</Text>
-                            <Text style={[T.sym, { color: cat }]}>{el.sym}</Text>
-                            {lvl > 0 && (
-                              <View style={[T.lvlBadgeBox, { backgroundColor: cat + '22' }]}>
-                                <Text style={[T.lvlBadgeTxt, { color: cat }]}>L{lvl}</Text>
-                              </View>
-                            )}
-                          </>
-                        ) : unlocked ? (
-                          <>
-                            <Text style={[T.num, { color: 'rgba(6, 182, 212, 0.6)' }]}>{z}</Text>
-                            <Text style={T.symReady}>?</Text>
-                            <View style={T.pulseDot} />
-                          </>
-                        ) : (
-                          <>
-                            <Text style={T.numLocked}>{z}</Text>
-                            <Text style={T.symLocked}>{el.sym}</Text>
-                          </>
-                        )}
+                        <Text style={[T.zNum, { color: found ? cat : COLORS.textTertiary }]}>{z}</Text>
+                        <Text style={[T.sym, { color: found ? '#ffffff' : unlocked ? cat : '#475569' }]}>
+                          {unlocked ? el.sym : '?'}
+                        </Text>
                       </View>
                     </TouchableOpacity>
                   );
@@ -203,86 +285,62 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
             ))}
           </View>
 
-          <View style={T.footer}>
-            <View style={T.footerGrad}>
-              <LinearGradient colors={['rgba(99, 102, 241, 0.08)', 'transparent']} style={StyleSheet.absoluteFill} />
-              <Text style={T.footerTitle}>Lanthanides</Text>
-            </View>
-            <View style={T.lantRow}>
-              {Array.from({ length: 15 }, (_, i) => {
-                const z = 57 + i;
+          {/* Lanthanide & Actinide Sub-Blocks */}
+          <View style={T.subBlockSection}>
+            <View style={T.subBlockRow}>
+              <Text style={T.subBlockLabel}>57-71</Text>
+              {LANTHANIDES.map(z => {
                 const el = getElement(z);
                 const found = discovered.includes(z);
                 const unlocked = isElementUnlocked(z, xp, levels);
                 const cat = getCategoryColor(el.category);
+                const isMatch = matchesSearchAndFilter(z);
+
                 return (
                   <TouchableOpacity
                     key={z}
                     onPress={() => handleCellPress(z)}
                     activeOpacity={0.7}
+                    style={{ opacity: isMatch ? 1.0 : 0.2 }}
                   >
                     <View style={[
-                      T.lantCell, 
-                      found ? {
-                        backgroundColor: cat + '15',
-                        borderColor: cat + '80',
-                      } : unlocked ? {
-                        backgroundColor: 'rgba(6, 182, 212, 0.04)',
-                        borderColor: 'rgba(6, 182, 212, 0.5)',
-                        borderStyle: 'dashed',
-                      } : {
-                        backgroundColor: 'rgba(255,255,255,0.01)',
-                        borderColor: 'rgba(255,255,255,0.04)',
-                      }
+                      T.cell,
+                      found ? { backgroundColor: cat + '22', borderColor: cat + '66' } : { backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.05)' }
                     ]}>
-                      {found ? (
-                        <Text style={[T.lantSym, { color: cat }]}>{el.sym}</Text>
-                      ) : unlocked ? (
-                        <Text style={T.symReadySmall}>?</Text>
-                      ) : null}
-                      <Text style={T.lantNum}>{z}</Text>
+                      <Text style={[T.zNum, { color: found ? cat : COLORS.textTertiary }]}>{z}</Text>
+                      <Text style={[T.sym, { color: found ? '#ffffff' : unlocked ? cat : '#475569' }]}>
+                        {unlocked ? el.sym : '?'}
+                      </Text>
                     </View>
                   </TouchableOpacity>
                 );
               })}
             </View>
-            <View style={[T.footerGrad, { marginTop: 8 }]}>
-              <LinearGradient colors={['rgba(168, 85, 247, 0.08)', 'transparent']} style={StyleSheet.absoluteFill} />
-              <Text style={T.footerTitle}>Actinides</Text>
-            </View>
-            <View style={T.lantRow}>
-              {Array.from({ length: 15 }, (_, i) => {
-                const z = 89 + i;
+
+            <View style={T.subBlockRow}>
+              <Text style={T.subBlockLabel}>89-103</Text>
+              {ACTINIDES.map(z => {
                 const el = getElement(z);
                 const found = discovered.includes(z);
                 const unlocked = isElementUnlocked(z, xp, levels);
                 const cat = getCategoryColor(el.category);
+                const isMatch = matchesSearchAndFilter(z);
+
                 return (
                   <TouchableOpacity
                     key={z}
                     onPress={() => handleCellPress(z)}
                     activeOpacity={0.7}
+                    style={{ opacity: isMatch ? 1.0 : 0.2 }}
                   >
                     <View style={[
-                      T.lantCell, 
-                      found ? {
-                        backgroundColor: cat + '15',
-                        borderColor: cat + '80',
-                      } : unlocked ? {
-                        backgroundColor: 'rgba(6, 182, 212, 0.04)',
-                        borderColor: 'rgba(6, 182, 212, 0.5)',
-                        borderStyle: 'dashed',
-                      } : {
-                        backgroundColor: 'rgba(255,255,255,0.01)',
-                        borderColor: 'rgba(255,255,255,0.04)',
-                      }
+                      T.cell,
+                      found ? { backgroundColor: cat + '22', borderColor: cat + '66' } : { backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.05)' }
                     ]}>
-                      {found ? (
-                        <Text style={[T.lantSym, { color: cat }]}>{el.sym}</Text>
-                      ) : unlocked ? (
-                        <Text style={T.symReadySmall}>?</Text>
-                      ) : null}
-                      <Text style={T.lantNum}>{z}</Text>
+                      <Text style={[T.zNum, { color: found ? cat : COLORS.textTertiary }]}>{z}</Text>
+                      <Text style={[T.sym, { color: found ? '#ffffff' : unlocked ? cat : '#475569' }]}>
+                        {unlocked ? el.sym : '?'}
+                      </Text>
                     </View>
                   </TouchableOpacity>
                 );
@@ -292,70 +350,204 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
         </ScrollView>
       </ScrollView>
 
-      {renderModal()}
+      {/* Render Quick Card Modal */}
+      {renderQuickCardModal()}
     </View>
   );
 }
 
 const T = StyleSheet.create({
-  wrap: { flex: 1, backgroundColor: COLORS.bg },
-  headGrad: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12 },
-  title: { fontSize: 20, fontWeight: '700', color: COLORS.text },
-  sub: { fontSize: 11, color: COLORS.textSecondary, marginTop: 2, marginBottom: 8 },
-  legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 3 },
-  legItem: { flexDirection: 'row', alignItems: 'center', marginRight: 6, marginBottom: 2 },
-  legDot: { width: 5, height: 5, borderRadius: 2.5, marginRight: 2 },
-  legLabel: { fontSize: 8, color: COLORS.textTertiary },
+  wrap: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+    paddingTop: 50,
+  },
+  headerSection: {
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: COLORS.text,
+    letterSpacing: -0.5,
+  },
+  statsBadge: {
+    backgroundColor: 'rgba(52, 211, 153, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: RADIUS.full,
+    borderWidth: 1,
+    borderColor: 'rgba(52, 211, 153, 0.3)',
+  },
+  statsText: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#34d399',
+  },
 
-  table: { paddingHorizontal: 16, paddingTop: 10 },
-  row: { flexDirection: 'row', marginBottom: GAP },
-  rowNum: { width: 18, fontSize: 9, color: COLORS.textTertiary, textAlign: 'center', marginTop: 8 },
-  cell: { width: CS, height: CS + 4, borderRadius: 6, alignItems: 'center', justifyContent: 'center', marginRight: GAP, borderWidth: 1 },
-  blank: { backgroundColor: 'transparent', borderWidth: 0 },
-  num: { position: 'absolute', top: 2, left: 3, fontSize: 7, fontWeight: '600' },
-  numLocked: { position: 'absolute', top: 2, left: 3, fontSize: 7, color: 'rgba(255,255,255,0.12)' },
-  symLocked: { fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.08)' },
-  sym: { fontSize: 13, fontWeight: '900', marginTop: -2 },
-  symReady: { fontSize: 12, fontWeight: '900', color: 'rgba(6, 182, 212, 0.7)', marginTop: -2 },
-  symReadySmall: { fontSize: 9, fontWeight: '900', color: 'rgba(6, 182, 212, 0.7)', marginTop: -1 },
-  lvlBadgeBox: { position: 'absolute', bottom: 2, right: 2, borderRadius: 3, paddingHorizontal: 2, paddingVertical: 0.5 },
-  lvlBadgeTxt: { fontSize: 5, fontWeight: '800' },
-  pulseDot: { position: 'absolute', bottom: 3, right: 3, width: 3, height: 3, borderRadius: 1.5, backgroundColor: '#00f5ff' },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    paddingHorizontal: 10,
+    marginBottom: 8,
+  },
+  searchInput: {
+    flex: 1,
+    height: 36,
+    color: COLORS.text,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  clearBtn: {
+    padding: 4,
+  },
+  clearBtnTxt: {
+    color: COLORS.textTertiary,
+    fontSize: 12,
+    fontWeight: '800',
+  },
 
-  footer: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 40 },
-  footerGrad: { borderRadius: RADIUS.sm, paddingVertical: 5, paddingHorizontal: 8, marginBottom: 4, overflow: 'hidden', borderWidth: 1, borderColor: COLORS.border },
-  footerTitle: { fontSize: 10, fontWeight: '700', color: '#94A3B8' },
-  lantRow: { flexDirection: 'row', gap: GAP, flexWrap: 'wrap' },
-  lantCell: { width: CS, height: CS - 2, borderRadius: 5, alignItems: 'center', justifyContent: 'center', borderWidth: 1, marginBottom: GAP },
-  lantSym: { fontSize: 10, fontWeight: '900', marginTop: -2 },
-  lantNum: { fontSize: 5.5, color: '#475569', position: 'absolute', bottom: 1, right: 2 },
+  filterScroll: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  filterChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    marginRight: 6,
+  },
+  filterChipActive: {
+    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+    borderColor: COLORS.primaryLight,
+  },
+  filterChipText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: COLORS.textTertiary,
+  },
+  filterChipTextActive: {
+    color: COLORS.primaryLight,
+  },
 
-  // Modal styling
-  modalOverlay: {
-    ...StyleSheet.absoluteFillObject as object,
-    backgroundColor: 'rgba(5, 7, 20, 0.75)',
+  matrixScroll: {
+    flex: 1,
+  },
+  matrixContent: {
+    padding: 12,
+    paddingBottom: 120,
+  },
+  table: {
+    gap: GAP,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: GAP,
+    alignItems: 'center',
+  },
+  rowNum: {
+    width: 14,
+    fontSize: 9,
+    fontWeight: '700',
+    color: COLORS.textTertiary,
+    textAlign: 'center',
+  },
+  cell: {
+    width: CS,
+    height: CS + 4,
+    borderRadius: 5,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
-    zIndex: 100,
+    padding: 1,
+  },
+  blank: {
+    backgroundColor: 'transparent',
+    borderColor: 'transparent',
+  },
+  zNum: {
+    fontSize: 7.5,
+    fontWeight: '700',
+  },
+  sym: {
+    fontSize: 11,
+    fontWeight: '900',
+  },
+
+  subBlockSection: {
+    marginTop: 14,
+    gap: GAP,
+    paddingLeft: 14,
+  },
+  subBlockRow: {
+    flexDirection: 'row',
+    gap: GAP,
+    alignItems: 'center',
+  },
+  subBlockLabel: {
+    width: 32,
+    fontSize: 8,
+    fontWeight: '800',
+    color: COLORS.textTertiary,
+  },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10, 14, 26, 0.88)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
   },
   modalBox: {
     width: '100%',
-    maxWidth: 320,
+    maxWidth: 340,
     borderRadius: RADIUS.lg,
-    padding: 24,
+    padding: 20,
     borderWidth: 1,
     borderColor: COLORS.border,
     alignItems: 'center',
     overflow: 'hidden',
     ...SHADOWS.glow,
   },
-  modalHeader: {
-    fontSize: 11,
+  modalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 12,
+  },
+  modalCatPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+  },
+  modalCatText: {
+    fontSize: 8.5,
     fontWeight: '800',
-    color: COLORS.textSecondary,
-    letterSpacing: 1.0,
-    marginBottom: 16,
+    letterSpacing: 0.5,
+  },
+  modalStatePill: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: COLORS.textTertiary,
+    letterSpacing: 0.5,
   },
   modalSymBox: {
     width: 60,
@@ -364,74 +556,116 @@ const T = StyleSheet.create({
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
-    backgroundColor: 'rgba(255,255,255,0.01)',
+    marginBottom: 8,
   },
   modalSym: {
     fontSize: 26,
-    fontWeight: '800',
+    fontWeight: '900',
+  },
+  modalZ: {
+    fontSize: 8.5,
+    fontWeight: '700',
+    color: COLORS.textTertiary,
   },
   modalName: {
     fontSize: 18,
     fontWeight: '800',
     color: COLORS.text,
-    marginBottom: 16,
   },
-  modalDesc: {
-    fontSize: 12,
+  modalMass: {
+    fontSize: 10.5,
     color: COLORS.textSecondary,
-    textAlign: 'center',
-    lineHeight: 18,
-    marginBottom: 20,
-  },
-  modalDescLocked: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    lineHeight: 18,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  reqRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    marginTop: 2,
     marginBottom: 8,
-    paddingHorizontal: 8,
   },
-  reqDot: {
-    fontSize: 12,
+  masteryRow: {
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    marginBottom: 12,
+  },
+  masteryText: {
+    fontSize: 10,
+    fontWeight: '700',
     color: COLORS.accent,
-    marginRight: 6,
-    lineHeight: 16,
   },
-  reqText: {
-    flex: 1,
+
+  propsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    width: '100%',
+    marginBottom: 14,
+  },
+  propCell: {
+    width: '48%',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    padding: 8,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+  },
+  propLabel: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: COLORS.textTertiary,
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+  propVal: {
     fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.text,
+  },
+
+  lockReqCard: {
+    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    borderRadius: RADIUS.sm,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.25)',
+    width: '100%',
+    marginBottom: 12,
+    gap: 3,
+  },
+  lockReqTitle: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#f87171',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  lockReqText: {
+    fontSize: 10,
     color: COLORS.textSecondary,
-    lineHeight: 16,
+  },
+
+  modalActions: {
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+    marginBottom: 10,
   },
   actionBtn: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    flex: 1,
+    paddingVertical: 10,
     borderRadius: RADIUS.md,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%',
-    marginBottom: 8,
   },
   actionBtnTxt: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '800',
-    color: '#ffffff',
   },
   closeBtn: {
-    paddingVertical: 10,
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
+    paddingVertical: 6,
   },
   closeBtnTxt: {
-    fontSize: 12,
+    fontSize: 11,
     color: COLORS.textTertiary,
     fontWeight: '600',
   },
