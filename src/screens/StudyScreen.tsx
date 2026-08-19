@@ -131,6 +131,14 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
             <Text style={S.propLbl}>Boiling Point</Text>
             <Text style={S.propVal}>{el.boilingPoint !== undefined ? `${el.boilingPoint} °C` : 'N/A'}</Text>
           </View>
+          <View style={S.propItem}>
+            <Text style={S.propLbl}>Discovered</Text>
+            <Text style={S.propVal}>{el.discovered ? `${el.discovered}` : 'Ancient'}</Text>
+          </View>
+          <View style={S.propItem}>
+            <Text style={S.propLbl}>Discoverer</Text>
+            <Text style={S.propVal} numberOfLines={1}>{el.discoveredBy || 'Antiquity'}</Text>
+          </View>
         </View>
 
         {/* Action Button for undiscovered elements */}
