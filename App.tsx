@@ -20,6 +20,8 @@ import {
   ACHIEVEMENTS_LIST, CHAPTERS, 
   checkAchievements, getDailyFeaturedElement 
 } from './src/data/achievements';
+import { Locale, t } from './src/data/i18n';
+import { triggerHaptic, playSound } from './src/services/feedback';
 
 type Tab = 'home' | 'table' | 'study' | 'builder' | 'quiz';
 
@@ -72,12 +74,12 @@ function TabIcon({ name, color }: { name: Tab; color: string }) {
   return <TableIcon color={color} />;
 }
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: 'home', label: 'Home' },
-  { key: 'table', label: 'Table' },
-  { key: 'study', label: 'Study' },
-  { key: 'builder', label: 'Builder' },
-  { key: 'quiz', label: 'Quiz' },
+const TABS: { key: Tab; labelKey: any }[] = [
+  { key: 'home', labelKey: 'appTitle' },
+  { key: 'table', labelKey: 'table' },
+  { key: 'study', labelKey: 'study' },
+  { key: 'builder', labelKey: 'builder' },
+  { key: 'quiz', labelKey: 'quiz' },
 ];
 
 const INITIAL_POOL = [1, 2, 3, 4, 5, 6];
@@ -118,11 +120,11 @@ function pickFromPool(pool: number[], levels: Record<number, number>): number {
 function xpForLevel(level: number): number { return 10 + level * 5; }
 
 function HomeScreen({ 
-  xp, discovered, levels, studyPool, unlockedAchievements, dailyStreak,
+  xp, discovered, levels, studyPool, unlockedAchievements, dailyStreak, locale, onToggleLocale,
   onGoStudy, onGoQuiz, onGoBuilder, onGoTable, onSelectElement
 }: {
   xp: number; discovered: number[]; levels: Record<number, number>; studyPool: number[];
-  unlockedAchievements: string[]; dailyStreak: number;
+  unlockedAchievements: string[]; dailyStreak: number; locale: Locale; onToggleLocale: () => void;
   onGoStudy: () => void; onGoQuiz: () => void; onGoBuilder: () => void; onGoTable: () => void;
   onSelectElement: (z: number) => void;
 }) {
@@ -138,8 +140,13 @@ function HomeScreen({
     <ScrollView style={HS.scroll} contentContainerStyle={HS.container} showsVerticalScrollIndicator={false}>
       <LinearGradient colors={['rgba(99, 102, 241, 0.08)', 'rgba(10, 14, 26, 0.2)']} style={HS.hero}>
         <View style={HS.headerTop}>
-          <Text style={HS.title}>Periodic Lab</Text>
-          <Text style={HS.subtitle}>Quantum Mechanics & Element Synthesis</Text>
+          <View>
+            <Text style={HS.title}>{t('appTitle', locale)}</Text>
+            <Text style={HS.subtitle}>{t('appSubtitle', locale)}</Text>
+          </View>
+          <TouchableOpacity style={HS.langToggle} onPress={onToggleLocale} activeOpacity={0.75}>
+            <Text style={HS.langToggleTxt}>{locale === 'en' ? '🇮🇱 עברית' : '🇺🇸 English'}</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Status Panel */}
@@ -179,7 +186,7 @@ function HomeScreen({
         <LinearGradient colors={['rgba(251, 191, 36, 0.12)', 'rgba(10, 14, 26, 0.4)']} style={StyleSheet.absoluteFill} />
         <View style={HS.dailyContent}>
           <View style={HS.dailyLeft}>
-            <Text style={HS.dailyTag}>DAILY RESEARCH QUEST</Text>
+            <Text style={HS.dailyTag}>{t('dailyQuest', locale)}</Text>
             <Text style={HS.dailyTitle}>Synthesize {dailyEl.nameEn} ({dailyEl.sym})</Text>
             <Text style={HS.dailySub}>Earn +{daily.bonusXP} bonus XP today!</Text>
           </View>
@@ -194,7 +201,7 @@ function HomeScreen({
       </View>
 
       {/* Main Actions Panel */}
-      <Text style={HS.sectionLabel}>LABORATORY MODULES</Text>
+      <Text style={HS.sectionLabel}>{t('modules', locale)}</Text>
       <View style={HS.actionRow}>
         <TouchableOpacity style={HS.moduleCard} onPress={onGoStudy} activeOpacity={0.85}>
           <LinearGradient colors={['rgba(99, 102, 241, 0.08)', 'rgba(99, 102, 241, 0.01)']} style={StyleSheet.absoluteFill} />
@@ -202,8 +209,8 @@ function HomeScreen({
             <StudyIcon color="#818cf8" />
           </View>
           <View style={HS.moduleTextContainer}>
-            <Text style={HS.moduleLabel}>Study</Text>
-            <Text style={HS.moduleDesc}>3D Shells & Isotopes</Text>
+            <Text style={HS.moduleLabel}>{t('study', locale)}</Text>
+            <Text style={HS.moduleDesc}>{t('studyDesc', locale)}</Text>
           </View>
         </TouchableOpacity>
         <TouchableOpacity style={HS.moduleCard} onPress={onGoBuilder} activeOpacity={0.85}>
@@ -212,8 +219,8 @@ function HomeScreen({
             <BuilderIcon color="#a78bfa" />
           </View>
           <View style={HS.moduleTextContainer}>
-            <Text style={HS.moduleLabel}>Builder</Text>
-            <Text style={HS.moduleDesc}>Fusion & Particle Tuning</Text>
+            <Text style={HS.moduleLabel}>{t('builder', locale)}</Text>
+            <Text style={HS.moduleDesc}>{t('builderDesc', locale)}</Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -225,8 +232,8 @@ function HomeScreen({
             <QuizIcon color="#f472b6" />
           </View>
           <View style={HS.moduleTextContainer}>
-            <Text style={HS.moduleLabel}>Quiz</Text>
-            <Text style={HS.moduleDesc}>Speed Bonus & Streaks</Text>
+            <Text style={HS.moduleLabel}>{t('quiz', locale)}</Text>
+            <Text style={HS.moduleDesc}>{t('quizDesc', locale)}</Text>
           </View>
         </TouchableOpacity>
         <TouchableOpacity style={HS.moduleCard} onPress={onGoTable} activeOpacity={0.85}>
@@ -235,14 +242,14 @@ function HomeScreen({
             <TableIcon color="#22d3ee" />
           </View>
           <View style={HS.moduleTextContainer}>
-            <Text style={HS.moduleLabel}>Table</Text>
-            <Text style={HS.moduleDesc}>Search & Filters</Text>
+            <Text style={HS.moduleLabel}>{t('table', locale)}</Text>
+            <Text style={HS.moduleDesc}>{t('tableDesc', locale)}</Text>
           </View>
         </TouchableOpacity>
       </View>
 
       {/* Chapters & Mastery Progression */}
-      <Text style={HS.sectionLabel}>RESEARCH CHAPTERS</Text>
+      <Text style={HS.sectionLabel}>{t('chapters', locale)}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={HS.chapterScroll}>
         {CHAPTERS.map(ch => {
           const chDiscovered = ch.elements.filter(z => discovered.includes(z)).length;
@@ -261,7 +268,7 @@ function HomeScreen({
                 />
               </View>
               <Text style={HS.chapterMeta}>
-                {isUnlocked ? `${chDiscovered}/${ch.elements.length} Discovered (${chPct}%)` : `Requires ${ch.requiredXP} XP`}
+                {isUnlocked ? `${chDiscovered}/${ch.elements.length} ${t('discovered', locale)} (${chPct}%)` : `Requires ${ch.requiredXP} XP`}
               </Text>
             </View>
           );
@@ -269,7 +276,7 @@ function HomeScreen({
       </ScrollView>
 
       {/* Achievements Showcase */}
-      <Text style={HS.sectionLabel}>RESEARCH ACHIEVEMENTS ({unlockedAchievements.length}/{ACHIEVEMENTS_LIST.length})</Text>
+      <Text style={HS.sectionLabel}>{t('achievements', locale)} ({unlockedAchievements.length}/{ACHIEVEMENTS_LIST.length})</Text>
       <View style={HS.achievementsGrid}>
         {ACHIEVEMENTS_LIST.map(ach => {
           const isUnlocked = unlockedAchievements.includes(ach.id);
@@ -295,6 +302,7 @@ function HomeScreen({
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('home');
+  const [locale, setLocale] = useState<Locale>('en');
   const [elementLevels, setElementLevels] = useState<Record<number, number>>({});
   const [totalXP, setTotalXP] = useState(0);
   const [studyPool, setStudyPool] = useState<number[]>(INITIAL_POOL);
@@ -302,6 +310,12 @@ export default function App() {
   const [dailyStreak, setDailyStreak] = useState(1);
   const [studyZ, setStudyZ] = useState(6);
   const [quizZ, setQuizZ] = useState(() => pickFromPool(INITIAL_POOL, {}));
+
+  const toggleLocale = useCallback(() => {
+    triggerHaptic('light');
+    playSound('click');
+    setLocale(l => (l === 'en' ? 'he' : 'en'));
+  }, []);
 
   // Initial loading from Storage
   useEffect(() => {
@@ -406,6 +420,8 @@ export default function App() {
         studyPool={studyPool}
         unlockedAchievements={unlockedAchievements}
         dailyStreak={dailyStreak}
+        locale={locale}
+        onToggleLocale={toggleLocale}
         onGoStudy={() => setTab('study')} 
         onGoQuiz={() => setTab('quiz')} 
         onGoBuilder={() => setTab('builder')} 
@@ -426,14 +442,14 @@ export default function App() {
       
       {/* Floating Glassmorphic Navigation Bar */}
       <View style={S.bar}>
-        {TABS.map(t => {
-          const active = tab === t.key;
+        {TABS.map(tTab => {
+          const active = tab === tTab.key;
           return (
-            <TouchableOpacity key={t.key} style={S.tab} onPress={() => setTab(t.key)} activeOpacity={0.75}>
+            <TouchableOpacity key={tTab.key} style={S.tab} onPress={() => setTab(tTab.key)} activeOpacity={0.75}>
               <View style={[S.tabInner, active && S.tabInnerActive]}>
-                <TabIcon name={t.key} color={active ? COLORS.tabActive : COLORS.tabInactive} />
+                <TabIcon name={tTab.key} color={active ? COLORS.tabActive : COLORS.tabInactive} />
                 {active ? (
-                  <Text style={S.tabLabelActive}>{t.label}</Text>
+                  <Text style={S.tabLabelActive}>{t(tTab.labelKey, locale)}</Text>
                 ) : null}
               </View>
             </TouchableOpacity>
@@ -491,9 +507,22 @@ const HS = StyleSheet.create({
   scroll: { flex: 1 },
   container: { paddingBottom: 160 },
   hero: { paddingHorizontal: 20, paddingTop: 28, paddingBottom: 16 },
-  headerTop: { marginBottom: 14 },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   title: { fontSize: 26, fontWeight: '900', color: COLORS.text, letterSpacing: -0.6 },
-  subtitle: { fontSize: 12.5, color: COLORS.textSecondary, letterSpacing: 0.2, marginTop: 2 },
+  subtitle: { fontSize: 12, color: COLORS.textSecondary, letterSpacing: 0.2, marginTop: 2 },
+  langToggle: {
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+  },
+  langToggleTxt: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: COLORS.text,
+  },
 
   profileCard: {
     flexDirection: 'row',
