@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, LayoutAnimation, Platform, UIManager, Modal, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getElement, getStableNeutrons, ELEMENTS } from '../data/elements';
+import { COMPOUNDS, Compound, findMatchingCompound } from '../data/compounds';
 import { COLORS, SHADOWS, RADIUS, getCategoryColor } from '../theme';
 import { isElementUnlocked } from '../data/storage';
 import Atom3D from '../components/Atom3D';
@@ -21,7 +22,10 @@ interface AtomBuilderProps {
   levels: Record<number, number>;
 }
 
-type BuilderMode = 'tuning' | 'fusion';
+type BuilderMode = 'tuning' | 'fusion' | 'compounds';
+
+// Common building block elements for compound synthesis
+const COMPOUND_ELEMENTS = [1, 6, 7, 8, 11, 12, 17, 26]; // H, C, N, O, Na, Mg, Cl, Fe
 
 export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBuilderProps) {
   const [p, setP] = useState(z);
@@ -31,6 +35,10 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
   const [fusionA, setFusionA] = useState(1);
   const [fusionB, setFusionB] = useState(Math.max(1, z - 1));
   const [showCongrats, setShowCongrats] = useState<number | null>(null);
+  
+  // Compounds mode state
+  const [compoundVessel, setCompoundVessel] = useState<Record<number, number>>({ 1: 2, 8: 1 }); // Default H2O
+  const [synthesizedCompound, setSynthesizedCompound] = useState<Compound | null>(null);
 
   // Synchronize target z selection when changed from outside
   useEffect(() => {
@@ -131,6 +139,28 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
     }
   }, [isFusionValid, isFound, p, onDiscover]);
 
+  // Compound Synthesis handler
+  const matchedCompound = findMatchingCompound(compoundVessel);
+  const updateVessel = (atomZ: number, delta: number) => {
+    triggerHaptic('light');
+    playSound('click');
+    setCompoundVessel(prev => {
+      const current = prev[atomZ] || 0;
+      const nextVal = Math.max(0, current + delta);
+      const updated = { ...prev, [atomZ]: nextVal };
+      if (nextVal === 0) delete updated[atomZ];
+      return updated;
+    });
+  };
+
+  const handleCompoundSynthesize = () => {
+    if (matchedCompound) {
+      triggerHaptic('success');
+      playSound('synthesize');
+      setSynthesizedCompound(matchedCompound);
+    }
+  };
+
   const atomSize = H * 0.28;
   const prevEl = p > 1 ? getElement(p - 1) : null;
   const prevLvl = p > 1 ? (levels[p - 1] || 0) : 0;
@@ -185,7 +215,14 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
             onPress={() => setMode('fusion')}
             activeOpacity={0.8}
           >
-            <Text style={[A.modeTabTxt, mode === 'fusion' && A.modeTabTxtActive]}>Fusion Chamber 💥</Text>
+            <Text style={[A.modeTabTxt, mode === 'fusion' && A.modeTabTxtActive]}>Fusion 💥</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[A.modeTab, mode === 'compounds' && A.modeTabActive]} 
+            onPress={() => setMode('compounds')}
+            activeOpacity={0.8}
+          >
+            <Text style={[A.modeTabTxt, mode === 'compounds' && A.modeTabTxtActive]}>Molecules 🧪</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -298,7 +335,7 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
               </TouchableOpacity>
             )}
           </>
-        ) : (
+        ) : mode === 'fusion' ? (
           /* Nuclear Fusion Chamber Mode */
           <View style={A.fusionBox}>
             <Text style={A.fusionTitle}>NUCLEAR FUSION REACTION</Text>
@@ -371,10 +408,66 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
               </TouchableOpacity>
             )}
           </View>
+        ) : (
+          /* Molecular Compounds Mode */
+          <View style={A.compoundLabContainer}>
+            <Text style={A.fusionTitle}>MOLECULAR BONDING LAB</Text>
+            <Text style={A.fusionDesc}>Select atom quantities in reaction vessel:</Text>
+
+            {/* Atom selection grid */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={A.compoundAtomScroll}>
+              {COMPOUND_ELEMENTS.map(cz => {
+                const cel = getElement(cz);
+                const count = compoundVessel[cz] || 0;
+                return (
+                  <View key={cz} style={A.compoundAtomCard}>
+                    <Text style={A.compoundAtomSym}>{cel.sym}</Text>
+                    <Text style={A.compoundAtomCount}>{count}</Text>
+                    <View style={A.compoundAtomBtnRow}>
+                      <TouchableOpacity style={A.compoundMiniBtn} onPress={() => updateVessel(cz, -1)}>
+                        <Text style={A.compoundMiniBtnTxt}>-</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={A.compoundMiniBtn} onPress={() => updateVessel(cz, 1)}>
+                        <Text style={A.compoundMiniBtnTxt}>+</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              })}
+            </ScrollView>
+
+            {/* Vessel Formula Feedback */}
+            <View style={A.compoundStatusCard}>
+              <Text style={A.compoundDetected}>
+                {matchedCompound 
+                  ? `✨ Matched: ${matchedCompound.name} (${matchedCompound.formula})` 
+                  : 'Vessel contents: Unknown mixture'}
+              </Text>
+              {matchedCompound && (
+                <Text style={A.compoundBondType}>Bond Type: {matchedCompound.bondType.replace('_', ' ').toUpperCase()}</Text>
+              )}
+            </View>
+
+            <TouchableOpacity 
+              onPress={handleCompoundSynthesize} 
+              activeOpacity={0.85}
+              disabled={!matchedCompound}
+            >
+              <LinearGradient
+                colors={matchedCompound ? ['#059669', '#10b981'] : ['#2f3640', '#1f242d']}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                style={A.discoverBtn}
+              >
+                <Text style={[A.discoverTxt, { color: matchedCompound ? '#FFFFFF' : COLORS.textTertiary }]}>
+                  {matchedCompound ? `Synthesize ${matchedCompound.formula} (+${matchedCompound.xpReward} XP)` : 'Adjust Recipe to Match Compound'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
         )}
       </View>
 
-      {/* Full-Screen Congratulatory Discovery Modal */}
+      {/* Full-Screen Congratulatory Discovery Modal (Elements) */}
       {showCongrats !== null && (
         <Modal transparent animationType="fade" visible={showCongrats !== null}>
           <View style={A.modalOverlay}>
@@ -415,6 +508,43 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
           </View>
         </Modal>
       )}
+
+      {/* Full-Screen Compound Synthesis Modal */}
+      {synthesizedCompound !== null && (
+        <Modal transparent animationType="fade" visible={synthesizedCompound !== null}>
+          <View style={A.modalOverlay}>
+            <View style={A.modalBox}>
+              <LinearGradient colors={['rgba(10,14,26,0.98)', 'rgba(10,14,26,1.0)']} style={StyleSheet.absoluteFill} />
+              
+              <Text style={[A.congratsTitle, { color: '#34d399' }]}>🧪 MOLECULE SYNTHESIZED 🧪</Text>
+              
+              <View style={[A.congratsSymBox, { borderColor: '#34d399', backgroundColor: 'rgba(52, 211, 153, 0.12)' }]}>
+                <Text style={[A.congratsSym, { color: '#34d399', fontSize: 24 }]}>{synthesizedCompound.formula}</Text>
+              </View>
+
+              <Text style={A.congratsName}>{synthesizedCompound.name}</Text>
+              <Text style={A.congratsSub}>{synthesizedCompound.bondType.toUpperCase()} BOND</Text>
+
+              <View style={A.loreCard}>
+                <Text style={A.loreTitle}>MOLECULAR DOSSIER</Text>
+                <Text style={A.loreText}>{synthesizedCompound.desc}</Text>
+              </View>
+
+              <View style={A.rewardsCard}>
+                <Text style={A.rewardXP}>+{synthesizedCompound.xpReward} Research XP Gained</Text>
+                <Text style={A.rewardText}>Chemical bonding complete.</Text>
+              </View>
+
+              <TouchableOpacity 
+                style={[A.confirmBtn, { backgroundColor: '#34d399' }]}
+                onPress={() => setSynthesizedCompound(null)}
+              >
+                <Text style={[A.confirmBtnTxt, { color: '#0a0e1a' }]}>Accept Molecule</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 }
@@ -423,7 +553,7 @@ const A = StyleSheet.create({
   wrap: { 
     flex: 1, 
     backgroundColor: COLORS.bg,
-    paddingTop: 54,
+    paddingTop: 50,
     paddingBottom: 110,
     paddingHorizontal: 16,
     justifyContent: 'space-between',
@@ -459,7 +589,7 @@ const A = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.03)',
     borderRadius: RADIUS.sm,
     padding: 3,
-    marginTop: 8,
+    marginTop: 6,
     borderWidth: 1,
     borderColor: COLORS.borderLight,
     gap: 4,
@@ -476,7 +606,7 @@ const A = StyleSheet.create({
     borderColor: 'rgba(99, 102, 241, 0.35)',
   },
   modeTabTxt: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: '700',
     color: COLORS.textTertiary,
   },
@@ -487,7 +617,7 @@ const A = StyleSheet.create({
   bottom: {
     borderRadius: RADIUS.xl,
     borderWidth: 1, borderColor: COLORS.border,
-    padding: 14, overflow: 'hidden',
+    padding: 12, overflow: 'hidden',
     ...SHADOWS.card,
     zIndex: 10,
   },
@@ -500,7 +630,7 @@ const A = StyleSheet.create({
   lockHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     marginBottom: 6,
   },
   lockTitle: {
@@ -535,32 +665,32 @@ const A = StyleSheet.create({
   telemetryRow: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   telemetryBadge: {
     flex: 1,
     backgroundColor: 'rgba(255,255,255,0.02)',
-    padding: 8,
+    padding: 6,
     borderRadius: RADIUS.sm,
     borderWidth: 1,
     borderColor: COLORS.borderLight,
   },
   telemetryLabel: {
-    fontSize: 8,
+    fontSize: 7.5,
     fontWeight: '800',
     color: COLORS.textTertiary,
     letterSpacing: 0.5,
-    marginBottom: 2,
+    marginBottom: 1,
   },
   telemetryVal: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontWeight: '700',
   },
 
   // Particle controls
   particleControl: {
-    marginBottom: 12,
-    gap: 6,
+    marginBottom: 10,
+    gap: 5,
   },
   particleRow: {
     flexDirection: 'row',
@@ -568,24 +698,24 @@ const A = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: 'rgba(255,255,255,0.02)',
     borderRadius: RADIUS.md,
-    padding: 8,
+    padding: 7,
     borderWidth: 1,
     borderColor: COLORS.borderLight,
-    gap: 10,
+    gap: 8,
   },
   rowHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   particleLabel: {
-    fontSize: 9,
+    fontSize: 8.5,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
   particleCount: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: '800',
     color: COLORS.text,
   },
@@ -596,8 +726,8 @@ const A = StyleSheet.create({
     gap: 6,
   },
   adjustBtn: {
-    width: 28,
-    height: 28,
+    width: 26,
+    height: 26,
     borderRadius: RADIUS.sm,
     backgroundColor: 'rgba(255,255,255,0.04)',
     alignItems: 'center',
@@ -606,26 +736,26 @@ const A = StyleSheet.create({
     borderColor: COLORS.border,
   },
   adjustTxt: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.textSecondary,
   },
 
-  discoverBtn: { borderRadius: RADIUS.md, padding: 12, alignItems: 'center', ...SHADOWS.glow },
-  discoverTxt: { fontSize: 13, fontWeight: '800' },
+  discoverBtn: { borderRadius: RADIUS.md, padding: 11, alignItems: 'center', ...SHADOWS.glow },
+  discoverTxt: { fontSize: 12.5, fontWeight: '800' },
 
   foundBadge: {
-    borderRadius: RADIUS.md, padding: 11, alignItems: 'center',
+    borderRadius: RADIUS.md, padding: 10, alignItems: 'center',
     borderWidth: 1, borderColor: 'rgba(52, 211, 153, 0.3)', overflow: 'hidden',
   },
-  foundTxt: { fontSize: 12, fontWeight: '700', color: '#34d399' },
+  foundTxt: { fontSize: 11.5, fontWeight: '700', color: '#34d399' },
 
   // Fusion Chamber styles
   fusionBox: {
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
   fusionTitle: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: '800',
     color: COLORS.textTertiary,
     letterSpacing: 0.5,
@@ -633,24 +763,24 @@ const A = StyleSheet.create({
     textAlign: 'center',
   },
   fusionDesc: {
-    fontSize: 10.5,
+    fontSize: 10,
     color: COLORS.textSecondary,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   fusionEquationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   fusionItem: {
     alignItems: 'center',
   },
   fusionSymBox: {
-    width: 46,
-    height: 46,
+    width: 44,
+    height: 44,
     borderRadius: RADIUS.sm,
     borderWidth: 1.5,
     alignItems: 'center',
@@ -658,25 +788,91 @@ const A = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.02)',
   },
   fusionSym: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
     color: COLORS.text,
   },
   fusionZ: {
-    fontSize: 8.5,
+    fontSize: 8,
     color: COLORS.textTertiary,
     marginTop: 1,
   },
   fusionPlus: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
     color: COLORS.textSecondary,
   },
   fusionFeedback: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
+  },
+
+  // Compound Lab styles
+  compoundLabContainer: {
+    paddingVertical: 2,
+  },
+  compoundAtomScroll: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  compoundAtomCard: {
+    width: 52,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    padding: 4,
+    alignItems: 'center',
+    marginRight: 6,
+  },
+  compoundAtomSym: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: COLORS.text,
+  },
+  compoundAtomCount: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.primaryLight,
+    marginVertical: 1,
+  },
+  compoundAtomBtnRow: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  compoundMiniBtn: {
+    width: 18,
+    height: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compoundMiniBtnTxt: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.textSecondary,
+  },
+  compoundStatusCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: RADIUS.sm,
+    padding: 6,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  compoundDetected: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#34d399',
+  },
+  compoundBondType: {
+    fontSize: 8.5,
+    color: COLORS.textTertiary,
+    marginTop: 2,
   },
 
   // Congrats Modal styles
@@ -751,7 +947,6 @@ const A = StyleSheet.create({
     fontSize: 11,
     color: COLORS.textSecondary,
     lineHeight: 16,
-    marginBottom: 8,
   },
   loreMetaRow: {
     flexDirection: 'row',
