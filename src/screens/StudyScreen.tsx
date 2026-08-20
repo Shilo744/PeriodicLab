@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getElement, getCachedNeutrons, getShellConfig } from '../data/elements';
+import { getElementSpectra } from '../data/spectra';
 import { COLORS, RADIUS, getCategoryColor, SHADOWS } from '../theme';
 import { isElementUnlocked } from '../data/storage';
 import Atom3D from '../components/Atom3D';
@@ -17,7 +18,7 @@ interface StudyScreenProps {
   onGoBuilder?: (z: number) => void;
 }
 
-type StudyTab = 'overview' | 'shells' | 'isotopes';
+type StudyTab = 'overview' | 'shells' | 'isotopes' | 'spectra';
 
 interface IsotopeInfo {
   massNumber: number;
@@ -32,8 +33,8 @@ function getIsotopesForElement(z: number, stableN: number, standardMass: number)
   if (z === 1) {
     return [
       { massNumber: 1, neutrons: 0, abundance: '99.98%', stable: true },
-      { massNumber: 2, neutrons: 1, abundance: '0.015%', stable: true }, // Deuterium
-      { massNumber: 3, neutrons: 2, abundance: 'Trace', halfLife: '12.32 years (β⁻)', stable: false }, // Tritium
+      { massNumber: 2, neutrons: 1, abundance: '0.015%', stable: true },
+      { massNumber: 3, neutrons: 2, abundance: 'Trace', halfLife: '12.32 years (β⁻)', stable: false },
     ];
   }
   if (z === 6) {
@@ -50,7 +51,6 @@ function getIsotopesForElement(z: number, stableN: number, standardMass: number)
       { massNumber: 238, neutrons: 146, abundance: '99.27%', halfLife: '4.468 B y (α)', stable: false },
     ];
   }
-  // Generic dynamic isotopes for any other element
   return [
     { massNumber: z + Math.max(0, stableN - 1), neutrons: Math.max(0, stableN - 1), abundance: 'Minor', stable: stableN > 1 },
     { massNumber: z + stableN, neutrons: stableN, abundance: 'Primary / Dominant', stable: z <= 83 },
@@ -78,6 +78,7 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
   const cat = getCategoryColor(el.category);
   const shells = getShellConfig(p);
   const isotopes = getIsotopesForElement(p, defaultStableN, el.mass);
+  const spectra = getElementSpectra(p);
 
   // Dynamic neutrons based on selected isotope
   const currentIsotope = isotopes[selectedIsotopeIdx] || isotopes[0];
@@ -91,7 +92,7 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
     setP(x => Math.max(1, Math.min(118, x + d)));
   }, []);
 
-  const atomSize = H * 0.29;
+  const atomSize = H * 0.28;
 
   return (
     <View style={S.wrap}>
@@ -114,7 +115,7 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
         </View>
       </View>
 
-      {/* Interactive Tabs (Overview | Quantum Shells | Isotopes) */}
+      {/* Interactive Tabs (Overview | Shells | Isotopes | Spectra) */}
       <View style={S.tabBar}>
         <TouchableOpacity
           style={[S.tabBtn, selectedTab === 'overview' && S.tabBtnActive]}
@@ -128,7 +129,7 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
           onPress={() => setSelectedTab('shells')}
           activeOpacity={0.8}
         >
-          <Text style={[S.tabBtnTxt, selectedTab === 'shells' && S.tabBtnTxtActive]}>Quantum Shells</Text>
+          <Text style={[S.tabBtnTxt, selectedTab === 'shells' && S.tabBtnTxtActive]}>Shells</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[S.tabBtn, selectedTab === 'isotopes' && S.tabBtnActive]}
@@ -136,6 +137,13 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
           activeOpacity={0.8}
         >
           <Text style={[S.tabBtnTxt, selectedTab === 'isotopes' && S.tabBtnTxtActive]}>Isotopes</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[S.tabBtn, selectedTab === 'spectra' && S.tabBtnActive]}
+          onPress={() => setSelectedTab('spectra')}
+          activeOpacity={0.8}
+        >
+          <Text style={[S.tabBtnTxt, selectedTab === 'spectra' && S.tabBtnTxtActive]}>Spectra 🌈</Text>
         </TouchableOpacity>
       </View>
 
@@ -276,10 +284,50 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
           </View>
         )}
 
+        {selectedTab === 'spectra' && (
+          <View style={S.spectraContainer}>
+            <Text style={S.sectionHeading}>ATOMIC EMISSION SPECTRUM (OPTICAL LINES)</Text>
+
+            {/* Glowing Spectrograph Bar */}
+            <View style={S.spectrographBar}>
+              <LinearGradient colors={['#050814', '#02040a']} style={StyleSheet.absoluteFill} />
+              {spectra.lines.map((line, idx) => {
+                // Map 380nm - 750nm to 0% - 100% position
+                const leftPct = Math.max(0, Math.min(100, ((line.wavelength - 380) / (750 - 380)) * 100));
+                return (
+                  <View
+                    key={idx}
+                    style={[
+                      S.spectralLine,
+                      {
+                        left: `${leftPct}%`,
+                        backgroundColor: line.color,
+                        opacity: line.intensity,
+                        shadowColor: line.color,
+                      }
+                    ]}
+                  />
+                );
+              })}
+            </View>
+
+            {/* Spectral Lines Details */}
+            <View style={S.spectralLinesRow}>
+              {spectra.lines.map((line, idx) => (
+                <View key={idx} style={[S.spectralTag, { borderColor: line.color + '60' }]}>
+                  <View style={[S.spectralDot, { backgroundColor: line.color }]} />
+                  <Text style={S.spectralNm}>{line.wavelength} nm</Text>
+                </View>
+              ))}
+            </View>
+            <Text style={S.spectraDesc}>{spectra.description}</Text>
+          </View>
+        )}
+
         {/* Action Button for undiscovered elements */}
         {!isDiscovered && onGoBuilder && (
           <TouchableOpacity 
-            style={[S.actionBtn, { backgroundColor: cat + 'D9', marginTop: 8 }]}
+            style={[S.actionBtn, { backgroundColor: cat + 'D9', marginTop: 6 }]}
             onPress={() => onGoBuilder(p)}
             activeOpacity={0.8}
           >
@@ -535,6 +583,61 @@ const S = StyleSheet.create({
     fontSize: 9.5,
     color: COLORS.textTertiary,
     marginTop: 2,
+  },
+
+  // Spectra View
+  spectraContainer: {
+    paddingVertical: 4,
+  },
+  spectrographBar: {
+    height: 36,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    overflow: 'hidden',
+    position: 'relative',
+    marginBottom: 8,
+  },
+  spectralLine: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 3,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 6,
+  },
+  spectralLinesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  spectralTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    gap: 4,
+  },
+  spectralDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  spectralNm: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: COLORS.textSecondary,
+  },
+  spectraDesc: {
+    fontSize: 9.5,
+    color: COLORS.textTertiary,
+    textAlign: 'center',
   },
 
   actionBtn: {
