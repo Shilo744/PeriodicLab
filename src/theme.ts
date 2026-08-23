@@ -44,6 +44,30 @@ export const getCategoryColor = (category: string): string => {
   return COLORS.category[category] || COLORS.category['Unknown'];
 };
 
+export const THEMES = {
+  quantum: {
+    name: 'Quantum Lab',
+    bg: '#0a0e1a',
+    primary: '#6366f1',
+    accent: '#a78bfa',
+    card: 'rgba(17, 24, 45, 0.75)',
+  },
+  cyberpunk: {
+    name: 'Cyber Neon',
+    bg: '#05050f',
+    primary: '#ec4899',
+    accent: '#06b6d4',
+    card: 'rgba(236, 72, 153, 0.08)',
+  },
+  deepspace: {
+    name: 'Deep Space',
+    bg: '#020408',
+    primary: '#38bdf8',
+    accent: '#818cf8',
+    card: 'rgba(56, 189, 248, 0.08)',
+  },
+};
+
 export const SHADOWS = {
   card: {
     shadowColor: '#000000',
