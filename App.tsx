@@ -21,7 +21,7 @@ import {
   checkAchievements, getDailyFeaturedElement 
 } from './src/data/achievements';
 import { Locale, t } from './src/data/i18n';
-import { triggerHaptic, playSound } from './src/services/feedback';
+import { triggerHaptic, playSound, isAudioMuted, toggleAudioMuted } from './src/services/feedback';
 
 type Tab = 'home' | 'table' | 'study' | 'builder' | 'quiz';
 
@@ -131,6 +131,7 @@ function HomeScreen({
   onSelectElement: (z: number) => void;
 }) {
   const [showProfile, setShowProfile] = useState(false);
+  const [mutedState, setMutedState] = useState(isAudioMuted());
   const league = getLeague(xp);
   const nextXP = xp < 100 ? 100 : xp < 500 ? 500 : xp < 1500 ? 1500 : xp < 5000 ? 5000 : 0;
   const nextPct = nextXP ? Math.round((xp / nextXP) * 100) : 100;
@@ -161,9 +162,21 @@ function HomeScreen({
             <Text style={HS.title}>{t('appTitle', locale)}</Text>
             <Text style={HS.subtitle}>{t('appSubtitle', locale)}</Text>
           </View>
-          <TouchableOpacity style={HS.langToggle} onPress={onToggleLocale} activeOpacity={0.75}>
-            <Text style={HS.langToggleTxt}>{locale === 'en' ? '🇮🇱 עברית' : '🇺🇸 English'}</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            <TouchableOpacity 
+              style={HS.langToggle} 
+              onPress={() => {
+                const nowMuted = toggleAudioMuted();
+                setMutedState(nowMuted);
+              }} 
+              activeOpacity={0.75}
+            >
+              <Text style={HS.langToggleTxt}>{mutedState ? '🔇' : '🔊'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={HS.langToggle} onPress={onToggleLocale} activeOpacity={0.75}>
+              <Text style={HS.langToggleTxt}>{locale === 'en' ? '🇮🇱 עברית' : '🇺🇸 English'}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Status Panel */}

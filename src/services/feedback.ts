@@ -35,12 +35,26 @@ export function triggerHaptic(type: 'light' | 'medium' | 'success' | 'error' = '
   } catch (e) {
     // Ignore if vibration is not supported or blocked
   }
+let audioMuted = false;
+
+export function isAudioMuted(): boolean {
+  return audioMuted;
+}
+
+export function setAudioMuted(muted: boolean): void {
+  audioMuted = muted;
+}
+
+export function toggleAudioMuted(): boolean {
+  audioMuted = !audioMuted;
+  return audioMuted;
 }
 
 /**
  * Play procedural sound cues
  */
 export function playSound(effect: 'click' | 'success' | 'error' | 'synthesize') {
+  if (audioMuted) return;
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
