@@ -6,6 +6,7 @@ import { COMPOUNDS, Compound, findMatchingCompound } from '../data/compounds';
 import { COLORS, SHADOWS, RADIUS, getCategoryColor } from '../theme';
 import { isElementUnlocked } from '../data/storage';
 import Atom3D from '../components/Atom3D';
+import Molecule3D from '../components/Molecule3D';
 import { triggerHaptic, playSound } from '../services/feedback';
 
 const H = Dimensions.get('window').height;
@@ -518,9 +519,7 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
               
               <Text style={[A.congratsTitle, { color: '#34d399' }]}>🧪 MOLECULE SYNTHESIZED 🧪</Text>
               
-              <View style={[A.congratsSymBox, { borderColor: '#34d399', backgroundColor: 'rgba(52, 211, 153, 0.12)' }]}>
-                <Text style={[A.congratsSym, { color: '#34d399', fontSize: 24 }]}>{synthesizedCompound.formula}</Text>
-              </View>
+              <Molecule3D compound={synthesizedCompound} size={150} />
 
               <Text style={A.congratsName}>{synthesizedCompound.name}</Text>
               <Text style={A.congratsSub}>{synthesizedCompound.bondType.toUpperCase()} BOND</Text>
