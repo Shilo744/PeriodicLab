@@ -119,6 +119,8 @@ function pickFromPool(pool: number[], levels: Record<number, number>): number {
 
 function xpForLevel(level: number): number { return 10 + level * 5; }
 
+import ProfileScreen from './src/screens/ProfileScreen';
+
 function HomeScreen({ 
   xp, discovered, levels, studyPool, unlockedAchievements, dailyStreak, locale, onToggleLocale,
   onGoStudy, onGoQuiz, onGoBuilder, onGoTable, onSelectElement
@@ -128,6 +130,7 @@ function HomeScreen({
   onGoStudy: () => void; onGoQuiz: () => void; onGoBuilder: () => void; onGoTable: () => void;
   onSelectElement: (z: number) => void;
 }) {
+  const [showProfile, setShowProfile] = useState(false);
   const league = getLeague(xp);
   const nextXP = xp < 100 ? 100 : xp < 500 ? 500 : xp < 1500 ? 1500 : xp < 5000 ? 5000 : 0;
   const nextPct = nextXP ? Math.round((xp / nextXP) * 100) : 100;
@@ -135,6 +138,20 @@ function HomeScreen({
   const poolPct = Math.round((poolDone / Math.max(1, studyPool.length)) * 100);
   const daily = getDailyFeaturedElement();
   const dailyEl = getElement(daily.z);
+
+  if (showProfile) {
+    return (
+      <ProfileScreen
+        xp={xp}
+        discovered={discovered}
+        levels={levels}
+        dailyStreak={dailyStreak}
+        unlockedAchievementsCount={unlockedAchievements.length}
+        locale={locale}
+        onClose={() => setShowProfile(false)}
+      />
+    );
+  }
 
   return (
     <ScrollView style={HS.scroll} contentContainerStyle={HS.container} showsVerticalScrollIndicator={false}>
@@ -150,7 +167,7 @@ function HomeScreen({
         </View>
 
         {/* Status Panel */}
-        <View style={HS.profileCard}>
+        <TouchableOpacity style={HS.profileCard} onPress={() => setShowProfile(true)} activeOpacity={0.85}>
           <LinearGradient colors={['rgba(255,255,255,0.03)', 'rgba(255,255,255,0.01)']} style={StyleSheet.absoluteFill} />
           <View style={HS.avatarGlow}>
             <LinearGradient colors={['#a855f7', '#6366f1']} style={HS.avatarCircle}>
@@ -159,7 +176,7 @@ function HomeScreen({
           </View>
           <View style={{ flex: 1, marginLeft: 16 }}>
             <View style={HS.profileHeader}>
-              <Text style={HS.leagueName}>{league.name.toUpperCase()}</Text>
+              <Text style={HS.leagueName}>{league.name.toUpperCase()} (STATS ➔)</Text>
               <View style={HS.streakPill}>
                 <Text style={HS.streakText}>🔥 {dailyStreak}d Streak</Text>
               </View>
@@ -178,7 +195,7 @@ function HomeScreen({
               </View>
             )}
           </View>
-        </View>
+        </TouchableOpacity>
       </LinearGradient>
 
       {/* Daily Quest Banner */}
