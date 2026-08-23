@@ -321,12 +321,15 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
 
             {/* Spectral Lines Details */}
             <View style={S.spectralLinesRow}>
-              {spectra.lines.map((line, idx) => (
-                <View key={idx} style={[S.spectralTag, { borderColor: line.color + '60' }]}>
-                  <View style={[S.spectralDot, { backgroundColor: line.color }]} />
-                  <Text style={S.spectralNm}>{line.wavelength} nm</Text>
-                </View>
-              ))}
+              {spectra.lines.map((line, idx) => {
+                const ev = (1239.84 / line.wavelength).toFixed(2);
+                return (
+                  <View key={idx} style={[S.spectralTag, { borderColor: line.color + '60' }]}>
+                    <View style={[S.spectralDot, { backgroundColor: line.color }]} />
+                    <Text style={S.spectralNm}>{line.wavelength} nm ({ev} eV)</Text>
+                  </View>
+                );
+              })}
             </View>
             <Text style={S.spectraDesc}>{spectra.description}</Text>
           </View>

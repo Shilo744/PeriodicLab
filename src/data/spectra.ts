@@ -4,6 +4,14 @@ export interface SpectralLine {
   intensity: number; // 0.1 to 1.0
 }
 
+export function getPhotonEnergyEV(wavelengthNm: number): number {
+  return parseFloat((1239.84 / Math.max(1, wavelengthNm)).toFixed(2));
+}
+
+export function getPhotonFrequencyTHz(wavelengthNm: number): number {
+  return parseFloat((299792 / Math.max(1, wavelengthNm)).toFixed(1));
+}
+
 export interface ElementSpectra {
   z: number;
   lines: SpectralLine[];
