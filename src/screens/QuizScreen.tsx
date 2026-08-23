@@ -43,6 +43,7 @@ export default function QuizScreen({
 }) {
   const [mode, setMode] = useState<QuizMode>('3d_atom');
   const [showBlitz, setShowBlitz] = useState(false);
+  const [triviaCategory, setTriviaCategory] = useState<string>('all');
   const [triviaIndex, setTriviaIndex] = useState(0);
   const [selectedOpt, setSelectedOpt] = useState<number | null>(null);
   const [state, setState] = useState<'playing' | 'correct' | 'wrong'>('playing');
@@ -51,7 +52,13 @@ export default function QuizScreen({
   const locked = useRef(false);
   const timerRef = useRef<any>(null);
 
-  const currentTrivia: Question = QUIZZES[triviaIndex % QUIZZES.length];
+  const filteredQuizzes = React.useMemo(() => {
+    if (triviaCategory === 'all') return QUIZZES;
+    return QUIZZES.filter(q => q.category === triviaCategory);
+  }, [triviaCategory]);
+
+  const activeTriviaList = filteredQuizzes.length > 0 ? filteredQuizzes : QUIZZES;
+  const currentTrivia: Question = activeTriviaList[triviaIndex % activeTriviaList.length];
   const el = getElement(z);
   const cat = getCategoryColor(el.category);
 
@@ -264,6 +271,27 @@ export default function QuizScreen({
       ) : (
         /* --- Chemical Theory Trivia Challenge --- */
         <View style={Q.triviaContainer}>
+          {/* Category Filter Chips */}
+          <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+            {['all', 'structure', 'trends', 'bonding', 'history', 'superheavy'].map(catKey => (
+              <TouchableOpacity
+                key={catKey}
+                style={[
+                  { paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: COLORS.borderLight },
+                  triviaCategory === catKey && { backgroundColor: 'rgba(99, 102, 241, 0.2)', borderColor: COLORS.primaryLight }
+                ]}
+                onPress={() => {
+                  setTriviaCategory(catKey);
+                  setTriviaIndex(0);
+                }}
+              >
+                <Text style={{ fontSize: 9, fontWeight: '800', color: triviaCategory === catKey ? COLORS.primaryLight : COLORS.textTertiary }}>
+                  {catKey.toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
           {/* Question Card */}
           <View style={Q.questionCard}>
             <LinearGradient colors={['rgba(99, 102, 241, 0.08)', 'rgba(10, 14, 26, 0.4)']} style={StyleSheet.absoluteFill} />
