@@ -32,6 +32,8 @@ function xpForLevel(level: number): number { return 10 + level * 5; }
 
 type QuizMode = '3d_atom' | 'trivia';
 
+import SpeedBlitzScreen from './SpeedBlitzScreen';
+
 export default function QuizScreen({
   z, elementLevels, discovered, pool,
   onCorrect, onNext,
@@ -40,6 +42,7 @@ export default function QuizScreen({
   pool: number[]; onCorrect: (z: number) => void; onNext: () => void;
 }) {
   const [mode, setMode] = useState<QuizMode>('3d_atom');
+  const [showBlitz, setShowBlitz] = useState(false);
   const [triviaIndex, setTriviaIndex] = useState(0);
   const [selectedOpt, setSelectedOpt] = useState<number | null>(null);
   const [state, setState] = useState<'playing' | 'correct' | 'wrong'>('playing');
@@ -155,6 +158,18 @@ export default function QuizScreen({
 
   const atomSize = H * 0.28;
 
+  if (showBlitz) {
+    return (
+      <SpeedBlitzScreen
+        onFinish={(score, gainedXP) => {
+          setShowBlitz(false);
+          onCorrect(z);
+        }}
+        onClose={() => setShowBlitz(false)}
+      />
+    );
+  }
+
   return (
     <View style={Q.wrap}>
       {/* Header: Mode Selector & Live Streak Badge */}
@@ -172,7 +187,14 @@ export default function QuizScreen({
             onPress={() => { setMode('trivia'); setState('playing'); setSelectedOpt(null); }}
             activeOpacity={0.8}
           >
-            <Text style={[Q.modeTxt, mode === 'trivia' && Q.modeTxtActive]}>Theory Trivia</Text>
+            <Text style={[Q.modeTxt, mode === 'trivia' && Q.modeTxtActive]}>Trivia</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[Q.modeBtn, { backgroundColor: 'rgba(244, 114, 182, 0.15)' }]}
+            onPress={() => setShowBlitz(true)}
+            activeOpacity={0.8}
+          >
+            <Text style={[Q.modeTxt, { color: '#f472b6', fontWeight: '800' }]}>⚡ Blitz</Text>
           </TouchableOpacity>
         </View>
 
