@@ -376,6 +376,25 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
               </View>
             </View>
 
+            {/* Stellar Pathway Quick Presets */}
+            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: 8 }}>
+              {p === 2 && (
+                <TouchableOpacity style={{ backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: COLORS.borderLight }} onPress={() => { setFusionA(1); setFusionB(1); }}>
+                  <Text style={{ fontSize: 9, color: '#fbbf24', fontWeight: '800' }}>☀️ p-p Chain (H + H)</Text>
+                </TouchableOpacity>
+              )}
+              {p === 6 && (
+                <TouchableOpacity style={{ backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: COLORS.borderLight }} onPress={() => { setFusionA(2); setFusionB(4); }}>
+                  <Text style={{ fontSize: 9, color: '#fbbf24', fontWeight: '800' }}>⭐ Triple-Alpha (He + Be)</Text>
+                </TouchableOpacity>
+              )}
+              {p === 26 && (
+                <TouchableOpacity style={{ backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: COLORS.borderLight }} onPress={() => { setFusionA(12); setFusionB(14); }}>
+                  <Text style={{ fontSize: 9, color: '#fbbf24', fontWeight: '800' }}>💥 Supernova Peak (Mg + Si)</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
             {/* Fusion Status Feedback */}
             <Text style={[A.fusionFeedback, { color: isFusionValid ? COLORS.success : '#f87171' }]}>
               {fusionA + fusionB !== p
