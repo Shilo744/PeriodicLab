@@ -18,7 +18,7 @@ interface StudyScreenProps {
   onGoBuilder?: (z: number) => void;
 }
 
-type StudyTab = 'overview' | 'shells' | 'isotopes' | 'spectra';
+type StudyTab = 'overview' | 'shells' | 'isotopes' | 'spectra' | 'thermal';
 
 interface IsotopeInfo {
   massNumber: number;
@@ -65,6 +65,7 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
   const [selectedTab, setSelectedTab] = useState<StudyTab>('overview');
   const [selectedIsotopeIdx, setSelectedIsotopeIdx] = useState(0);
   const [highlightedShell, setHighlightedShell] = useState<number | null>(null);
+  const [tempK, setTempK] = useState(298.15); // Default room temp 25°C
 
   useEffect(() => {
     setP(z);
@@ -144,6 +145,13 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
           activeOpacity={0.8}
         >
           <Text style={[S.tabBtnTxt, selectedTab === 'spectra' && S.tabBtnTxtActive]}>Spectra 🌈</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[S.tabBtn, selectedTab === 'thermal' && S.tabBtnActive]}
+          onPress={() => setSelectedTab('thermal')}
+          activeOpacity={0.8}
+        >
+          <Text style={[S.tabBtnTxt, selectedTab === 'thermal' && S.tabBtnTxtActive]}>Thermal 🌡️</Text>
         </TouchableOpacity>
       </View>
 
@@ -323,6 +331,67 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
             <Text style={S.spectraDesc}>{spectra.description}</Text>
           </View>
         )}
+
+        {selectedTab === 'thermal' && (() => {
+          const mpC = el.meltingPoint !== undefined ? el.meltingPoint : 1000;
+          const bpC = el.boilingPoint !== undefined ? el.boilingPoint : 2500;
+          const mpK = mpC + 273.15;
+          const bpK = bpC + 273.15;
+          const curC = tempK - 273.15;
+
+          let phaseName = 'SOLID 🧊';
+          let phaseColor = '#60a5fa';
+          if (tempK >= 5000) {
+            phaseName = 'PLASMA ⚡';
+            phaseColor = '#f43f5e';
+          } else if (tempK >= bpK) {
+            phaseName = 'GAS 💨';
+            phaseColor = '#fbbf24';
+          } else if (tempK >= mpK) {
+            phaseName = 'LIQUID 💧';
+            phaseColor = '#34d399';
+          }
+
+          return (
+            <View style={S.thermalContainer}>
+              <Text style={S.sectionHeading}>THERMAL PHASE TRANSITION SIMULATOR</Text>
+              
+              {/* Temperature Readout */}
+              <View style={S.tempHUD}>
+                <Text style={[S.tempVal, { color: phaseColor }]}>{Math.round(tempK)} K</Text>
+                <Text style={S.tempSub}>({curC.toFixed(1)} °C)</Text>
+                <View style={[S.phasePill, { backgroundColor: phaseColor + '20', borderColor: phaseColor }]}>
+                  <Text style={[S.phaseTxt, { color: phaseColor }]}>{phaseName}</Text>
+                </View>
+              </View>
+
+              {/* Thermal Step Buttons */}
+              <View style={S.tempBtnsRow}>
+                <TouchableOpacity style={S.tempBtn} onPress={() => setTempK(t => Math.max(0, t - 200))}>
+                  <Text style={S.tempBtnTxt}>-200K</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={S.tempBtn} onPress={() => setTempK(t => Math.max(0, t - 50))}>
+                  <Text style={S.tempBtnTxt}>-50K</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={S.tempBtn} onPress={() => setTempK(298.15)}>
+                  <Text style={[S.tempBtnTxt, { color: '#fbbf24' }]}>25°C</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={S.tempBtn} onPress={() => setTempK(t => Math.min(6000, t + 50))}>
+                  <Text style={S.tempBtnTxt}>+50K</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={S.tempBtn} onPress={() => setTempK(t => Math.min(6000, t + 200))}>
+                  <Text style={S.tempBtnTxt}>+200K</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Phase thresholds meta */}
+              <View style={S.phaseMetaRow}>
+                <Text style={S.phaseMeta}>Melting Point: {mpK.toFixed(0)} K ({mpC}°C)</Text>
+                <Text style={S.phaseMeta}>Boiling Point: {bpK.toFixed(0)} K ({bpC}°C)</Text>
+              </View>
+            </View>
+          );
+        })()}
 
         {/* Action Button for undiscovered elements */}
         {!isDiscovered && onGoBuilder && (
@@ -652,5 +721,65 @@ const S = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     color: '#ffffff',
+  },
+
+  // Thermal simulator styles
+  thermalContainer: {
+    paddingVertical: 4,
+  },
+  tempHUD: {
+    alignItems: 'center',
+    marginVertical: 4,
+  },
+  tempVal: {
+    fontSize: 22,
+    fontWeight: '900',
+  },
+  tempSub: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    marginTop: 1,
+  },
+  phasePill: {
+    marginTop: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+  },
+  phaseTxt: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  tempBtnsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
+    marginVertical: 8,
+  },
+  tempBtn: {
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+  },
+  tempBtnTxt: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.textSecondary,
+  },
+  phaseMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.04)',
+  },
+  phaseMeta: {
+    fontSize: 9,
+    color: COLORS.textTertiary,
   },
 });
