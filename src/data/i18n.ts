@@ -25,6 +25,11 @@ export const STRINGS = {
     neutrons: 'Neutrons',
     electrons: 'Electrons',
     mass: 'Mass (u)',
+    blitz: 'Speed Blitz',
+    thermal: 'Thermal Phase',
+    spectra: 'Emission Spectra',
+    molecules: 'Molecular Lab',
+    profile: 'Lab Dossier',
   },
   he: {
     appTitle: 'מעבדה מחזורית',
@@ -50,6 +55,11 @@ export const STRINGS = {
     neutrons: 'נויטרונים',
     electrons: 'אלקטרונים',
     mass: 'מסה (u)',
+    blitz: 'אתגר בזק 60 שניות',
+    thermal: 'מעברי פאזה וטמפרטורה',
+    spectra: 'ספקטרום פליטה אופטי',
+    molecules: 'מעבדת מולקולות',
+    profile: 'תיק מחקר ומדען',
   }
 };
 
