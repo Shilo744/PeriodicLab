@@ -86,6 +86,9 @@ export default function FlashcardScreen({ onClose, onMasterElement }: FlashcardS
           }}><Text style={[FC.filterText, deckFilter === filter && FC.filterTextActive]}>{filter}</Text></TouchableOpacity>
         ))}
       </ScrollView>
+      <View style={FC.progressTrack} accessibilityLabel={`${masteredZList.length} mastered flashcards`}>
+        <LinearGradient colors={['#34d399', '#22d3ee']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[FC.progressFill, { width: `${Math.min(100, (masteredZList.length / 36) * 100)}%` }]} />
+      </View>
 
       {/* Interactive Flip Card */}
       <TouchableOpacity style={FC.cardContainer} onPress={flipCard} activeOpacity={0.9}>
@@ -174,6 +177,8 @@ const FC = StyleSheet.create({
   filterChipActive: { backgroundColor: 'rgba(99,102,241,0.18)', borderColor: COLORS.primaryLight },
   filterText: { color: COLORS.textTertiary, fontSize: 10, fontWeight: '700' },
   filterTextActive: { color: COLORS.primaryLight },
+  progressTrack: { height: 5, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.06)', overflow: 'hidden', marginBottom: 8 },
+  progressFill: { height: '100%', borderRadius: 3 },
   closeTxt: {
     color: COLORS.textSecondary,
     fontSize: 14,
