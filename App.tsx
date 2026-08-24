@@ -24,6 +24,7 @@ import { Locale, t } from './src/data/i18n';
 import { triggerHaptic, playSound, isAudioMuted, setAudioMuted, toggleAudioMuted } from './src/services/feedback';
 import FlashcardScreen from './src/screens/FlashcardScreen';
 import ReactionLabScreen from './src/screens/ReactionLabScreen';
+import { validateScientificData } from './src/data/validation';
 
 type Tab = 'home' | 'table' | 'study' | 'builder' | 'quiz';
 
@@ -366,6 +367,13 @@ export default function App() {
   const [quizZ, setQuizZ] = useState(() => pickFromPool(INITIAL_POOL, {}));
   const [showFlashcards, setShowFlashcards] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
+
+  useEffect(() => {
+    if (__DEV__) {
+      const result = validateScientificData();
+      if (!result.valid) console.warn('Scientific data validation issues:', result.errors);
+    }
+  }, []);
 
   const toggleLocale = useCallback(() => {
     triggerHaptic('light');
