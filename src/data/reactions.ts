@@ -13,6 +13,22 @@ export interface ChemicalReaction {
 
 export const REACTIONS: ChemicalReaction[] = [
   {
+    id: 'strong_acid_base', name: 'Hydrochloric Acid Neutralization', nameHe: 'סתירת חומצה הידרוכלורית',
+    equation: 'HCl + NaOH ➔ NaCl + H₂O',
+    reactants: [{ formula: 'HCl', count: 1, name: 'Hydrochloric Acid' }, { formula: 'NaOH', count: 1, name: 'Sodium Hydroxide' }],
+    products: [{ formula: 'NaCl', count: 1, name: 'Sodium Chloride' }, { formula: 'H₂O', count: 1, name: 'Water' }],
+    type: 'neutralization', enthalpy: 'Exothermic (ΔH ≈ -57 kJ/mol)',
+    description: 'A strong acid and strong base exchange ions to form water and dissolved table salt.', xpReward: 85,
+  },
+  {
+    id: 'sulfuric_neutralization', name: 'Sulfuric Acid Neutralization', nameHe: 'סתירת חומצה גופרתית',
+    equation: 'H₂SO₄ + 2KOH ➔ K₂SO₄ + 2H₂O',
+    reactants: [{ formula: 'H₂SO₄', count: 1, name: 'Sulfuric Acid' }, { formula: 'KOH', count: 2, name: 'Potassium Hydroxide' }],
+    products: [{ formula: 'K₂SO₄', count: 1, name: 'Potassium Sulfate' }, { formula: 'H₂O', count: 2, name: 'Water' }],
+    type: 'neutralization', enthalpy: 'Exothermic acid-base reaction',
+    description: 'A diprotic acid consumes two hydroxide ions, demonstrating stoichiometric coefficients.', xpReward: 105,
+  },
+  {
     id: 'water_synthesis',
     name: 'Hydrogen Combustion (Water Synthesis)',
     nameHe: 'שריפת מימן (סינתוז מים)',
