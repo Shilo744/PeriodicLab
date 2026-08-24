@@ -23,6 +23,7 @@ import {
 import { Locale, t } from './src/data/i18n';
 import { triggerHaptic, playSound, isAudioMuted, toggleAudioMuted } from './src/services/feedback';
 import FlashcardScreen from './src/screens/FlashcardScreen';
+import ReactionLabScreen from './src/screens/ReactionLabScreen';
 
 type Tab = 'home' | 'table' | 'study' | 'builder' | 'quiz';
 
@@ -124,12 +125,13 @@ import ProfileScreen from './src/screens/ProfileScreen';
 
 function HomeScreen({ 
   xp, discovered, levels, studyPool, unlockedAchievements, dailyStreak, locale, onToggleLocale,
-  onGoStudy, onGoQuiz, onGoBuilder, onGoTable, onGoFlashcards, onSelectElement
+  onGoStudy, onGoQuiz, onGoBuilder, onGoTable, onGoFlashcards, onGoReactions, onSelectElement
 }: {
   xp: number; discovered: number[]; levels: Record<number, number>; studyPool: number[];
   unlockedAchievements: string[]; dailyStreak: number; locale: Locale; onToggleLocale: () => void;
   onGoStudy: () => void; onGoQuiz: () => void; onGoBuilder: () => void; onGoTable: () => void;
   onGoFlashcards: () => void;
+  onGoReactions: () => void;
   onSelectElement: (z: number) => void;
 }) {
   const [showProfile, setShowProfile] = useState(false);
@@ -255,6 +257,11 @@ function HomeScreen({
             <Text style={HS.moduleDesc}>{t('builderDesc', locale)}</Text>
           </View>
         </TouchableOpacity>
+        <TouchableOpacity style={HS.moduleCard} onPress={onGoReactions} activeOpacity={0.85}>
+          <LinearGradient colors={['rgba(251, 146, 60, 0.10)', 'rgba(251, 146, 60, 0.01)']} style={StyleSheet.absoluteFill} />
+          <View style={[HS.iconWrapper, { backgroundColor: 'rgba(251, 146, 60, 0.12)' }]}><Text style={{ fontSize: 18 }}>⚗️</Text></View>
+          <View style={HS.moduleTextContainer}><Text style={HS.moduleLabel}>Reaction Lab</Text><Text style={HS.moduleDesc}>Run and inspect balanced equations</Text></View>
+        </TouchableOpacity>
       </View>
 
       <View style={HS.actionRow}>
@@ -356,6 +363,7 @@ export default function App() {
   const [studyZ, setStudyZ] = useState(6);
   const [quizZ, setQuizZ] = useState(() => pickFromPool(INITIAL_POOL, {}));
   const [showFlashcards, setShowFlashcards] = useState(false);
+  const [showReactions, setShowReactions] = useState(false);
 
   const toggleLocale = useCallback(() => {
     triggerHaptic('light');
@@ -473,6 +481,7 @@ export default function App() {
         onGoBuilder={() => setTab('builder')} 
         onGoTable={() => setTab('table')} 
         onGoFlashcards={() => setShowFlashcards(true)}
+        onGoReactions={() => setShowReactions(true)}
         onSelectElement={(z) => { setStudyZ(z); setTab('builder'); }}
       />
     ),
@@ -484,6 +493,9 @@ export default function App() {
 
   if (showFlashcards) {
     return <FlashcardScreen onClose={() => setShowFlashcards(false)} onMasterElement={handleCorrect} />;
+  }
+  if (showReactions) {
+    return <ReactionLabScreen onClose={() => setShowReactions(false)} />;
   }
 
   return (
