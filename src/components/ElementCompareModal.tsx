@@ -35,7 +35,7 @@ export default function ElementCompareModal({ initialZA = 11, initialZB = 17, on
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={C.scroll}>
             {/* Top Cards Comparison */}
-            <View style={C.cardsRow}>
+          <View style={C.cardsRow}>
               {/* Element A */}
               <View style={[C.elCard, { borderColor: catA }]}>
                 <Text style={[C.sym, { color: catA }]}>{elA.sym}</Text>
@@ -50,6 +50,14 @@ export default function ElementCompareModal({ initialZA = 11, initialZB = 17, on
               {/* VS Divider */}
               <View style={C.vsBadge}>
                 <Text style={C.vsTxt}>VS</Text>
+                <TouchableOpacity
+                  style={C.swapBtn}
+                  onPress={() => { setZA(zB); setZB(zA); }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Swap compared elements"
+                >
+                  <Text style={C.swapTxt}>⇄</Text>
+                </TouchableOpacity>
               </View>
 
               {/* Element B */}
@@ -227,6 +235,8 @@ const C = StyleSheet.create({
     fontWeight: '900',
     color: COLORS.textTertiary,
   },
+  swapBtn: { marginTop: 8, width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(34,211,238,0.12)', alignItems: 'center', justifyContent: 'center' },
+  swapTxt: { color: '#22d3ee', fontSize: 17, fontWeight: '900' },
   tableContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.02)',
     borderRadius: RADIUS.md,
