@@ -16,15 +16,15 @@ interface ProfileScreenProps {
 }
 
 const CATEGORIES: { key: ElementCategory; label: string }[] = [
-  { key: 'alkali', label: 'Alkali Metals' },
-  { key: 'alkaline', label: 'Alkaline Earth' },
-  { key: 'transition', label: 'Transition Metals' },
-  { key: 'post-transition', label: 'Post-Transition' },
-  { key: 'metalloid', label: 'Metalloids' },
-  { key: 'nonmetal', label: 'Reactive Nonmetals' },
-  { key: 'noble', label: 'Noble Gases' },
-  { key: 'lanthanide', label: 'Lanthanides' },
-  { key: 'actinide', label: 'Actinides' },
+  { key: 'Alkali metal', label: 'Alkali Metals' },
+  { key: 'Alkaline earth', label: 'Alkaline Earth' },
+  { key: 'Transition metal', label: 'Transition Metals' },
+  { key: 'Post-transition', label: 'Post-Transition' },
+  { key: 'Metalloid', label: 'Metalloids' },
+  { key: 'Nonmetal', label: 'Reactive Nonmetals' },
+  { key: 'Noble gas', label: 'Noble Gases' },
+  { key: 'Lanthanide', label: 'Lanthanides' },
+  { key: 'Actinide', label: 'Actinides' },
 ];
 
 export default function ProfileScreen({

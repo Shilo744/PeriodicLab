@@ -1,3 +1,5 @@
+export type ElementCategory = 'Nonmetal' | 'Noble gas' | 'Alkali metal' | 'Alkaline earth' | 'Metalloid' | 'Post-transition' | 'Transition metal' | 'Halogen' | 'Actinide' | 'Lanthanide' | 'Unknown';
+
 export interface Element {
   z: number;
   sym: string;
@@ -5,7 +7,7 @@ export interface Element {
   nameEn: string;
   state: 'solid' | 'liquid' | 'gas' | 'unknown';
   color: string;
-  category: string;
+  category: ElementCategory;
   desc: string;
   mass: number;
   stableNeutrons: number;
