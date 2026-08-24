@@ -109,6 +109,21 @@ export default function ElementCompareModal({ initialZA = 11, initialZB = 17, on
                 <Text style={C.colLabel}>MELTING POINT</Text>
                 <Text style={C.colVal}>{elB.meltingPoint !== undefined ? `${elB.meltingPoint}°C` : 'N/A'}</Text>
               </View>
+              <View style={C.tableRow}>
+                <Text style={C.colVal}>{elA.atomicRadius ? `${elA.atomicRadius} pm` : 'N/A'}</Text>
+                <Text style={C.colLabel}>ATOMIC RADIUS</Text>
+                <Text style={C.colVal}>{elB.atomicRadius ? `${elB.atomicRadius} pm` : 'N/A'}</Text>
+              </View>
+              <View style={C.tableRow}>
+                <Text style={C.colVal}>{elA.ionizationEnergy ? `${elA.ionizationEnergy} kJ/mol` : 'N/A'}</Text>
+                <Text style={C.colLabel}>IONIZATION ENERGY</Text>
+                <Text style={C.colVal}>{elB.ionizationEnergy ? `${elB.ionizationEnergy} kJ/mol` : 'N/A'}</Text>
+              </View>
+              <View style={C.tableRow}>
+                <Text style={C.colVal}>{elA.crystalStructure ?? 'N/A'}</Text>
+                <Text style={C.colLabel}>CRYSTAL STRUCTURE</Text>
+                <Text style={C.colVal}>{elB.crystalStructure ?? 'N/A'}</Text>
+              </View>
             </View>
 
             {/* Electronegativity Difference & Bond Characterization */}
