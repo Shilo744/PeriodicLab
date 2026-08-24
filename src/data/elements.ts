@@ -17,6 +17,9 @@ export interface Element {
   density?: number;
   meltingPoint?: number;
   boilingPoint?: number;
+  crystalStructure?: string; // e.g. 'FCC', 'BCC', 'HCP', 'Diamond Cubic'
+  ionizationEnergy?: number; // kJ/mol
+  atomicRadius?: number; // pm
 }
 
 export const ELEMENTS: Element[] = [
@@ -24,37 +27,43 @@ export const ELEMENTS: Element[] = [
     z: 1, sym: 'H', name: 'Hydrogen', nameEn: 'Hydrogen', state: 'gas', color: '#e8e8e8', category: 'Nonmetal',
     desc: 'Lightest and most abundant element in the universe. Colorless, odorless, highly flammable diatomic gas.',
     mass: 1.008, stableNeutrons: 0, shells: [1], discovered: 1766, discoveredBy: 'Henry Cavendish',
-    electronConfig: '1s¹', electronegativity: 2.20, density: 0.00008988, meltingPoint: -259.16, boilingPoint: -252.87
+    electronConfig: '1s¹', electronegativity: 2.20, density: 0.00008988, meltingPoint: -259.16, boilingPoint: -252.87,
+    crystalStructure: 'Hexagonal', ionizationEnergy: 1312, atomicRadius: 53
   },
   {
     z: 2, sym: 'He', name: 'Helium', nameEn: 'Helium', state: 'gas', color: '#d6d6e0', category: 'Noble gas',
     desc: 'Inert, colorless noble gas. Second lightest and second most abundant element in the observable universe.',
     mass: 4.0026, stableNeutrons: 2, shells: [2], discovered: 1868, discoveredBy: 'Pierre Janssen, Norman Lockyer',
-    electronConfig: '1s²', electronegativity: undefined, density: 0.0001785, meltingPoint: -272.20, boilingPoint: -268.93
+    electronConfig: '1s²', electronegativity: undefined, density: 0.0001785, meltingPoint: -272.20, boilingPoint: -268.93,
+    crystalStructure: 'HCP', ionizationEnergy: 2372, atomicRadius: 31
   },
   {
     z: 3, sym: 'Li', name: 'Lithium', nameEn: 'Lithium', state: 'solid', color: '#c0c0c0', category: 'Alkali metal',
     desc: 'Soft, silvery-white alkali metal. Lightest metal and least dense solid element under standard conditions.',
     mass: 6.94, stableNeutrons: 4, shells: [2, 1], discovered: 1817, discoveredBy: 'Johan August Arfwedson',
-    electronConfig: '[He] 2s¹', electronegativity: 0.98, density: 0.534, meltingPoint: 180.54, boilingPoint: 1342
+    electronConfig: '[He] 2s¹', electronegativity: 0.98, density: 0.534, meltingPoint: 180.54, boilingPoint: 1342,
+    crystalStructure: 'BCC', ionizationEnergy: 520, atomicRadius: 167
   },
   {
     z: 4, sym: 'Be', name: 'Beryllium', nameEn: 'Beryllium', state: 'solid', color: '#a0a0a0', category: 'Alkaline earth',
     desc: 'Relatively rare, divalent alkaline earth metal. Steel-gray, strong, lightweight and brittle.',
     mass: 9.0122, stableNeutrons: 5, shells: [2, 2], discovered: 1798, discoveredBy: 'Louis-Nicolas Vauquelin',
-    electronConfig: '[He] 2s²', electronegativity: 1.57, density: 1.85, meltingPoint: 1287, boilingPoint: 2470
+    electronConfig: '[He] 2s²', electronegativity: 1.57, density: 1.85, meltingPoint: 1287, boilingPoint: 2470,
+    crystalStructure: 'HCP', ionizationEnergy: 899, atomicRadius: 112
   },
   {
     z: 5, sym: 'B', name: 'Boron', nameEn: 'Boron', state: 'solid', color: '#8a6e45', category: 'Metalloid',
     desc: 'Low-abundance metalloid synthesized entirely by cosmic ray spallation and supernovae.',
     mass: 10.81, stableNeutrons: 6, shells: [2, 3], discovered: 1808, discoveredBy: 'Joseph Louis Gay-Lussac, Louis Jacques Thénard',
-    electronConfig: '[He] 2s² 2p¹', electronegativity: 2.04, density: 2.34, meltingPoint: 2076, boilingPoint: 3927
+    electronConfig: '[He] 2s² 2p¹', electronegativity: 2.04, density: 2.34, meltingPoint: 2076, boilingPoint: 3927,
+    crystalStructure: 'Rhombohedral', ionizationEnergy: 801, atomicRadius: 87
   },
   {
     z: 6, sym: 'C', name: 'Carbon', nameEn: 'Carbon', state: 'solid', color: '#404040', category: 'Nonmetal',
     desc: 'Basis of all known organic life. Forms versatile allotropes including graphite, diamond, and graphene.',
     mass: 12.011, stableNeutrons: 6, shells: [2, 4], discovered: 'Ancient', discoveredBy: 'Known to antiquity',
-    electronConfig: '[He] 2s² 2p²', electronegativity: 2.55, density: 2.267, meltingPoint: 3550, boilingPoint: 4827
+    electronConfig: '[He] 2s² 2p²', electronegativity: 2.55, density: 2.267, meltingPoint: 3550, boilingPoint: 4827,
+    crystalStructure: 'Diamond Cubic / Hexagonal', ionizationEnergy: 1086, atomicRadius: 67
   },
   {
     z: 7, sym: 'N', name: 'Nitrogen', nameEn: 'Nitrogen', state: 'gas', color: '#c0d0e0', category: 'Nonmetal',
