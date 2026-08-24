@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { getElement, ELEMENTS } from '../data/elements';
 import { COLORS, RADIUS, getCategoryColor, SHADOWS } from '../theme';
 import { isElementUnlocked } from '../data/storage';
+import ElementCompareModal from './ElementCompareModal';
 
 const CS = 34;
 const GAP = 3;
@@ -51,6 +52,7 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [selectedEl, setSelectedEl] = useState<number | null>(null);
+  const [comparePair, setComparePair] = useState<[number, number] | null>(null);
 
   // Check matching criteria for any element Z
   const matchesSearchAndFilter = (z: number): boolean => {
@@ -153,6 +155,16 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
 
             {/* Action Buttons */}
             <View style={T.modalActions}>
+              <TouchableOpacity
+                style={[T.actionBtn, { backgroundColor: 'rgba(34, 211, 238, 0.14)', borderColor: 'rgba(34, 211, 238, 0.4)' }]}
+                onPress={() => {
+                  setComparePair([selectedEl, selectedEl === 118 ? 117 : selectedEl + 1]);
+                  setSelectedEl(null);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={[T.actionBtnTxt, { color: '#22d3ee' }]}>⚖ Compare</Text>
+              </TouchableOpacity>
               {onSelect && (
                 <TouchableOpacity
                   style={[T.actionBtn, { backgroundColor: 'rgba(99, 102, 241, 0.2)', borderColor: 'rgba(99, 102, 241, 0.4)' }]}
@@ -352,6 +364,13 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
 
       {/* Render Quick Card Modal */}
       {renderQuickCardModal()}
+      {comparePair && (
+        <ElementCompareModal
+          initialZA={comparePair[0]}
+          initialZB={comparePair[1]}
+          onClose={() => setComparePair(null)}
+        />
+      )}
     </View>
   );
 }
