@@ -8,7 +8,24 @@ const KEYS = {
   DAILY: 'periodic_lab_daily',
   FLASHCARDS: 'periodic_lab_flashcards',
   FAVORITE_REACTIONS: 'periodic_lab_favorite_reactions',
+  PREFERENCES: 'periodic_lab_preferences',
 };
+
+export interface AppPreferences { locale: 'en' | 'he'; audioMuted: boolean; }
+const DEFAULT_PREFERENCES: AppPreferences = { locale: 'en', audioMuted: false };
+
+export async function loadPreferences(): Promise<AppPreferences> {
+  try {
+    const value = await AsyncStorage.getItem(KEYS.PREFERENCES);
+    return value ? { ...DEFAULT_PREFERENCES, ...JSON.parse(value) } : DEFAULT_PREFERENCES;
+  } catch { return memoryCache[KEYS.PREFERENCES] ? { ...DEFAULT_PREFERENCES, ...JSON.parse(memoryCache[KEYS.PREFERENCES]) } : DEFAULT_PREFERENCES; }
+}
+
+export async function savePreferences(update: Partial<AppPreferences>): Promise<void> {
+  const value = JSON.stringify({ ...(await loadPreferences()), ...update });
+  try { await AsyncStorage.setItem(KEYS.PREFERENCES, value); }
+  catch { memoryCache[KEYS.PREFERENCES] = value; }
+}
 
 export async function saveFavoriteReactions(ids: string[]): Promise<void> {
   const value = JSON.stringify([...new Set(ids)]);

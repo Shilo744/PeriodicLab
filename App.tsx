@@ -14,14 +14,14 @@ import {
   saveLevels, loadLevels, 
   saveStudyPool, loadStudyPool,
   saveAchievements, loadAchievements,
-  updateDailyStreak
+  updateDailyStreak, loadPreferences, savePreferences
 } from './src/data/storage';
 import { 
   ACHIEVEMENTS_LIST, CHAPTERS, 
   checkAchievements, getDailyFeaturedElement 
 } from './src/data/achievements';
 import { Locale, t } from './src/data/i18n';
-import { triggerHaptic, playSound, isAudioMuted, toggleAudioMuted } from './src/services/feedback';
+import { triggerHaptic, playSound, isAudioMuted, setAudioMuted, toggleAudioMuted } from './src/services/feedback';
 import FlashcardScreen from './src/screens/FlashcardScreen';
 import ReactionLabScreen from './src/screens/ReactionLabScreen';
 
@@ -136,6 +136,7 @@ function HomeScreen({
 }) {
   const [showProfile, setShowProfile] = useState(false);
   const [mutedState, setMutedState] = useState(isAudioMuted());
+  useEffect(() => { loadPreferences().then(p => setMutedState(p.audioMuted)); }, []);
   const league = getLeague(xp);
   const nextXP = xp < 100 ? 100 : xp < 500 ? 500 : xp < 1500 ? 1500 : xp < 5000 ? 5000 : 0;
   const nextPct = nextXP ? Math.round((xp / nextXP) * 100) : 100;
@@ -172,6 +173,7 @@ function HomeScreen({
               onPress={() => {
                 const nowMuted = toggleAudioMuted();
                 setMutedState(nowMuted);
+                savePreferences({ audioMuted: nowMuted });
               }} 
               activeOpacity={0.75}
             >
@@ -368,7 +370,11 @@ export default function App() {
   const toggleLocale = useCallback(() => {
     triggerHaptic('light');
     playSound('click');
-    setLocale(l => (l === 'en' ? 'he' : 'en'));
+    setLocale(l => {
+      const next = l === 'en' ? 'he' : 'en';
+      savePreferences({ locale: next });
+      return next;
+    });
   }, []);
 
   // Initial loading from Storage
@@ -379,12 +385,15 @@ export default function App() {
       const savedPool = await loadStudyPool(INITIAL_POOL);
       const savedAch = await loadAchievements();
       const savedDaily = await updateDailyStreak();
+      const preferences = await loadPreferences();
       
       setTotalXP(savedXP);
       setElementLevels(savedLevels);
       setStudyPool(savedPool);
       setUnlockedAchievements(savedAch);
       setDailyStreak(savedDaily.streak);
+      setLocale(preferences.locale);
+      setAudioMuted(preferences.audioMuted);
       
       setQuizZ(pickFromPool(savedPool, savedLevels));
     }
