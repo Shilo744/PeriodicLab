@@ -35,6 +35,7 @@ export function triggerHaptic(type: 'light' | 'medium' | 'success' | 'error' = '
   } catch (e) {
     // Ignore if vibration is not supported or blocked
   }
+}
 let audioMuted = false;
 
 export function isAudioMuted(): boolean {
@@ -53,13 +54,41 @@ export function toggleAudioMuted(): boolean {
 /**
  * Play procedural sound cues
  */
-export function playSound(effect: 'click' | 'success' | 'error' | 'synthesize') {
+export function playSound(effect: 'click' | 'success' | 'error' | 'synthesize' | 'fusion' | 'laser') {
   if (audioMuted) return;
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
 
     const now = ctx.currentTime;
+
+    if (effect === 'fusion') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(90, now);
+      osc.frequency.exponentialRampToValueAtTime(320, now + 0.35);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.35);
+      return;
+    } else if (effect === 'laser') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1400, now);
+      osc.frequency.exponentialRampToValueAtTime(600, now + 0.08);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.08);
+      return;
+    }
 
     if (effect === 'click') {
       const osc = ctx.createOscillator();
