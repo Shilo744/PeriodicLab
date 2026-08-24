@@ -151,6 +151,24 @@ export async function loadDailyStreak(): Promise<{ streak: number; lastDate: str
   return { streak: 1, lastDate: new Date().toISOString().split('T')[0] };
 }
 
+function localDateKey(date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export async function updateDailyStreak(): Promise<{ streak: number; lastDate: string }> {
+  const saved = await loadDailyStreak();
+  const today = localDateKey();
+  if (saved.lastDate === today) return saved;
+  const yesterdayDate = new Date();
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const streak = saved.lastDate === localDateKey(yesterdayDate) ? saved.streak + 1 : 1;
+  await saveDailyStreak(streak, today);
+  return { streak, lastDate: today };
+}
+
 export function isElementUnlocked(z: number, xp: number, levels: Record<number, number>): boolean {
   if (z <= 3) return true; // H, He, Li are unlocked by default
   const prevLevel = levels[z - 1] || 0;

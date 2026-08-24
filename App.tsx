@@ -14,7 +14,7 @@ import {
   saveLevels, loadLevels, 
   saveStudyPool, loadStudyPool,
   saveAchievements, loadAchievements,
-  saveDailyStreak, loadDailyStreak
+  updateDailyStreak
 } from './src/data/storage';
 import { 
   ACHIEVEMENTS_LIST, CHAPTERS, 
@@ -378,7 +378,7 @@ export default function App() {
       const savedLevels = await loadLevels();
       const savedPool = await loadStudyPool(INITIAL_POOL);
       const savedAch = await loadAchievements();
-      const savedDaily = await loadDailyStreak();
+      const savedDaily = await updateDailyStreak();
       
       setTotalXP(savedXP);
       setElementLevels(savedLevels);
