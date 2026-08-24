@@ -22,6 +22,7 @@ import {
 } from './src/data/achievements';
 import { Locale, t } from './src/data/i18n';
 import { triggerHaptic, playSound, isAudioMuted, toggleAudioMuted } from './src/services/feedback';
+import FlashcardScreen from './src/screens/FlashcardScreen';
 
 type Tab = 'home' | 'table' | 'study' | 'builder' | 'quiz';
 
@@ -123,11 +124,12 @@ import ProfileScreen from './src/screens/ProfileScreen';
 
 function HomeScreen({ 
   xp, discovered, levels, studyPool, unlockedAchievements, dailyStreak, locale, onToggleLocale,
-  onGoStudy, onGoQuiz, onGoBuilder, onGoTable, onSelectElement
+  onGoStudy, onGoQuiz, onGoBuilder, onGoTable, onGoFlashcards, onSelectElement
 }: {
   xp: number; discovered: number[]; levels: Record<number, number>; studyPool: number[];
   unlockedAchievements: string[]; dailyStreak: number; locale: Locale; onToggleLocale: () => void;
   onGoStudy: () => void; onGoQuiz: () => void; onGoBuilder: () => void; onGoTable: () => void;
+  onGoFlashcards: () => void;
   onSelectElement: (z: number) => void;
 }) {
   const [showProfile, setShowProfile] = useState(false);
@@ -256,6 +258,19 @@ function HomeScreen({
       </View>
 
       <View style={HS.actionRow}>
+        <TouchableOpacity style={HS.moduleCard} onPress={onGoFlashcards} activeOpacity={0.85}>
+          <LinearGradient colors={['rgba(52, 211, 153, 0.10)', 'rgba(52, 211, 153, 0.01)']} style={StyleSheet.absoluteFill} />
+          <View style={[HS.iconWrapper, { backgroundColor: 'rgba(52, 211, 153, 0.12)' }]}>
+            <Text style={{ fontSize: 18 }}>🧠</Text>
+          </View>
+          <View style={HS.moduleTextContainer}>
+            <Text style={HS.moduleLabel}>Flashcards</Text>
+            <Text style={HS.moduleDesc}>Recall element facts and track mastery</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      <View style={HS.actionRow}>
         <TouchableOpacity style={HS.moduleCard} onPress={onGoQuiz} activeOpacity={0.85}>
           <LinearGradient colors={['rgba(244, 114, 182, 0.08)', 'rgba(244, 114, 182, 0.01)']} style={StyleSheet.absoluteFill} />
           <View style={[HS.iconWrapper, { backgroundColor: 'rgba(244, 114, 182, 0.12)' }]}>
@@ -340,6 +355,7 @@ export default function App() {
   const [dailyStreak, setDailyStreak] = useState(1);
   const [studyZ, setStudyZ] = useState(6);
   const [quizZ, setQuizZ] = useState(() => pickFromPool(INITIAL_POOL, {}));
+  const [showFlashcards, setShowFlashcards] = useState(false);
 
   const toggleLocale = useCallback(() => {
     triggerHaptic('light');
@@ -456,6 +472,7 @@ export default function App() {
         onGoQuiz={() => setTab('quiz')} 
         onGoBuilder={() => setTab('builder')} 
         onGoTable={() => setTab('table')} 
+        onGoFlashcards={() => setShowFlashcards(true)}
         onSelectElement={(z) => { setStudyZ(z); setTab('builder'); }}
       />
     ),
@@ -464,6 +481,10 @@ export default function App() {
     quiz: <QuizScreen z={quizZ} elementLevels={elementLevels} discovered={discovered} pool={studyPool} onCorrect={handleCorrect} onNext={handleNextQuiz} />,
     table: <PeriodicTable discovered={discovered} levels={elementLevels} xp={totalXP} onSelect={handleSelectTableElement} onGoBuilder={(z) => { setStudyZ(z); setTab('builder'); }} />,
   }[tab];
+
+  if (showFlashcards) {
+    return <FlashcardScreen onClose={() => setShowFlashcards(false)} onMasterElement={handleCorrect} />;
+  }
 
   return (
     <View style={S.root}>
