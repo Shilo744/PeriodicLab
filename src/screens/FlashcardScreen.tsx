@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getElement, ELEMENTS } from '../data/elements';
 import { COLORS, RADIUS, SHADOWS, getCategoryColor } from '../theme';
@@ -7,6 +7,7 @@ import { triggerHaptic, playSound } from '../services/feedback';
 import { loadMasteredFlashcards, saveMasteredFlashcards } from '../data/storage';
 
 const { width: W, height: H } = Dimensions.get('window');
+const DECK_FILTERS = ['All', 'Nonmetal', 'Noble gas', 'Metal'] as const;
 
 interface FlashcardScreenProps {
   onClose: () => void;
@@ -18,6 +19,7 @@ export default function FlashcardScreen({ onClose, onMasterElement }: FlashcardS
   const [isFlipped, setIsFlipped] = useState(false);
   const [masteredZList, setMasteredZList] = useState<number[]>([]);
   const [deck, setDeck] = useState(() => ELEMENTS.slice(0, 36));
+  const [deckFilter, setDeckFilter] = useState<(typeof DECK_FILTERS)[number]>('All');
 
   useEffect(() => {
     loadMasteredFlashcards().then(setMasteredZList);
@@ -70,6 +72,20 @@ export default function FlashcardScreen({ onClose, onMasterElement }: FlashcardS
           <TouchableOpacity style={FC.closeBtn} onPress={onClose}><Text style={FC.closeTxt}>✕</Text></TouchableOpacity>
         </View>
       </View>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={FC.filters} contentContainerStyle={FC.filtersContent}>
+        {DECK_FILTERS.map(filter => (
+          <TouchableOpacity key={filter} style={[FC.filterChip, deckFilter === filter && FC.filterChipActive]} onPress={() => {
+            const base = ELEMENTS.slice(0, 36);
+            const metalFamilies = ['Alkali metal', 'Alkaline earth', 'Transition metal', 'Post-transition'];
+            const next = filter === 'All' ? base : filter === 'Metal' ? base.filter(el => metalFamilies.includes(el.category)) : base.filter(el => el.category === filter);
+            setDeckFilter(filter);
+            setDeck(next);
+            setCurrentIdx(0);
+            setIsFlipped(false);
+          }}><Text style={[FC.filterText, deckFilter === filter && FC.filterTextActive]}>{filter}</Text></TouchableOpacity>
+        ))}
+      </ScrollView>
 
       {/* Interactive Flip Card */}
       <TouchableOpacity style={FC.cardContainer} onPress={flipCard} activeOpacity={0.9}>
@@ -152,6 +168,12 @@ const FC = StyleSheet.create({
     justifyContent: 'center',
   },
   headerActions: { flexDirection: 'row', gap: 8 },
+  filters: { flexGrow: 0, marginVertical: 10 },
+  filtersContent: { gap: 8 },
+  filterChip: { paddingHorizontal: 11, paddingVertical: 6, borderRadius: RADIUS.full, borderWidth: 1, borderColor: COLORS.border },
+  filterChipActive: { backgroundColor: 'rgba(99,102,241,0.18)', borderColor: COLORS.primaryLight },
+  filterText: { color: COLORS.textTertiary, fontSize: 10, fontWeight: '700' },
+  filterTextActive: { color: COLORS.primaryLight },
   closeTxt: {
     color: COLORS.textSecondary,
     fontSize: 14,
