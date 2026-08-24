@@ -6,7 +6,27 @@ const KEYS = {
   POOL: 'periodic_lab_pool',
   ACHIEVEMENTS: 'periodic_lab_achievements',
   DAILY: 'periodic_lab_daily',
+  FLASHCARDS: 'periodic_lab_flashcards',
 };
+
+export async function saveMasteredFlashcards(elements: number[]): Promise<void> {
+  const value = JSON.stringify([...new Set(elements)]);
+  try {
+    await AsyncStorage.setItem(KEYS.FLASHCARDS, value);
+  } catch (err) {
+    memoryCache[KEYS.FLASHCARDS] = value;
+  }
+}
+
+export async function loadMasteredFlashcards(): Promise<number[]> {
+  try {
+    const value = await AsyncStorage.getItem(KEYS.FLASHCARDS);
+    if (value !== null) return JSON.parse(value);
+  } catch (err) {
+    if (memoryCache[KEYS.FLASHCARDS]) return JSON.parse(memoryCache[KEYS.FLASHCARDS]);
+  }
+  return [];
+}
 
 // In-memory fallback if storage fails
 const memoryCache: Record<string, string> = {};

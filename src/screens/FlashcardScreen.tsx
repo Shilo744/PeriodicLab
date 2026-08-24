@@ -1,9 +1,10 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getElement, ELEMENTS } from '../data/elements';
 import { COLORS, RADIUS, SHADOWS, getCategoryColor } from '../theme';
 import { triggerHaptic, playSound } from '../services/feedback';
+import { loadMasteredFlashcards, saveMasteredFlashcards } from '../data/storage';
 
 const { width: W, height: H } = Dimensions.get('window');
 
@@ -16,6 +17,10 @@ export default function FlashcardScreen({ onClose, onMasterElement }: FlashcardS
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [masteredZList, setMasteredZList] = useState<number[]>([]);
+
+  useEffect(() => {
+    loadMasteredFlashcards().then(setMasteredZList);
+  }, []);
 
   const activeElements = ELEMENTS.slice(0, 36); // Top 36 elements for active flashcard deck
   const currentEl = activeElements[currentIdx % activeElements.length];
@@ -31,7 +36,11 @@ export default function FlashcardScreen({ onClose, onMasterElement }: FlashcardS
     if (known) {
       triggerHaptic('success');
       playSound('success');
-      setMasteredZList(prev => [...prev, currentEl.z]);
+      setMasteredZList(prev => {
+        const next = prev.includes(currentEl.z) ? prev : [...prev, currentEl.z];
+        saveMasteredFlashcards(next);
+        return next;
+      });
       if (onMasterElement) onMasterElement(currentEl.z);
     } else {
       triggerHaptic('error');
