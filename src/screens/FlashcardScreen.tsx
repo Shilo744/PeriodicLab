@@ -17,12 +17,13 @@ export default function FlashcardScreen({ onClose, onMasterElement }: FlashcardS
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [masteredZList, setMasteredZList] = useState<number[]>([]);
+  const [deck, setDeck] = useState(() => ELEMENTS.slice(0, 36));
 
   useEffect(() => {
     loadMasteredFlashcards().then(setMasteredZList);
   }, []);
 
-  const activeElements = ELEMENTS.slice(0, 36); // Top 36 elements for active flashcard deck
+  const activeElements = deck;
   const currentEl = activeElements[currentIdx % activeElements.length];
   const catColor = getCategoryColor(currentEl.category);
 
@@ -60,9 +61,14 @@ export default function FlashcardScreen({ onClose, onMasterElement }: FlashcardS
           <Text style={FC.title}>SPACED FLASHCARDS</Text>
           <Text style={FC.sub}>Card {currentIdx + 1} of {activeElements.length} &bull; {masteredZList.length} Memorized</Text>
         </View>
-        <TouchableOpacity style={FC.closeBtn} onPress={onClose}>
-          <Text style={FC.closeTxt}>✕</Text>
-        </TouchableOpacity>
+        <View style={FC.headerActions}>
+          <TouchableOpacity style={FC.closeBtn} onPress={() => {
+            setDeck(prev => [...prev].sort(() => Math.random() - 0.5));
+            setCurrentIdx(0);
+            setIsFlipped(false);
+          }} accessibilityLabel="Shuffle flashcards"><Text style={FC.closeTxt}>⤨</Text></TouchableOpacity>
+          <TouchableOpacity style={FC.closeBtn} onPress={onClose}><Text style={FC.closeTxt}>✕</Text></TouchableOpacity>
+        </View>
       </View>
 
       {/* Interactive Flip Card */}
@@ -145,6 +151,7 @@ const FC = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  headerActions: { flexDirection: 'row', gap: 8 },
   closeTxt: {
     color: COLORS.textSecondary,
     fontSize: 14,
