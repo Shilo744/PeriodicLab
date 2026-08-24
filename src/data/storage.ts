@@ -7,7 +7,24 @@ const KEYS = {
   ACHIEVEMENTS: 'periodic_lab_achievements',
   DAILY: 'periodic_lab_daily',
   FLASHCARDS: 'periodic_lab_flashcards',
+  FAVORITE_REACTIONS: 'periodic_lab_favorite_reactions',
 };
+
+export async function saveFavoriteReactions(ids: string[]): Promise<void> {
+  const value = JSON.stringify([...new Set(ids)]);
+  try { await AsyncStorage.setItem(KEYS.FAVORITE_REACTIONS, value); }
+  catch { memoryCache[KEYS.FAVORITE_REACTIONS] = value; }
+}
+
+export async function loadFavoriteReactions(): Promise<string[]> {
+  try {
+    const value = await AsyncStorage.getItem(KEYS.FAVORITE_REACTIONS);
+    if (value !== null) return JSON.parse(value);
+  } catch {
+    if (memoryCache[KEYS.FAVORITE_REACTIONS]) return JSON.parse(memoryCache[KEYS.FAVORITE_REACTIONS]);
+  }
+  return [];
+}
 
 export async function saveMasteredFlashcards(elements: number[]): Promise<void> {
   const value = JSON.stringify([...new Set(elements)]);
