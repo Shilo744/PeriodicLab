@@ -32,7 +32,7 @@ export default function ReactionLabScreen({ onClose }: { onClose: () => void }) 
       <LinearGradient colors={['#07111f', COLORS.bg]} style={StyleSheet.absoluteFill} />
       <View style={S.header}>
         <View><Text style={S.title}>REACTION LAB</Text><Text style={S.subtitle}>Explore balanced chemical equations</Text></View>
-        <TouchableOpacity onPress={onClose} style={S.close}><Text style={S.closeText}>✕</Text></TouchableOpacity>
+        <View style={S.headerActions}><TouchableOpacity onPress={() => runReaction(REACTIONS[Math.floor(Math.random() * REACTIONS.length)])} style={S.close} accessibilityLabel="Pick random reaction"><Text style={S.closeText}>⚄</Text></TouchableOpacity><TouchableOpacity onPress={onClose} style={S.close}><Text style={S.closeText}>✕</Text></TouchableOpacity></View>
       </View>
       <TextInput value={query} onChangeText={setQuery} placeholder="Search name, formula, or description…" placeholderTextColor={COLORS.textTertiary} style={S.search} autoCorrect={false} accessibilityLabel="Search reactions" />
       <TouchableOpacity style={[S.favoriteFilter, favoritesOnly && S.favoriteFilterActive]} onPress={() => setFavoritesOnly(value => !value)}><Text style={S.favoriteFilterText}>{favoritesOnly ? '★ Showing favorites' : '☆ Show favorites only'}</Text></TouchableOpacity>
@@ -63,6 +63,7 @@ const S = StyleSheet.create({
   subtitle: { color: COLORS.textSecondary, fontSize: 12, marginTop: 3 },
   close: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.surface, alignItems: 'center', justifyContent: 'center' },
   closeText: { color: COLORS.textSecondary, fontWeight: '800' },
+  headerActions: { flexDirection: 'row', gap: 8 },
   search: { marginHorizontal: 20, marginTop: 16, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.md, color: COLORS.text, backgroundColor: COLORS.surface, paddingHorizontal: 14, paddingVertical: 10, fontSize: 13 },
   favoriteFilter: { alignSelf: 'flex-start', marginLeft: 20, marginTop: 8, paddingHorizontal: 10, paddingVertical: 6, borderRadius: RADIUS.full, borderWidth: 1, borderColor: COLORS.border },
   favoriteFilterActive: { borderColor: '#fbbf24', backgroundColor: 'rgba(251,191,36,0.10)' },
