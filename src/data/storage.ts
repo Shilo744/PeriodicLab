@@ -10,7 +10,18 @@ const KEYS = {
   FAVORITE_REACTIONS: 'periodic_lab_favorite_reactions',
   PREFERENCES: 'periodic_lab_preferences',
   LAST_TAB: 'periodic_lab_last_tab',
+  LAST_ELEMENT: 'periodic_lab_last_element',
 };
+
+export async function saveLastElement(z: number): Promise<void> {
+  const value = String(Math.max(1, Math.min(118, z)));
+  try { await AsyncStorage.setItem(KEYS.LAST_ELEMENT, value); } catch { memoryCache[KEYS.LAST_ELEMENT] = value; }
+}
+
+export async function loadLastElement(): Promise<number> {
+  try { return Number(await AsyncStorage.getItem(KEYS.LAST_ELEMENT)) || 6; }
+  catch { return Number(memoryCache[KEYS.LAST_ELEMENT]) || 6; }
+}
 
 export async function saveLastTab(tab: string): Promise<void> {
   try { await AsyncStorage.setItem(KEYS.LAST_TAB, tab); } catch { memoryCache[KEYS.LAST_TAB] = tab; }
