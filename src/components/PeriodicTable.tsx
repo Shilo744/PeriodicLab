@@ -38,6 +38,7 @@ const FILTER_TAGS = [
   'Solid',
   'Liquid',
   'Gas'
+  ,'High density'
 ];
 
 interface PeriodicTableProps {
@@ -74,6 +75,7 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
     if (activeFilter === 'Solid') return el.state === 'solid';
     if (activeFilter === 'Liquid') return el.state === 'liquid';
     if (activeFilter === 'Gas') return el.state === 'gas';
+    if (activeFilter === 'High density') return (el.density ?? 0) >= 10;
     return el.category.toLowerCase() === activeFilter.toLowerCase();
   };
 
