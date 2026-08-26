@@ -36,6 +36,7 @@ export default function ReactionLabScreen({ onClose }: { onClose: () => void }) 
       </View>
       <TextInput value={query} onChangeText={setQuery} placeholder="Search name, formula, or description…" placeholderTextColor={COLORS.textTertiary} style={S.search} autoCorrect={false} accessibilityLabel="Search reactions" />
       <TouchableOpacity style={[S.favoriteFilter, favoritesOnly && S.favoriteFilterActive]} onPress={() => setFavoritesOnly(value => !value)}><Text style={S.favoriteFilterText}>{favoritesOnly ? '★ Showing favorites' : '☆ Show favorites only'}</Text></TouchableOpacity>
+      <Text style={S.resultCount}>{visible.length} experiments · {favorites.length} favorites</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={S.filters} contentContainerStyle={S.filterContent}>
         {TYPES.map(type => <TouchableOpacity key={type} onPress={() => setFilter(type)} style={[S.chip, filter === type && S.chipActive]}><Text style={[S.chipText, filter === type && S.chipTextActive]}>{type.toUpperCase()}</Text></TouchableOpacity>)}
       </ScrollView>
@@ -66,6 +67,7 @@ const S = StyleSheet.create({
   favoriteFilter: { alignSelf: 'flex-start', marginLeft: 20, marginTop: 8, paddingHorizontal: 10, paddingVertical: 6, borderRadius: RADIUS.full, borderWidth: 1, borderColor: COLORS.border },
   favoriteFilterActive: { borderColor: '#fbbf24', backgroundColor: 'rgba(251,191,36,0.10)' },
   favoriteFilterText: { color: '#fbbf24', fontSize: 10, fontWeight: '800' },
+  resultCount: { color: COLORS.textTertiary, fontSize: 10, fontWeight: '700', marginHorizontal: 20, marginTop: 8 },
   filters: { flexGrow: 0, marginTop: 18 }, filterContent: { paddingHorizontal: 20, gap: 8 },
   chip: { borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.full, paddingHorizontal: 12, paddingVertical: 7 },
   chipActive: { borderColor: COLORS.primaryLight, backgroundColor: 'rgba(99,102,241,0.18)' },
