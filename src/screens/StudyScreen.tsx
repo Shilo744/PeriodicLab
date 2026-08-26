@@ -224,6 +224,10 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
                 <Text style={S.propLbl}>Discovered</Text>
                 <Text style={S.propVal} numberOfLines={1}>{el.discovered} ({el.discoveredBy || 'Antiquity'})</Text>
               </View>
+              <View style={S.propItem}>
+                <Text style={S.propLbl}>Crystal Structure</Text>
+                <Text style={S.propVal}>{el.crystalStructure || 'Not catalogued'}</Text>
+              </View>
             </View>
           </>
         )}
