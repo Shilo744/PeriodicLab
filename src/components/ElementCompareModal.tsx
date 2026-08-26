@@ -34,6 +34,9 @@ export default function ElementCompareModal({ initialZA = 11, initialZB = 17, on
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={C.scroll}>
+            <View style={C.presets}>
+              {[[1, 17, 'H–Cl'], [6, 8, 'C–O'], [26, 29, 'Fe–Cu']].map(([a, b, label]) => <TouchableOpacity key={String(label)} style={C.presetBtn} onPress={() => { setZA(Number(a)); setZB(Number(b)); }}><Text style={C.presetText}>{label}</Text></TouchableOpacity>)}
+            </View>
             {/* Top Cards Comparison */}
           <View style={C.cardsRow}>
               {/* Element A */}
@@ -194,6 +197,9 @@ const C = StyleSheet.create({
     padding: 16,
     paddingBottom: 60,
   },
+  presets: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 12 },
+  presetBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.full, borderWidth: 1, borderColor: COLORS.border },
+  presetText: { color: COLORS.textSecondary, fontSize: 10, fontWeight: '800' },
   cardsRow: {
     flexDirection: 'row',
     alignItems: 'center',
