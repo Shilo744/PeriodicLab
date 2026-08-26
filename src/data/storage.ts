@@ -9,7 +9,17 @@ const KEYS = {
   FLASHCARDS: 'periodic_lab_flashcards',
   FAVORITE_REACTIONS: 'periodic_lab_favorite_reactions',
   PREFERENCES: 'periodic_lab_preferences',
+  LAST_TAB: 'periodic_lab_last_tab',
 };
+
+export async function saveLastTab(tab: string): Promise<void> {
+  try { await AsyncStorage.setItem(KEYS.LAST_TAB, tab); } catch { memoryCache[KEYS.LAST_TAB] = tab; }
+}
+
+export async function loadLastTab(): Promise<string> {
+  try { return (await AsyncStorage.getItem(KEYS.LAST_TAB)) || 'home'; }
+  catch { return memoryCache[KEYS.LAST_TAB] || 'home'; }
+}
 
 export interface AppPreferences { locale: 'en' | 'he'; audioMuted: boolean; }
 const DEFAULT_PREFERENCES: AppPreferences = { locale: 'en', audioMuted: false };

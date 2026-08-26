@@ -14,7 +14,7 @@ import {
   saveLevels, loadLevels, 
   saveStudyPool, loadStudyPool,
   saveAchievements, loadAchievements,
-  updateDailyStreak, loadPreferences, savePreferences
+  updateDailyStreak, loadPreferences, savePreferences, loadLastTab, saveLastTab
 } from './src/data/storage';
 import { 
   ACHIEVEMENTS_LIST, CHAPTERS, 
@@ -367,6 +367,7 @@ export default function App() {
   const [quizZ, setQuizZ] = useState(() => pickFromPool(INITIAL_POOL, {}));
   const [showFlashcards, setShowFlashcards] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
+  const [storageReady, setStorageReady] = useState(false);
 
   useEffect(() => {
     if (__DEV__) {
@@ -394,6 +395,7 @@ export default function App() {
       const savedAch = await loadAchievements();
       const savedDaily = await updateDailyStreak();
       const preferences = await loadPreferences();
+      const savedTab = await loadLastTab();
       
       setTotalXP(savedXP);
       setElementLevels(savedLevels);
@@ -402,11 +404,15 @@ export default function App() {
       setDailyStreak(savedDaily.streak);
       setLocale(preferences.locale);
       setAudioMuted(preferences.audioMuted);
+      if (TABS.some(item => item.key === savedTab)) setTab(savedTab as Tab);
+      setStorageReady(true);
       
       setQuizZ(pickFromPool(savedPool, savedLevels));
     }
     loadSavedData();
   }, []);
+
+  useEffect(() => { if (storageReady) saveLastTab(tab); }, [tab, storageReady]);
 
   const discovered = Object.entries(elementLevels).filter(([_, l]) => l > 0).map(([z]) => parseInt(z));
 
