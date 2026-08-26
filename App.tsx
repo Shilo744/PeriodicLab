@@ -534,7 +534,7 @@ export default function App() {
         {TABS.map(tTab => {
           const active = tab === tTab.key;
           return (
-            <TouchableOpacity key={tTab.key} style={S.tab} onPress={() => setTab(tTab.key)} activeOpacity={0.75}>
+            <TouchableOpacity key={tTab.key} style={S.tab} onPress={() => setTab(tTab.key)} activeOpacity={0.75} accessibilityRole="tab" accessibilityLabel={`${t(tTab.labelKey, locale)} module`} accessibilityState={{ selected: active }}>
               <View style={[S.tabInner, active && S.tabInnerActive]}>
                 <TabIcon name={tTab.key} color={active ? COLORS.tabActive : COLORS.tabInactive} />
                 {active ? (
