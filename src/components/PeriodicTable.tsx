@@ -39,6 +39,7 @@ const FILTER_TAGS = [
   'Liquid',
   'Gas'
   ,'High density'
+  ,'Radioactive'
 ];
 
 interface PeriodicTableProps {
@@ -76,6 +77,7 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
     if (activeFilter === 'Liquid') return el.state === 'liquid';
     if (activeFilter === 'Gas') return el.state === 'gas';
     if (activeFilter === 'High density') return (el.density ?? 0) >= 10;
+    if (activeFilter === 'Radioactive') return el.z === 43 || el.z === 61 || el.z >= 84;
     return el.category.toLowerCase() === activeFilter.toLowerCase();
   };
 
