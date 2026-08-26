@@ -123,6 +123,7 @@ export default function FlashcardScreen({ onClose, onMasterElement }: FlashcardS
 
       {/* Review / Memorized Buttons */}
       <View style={FC.actionsRow}>
+        <TouchableOpacity style={FC.previousBtn} onPress={() => { setIsFlipped(false); setCurrentIdx(i => (i - 1 + activeElements.length) % activeElements.length); }} accessibilityLabel="Previous flashcard"><Text style={FC.previousTxt}>←</Text></TouchableOpacity>
         <TouchableOpacity style={[FC.actionBtn, FC.btnReview]} onPress={() => handleNext(false)} activeOpacity={0.8}>
           <Text style={FC.btnReviewTxt}>Need Review ↻</Text>
         </TouchableOpacity>
@@ -285,6 +286,8 @@ const FC = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  previousBtn: { width: 48, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: COLORS.border, backgroundColor: COLORS.surface },
+  previousTxt: { color: COLORS.textSecondary, fontSize: 20, fontWeight: '800' },
   btnReview: {
     backgroundColor: 'rgba(239, 68, 68, 0.15)',
     borderWidth: 1,
