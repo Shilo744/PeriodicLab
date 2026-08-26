@@ -14,11 +14,12 @@ export default function ReactionLabScreen({ onClose }: { onClose: () => void }) 
   const [selected, setSelected] = useState<string>(REACTIONS[0].id);
   const [query, setQuery] = useState('');
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   useEffect(() => { loadFavoriteReactions().then(setFavorites); }, []);
   const visible = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    return REACTIONS.filter(r => (filter === 'all' || r.type === filter) && (!normalized || `${r.name} ${r.nameHe} ${r.equation} ${r.description}`.toLowerCase().includes(normalized)));
-  }, [filter, query]);
+    return REACTIONS.filter(r => (!favoritesOnly || favorites.includes(r.id)) && (filter === 'all' || r.type === filter) && (!normalized || `${r.name} ${r.nameHe} ${r.equation} ${r.description}`.toLowerCase().includes(normalized)));
+  }, [filter, query, favoritesOnly, favorites]);
 
   const runReaction = (reaction: ChemicalReaction) => {
     setSelected(reaction.id);
@@ -34,6 +35,7 @@ export default function ReactionLabScreen({ onClose }: { onClose: () => void }) 
         <TouchableOpacity onPress={onClose} style={S.close}><Text style={S.closeText}>✕</Text></TouchableOpacity>
       </View>
       <TextInput value={query} onChangeText={setQuery} placeholder="Search name, formula, or description…" placeholderTextColor={COLORS.textTertiary} style={S.search} autoCorrect={false} accessibilityLabel="Search reactions" />
+      <TouchableOpacity style={[S.favoriteFilter, favoritesOnly && S.favoriteFilterActive]} onPress={() => setFavoritesOnly(value => !value)}><Text style={S.favoriteFilterText}>{favoritesOnly ? '★ Showing favorites' : '☆ Show favorites only'}</Text></TouchableOpacity>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={S.filters} contentContainerStyle={S.filterContent}>
         {TYPES.map(type => <TouchableOpacity key={type} onPress={() => setFilter(type)} style={[S.chip, filter === type && S.chipActive]}><Text style={[S.chipText, filter === type && S.chipTextActive]}>{type.toUpperCase()}</Text></TouchableOpacity>)}
       </ScrollView>
@@ -60,6 +62,9 @@ const S = StyleSheet.create({
   close: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.surface, alignItems: 'center', justifyContent: 'center' },
   closeText: { color: COLORS.textSecondary, fontWeight: '800' },
   search: { marginHorizontal: 20, marginTop: 16, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.md, color: COLORS.text, backgroundColor: COLORS.surface, paddingHorizontal: 14, paddingVertical: 10, fontSize: 13 },
+  favoriteFilter: { alignSelf: 'flex-start', marginLeft: 20, marginTop: 8, paddingHorizontal: 10, paddingVertical: 6, borderRadius: RADIUS.full, borderWidth: 1, borderColor: COLORS.border },
+  favoriteFilterActive: { borderColor: '#fbbf24', backgroundColor: 'rgba(251,191,36,0.10)' },
+  favoriteFilterText: { color: '#fbbf24', fontSize: 10, fontWeight: '800' },
   filters: { flexGrow: 0, marginTop: 18 }, filterContent: { paddingHorizontal: 20, gap: 8 },
   chip: { borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.full, paddingHorizontal: 12, paddingVertical: 7 },
   chipActive: { borderColor: COLORS.primaryLight, backgroundColor: 'rgba(99,102,241,0.18)' },
