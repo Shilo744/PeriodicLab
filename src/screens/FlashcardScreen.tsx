@@ -100,6 +100,7 @@ export default function FlashcardScreen({ onClose, onMasterElement }: FlashcardS
           colors={isFlipped ? ['rgba(99, 102, 241, 0.12)', 'rgba(10, 14, 26, 0.95)'] : ['rgba(255, 255, 255, 0.04)', 'rgba(10, 14, 26, 0.9)']}
           style={StyleSheet.absoluteFill}
         />
+        {masteredZList.includes(currentEl.z) && <View style={FC.masteredBadge}><Text style={FC.masteredBadgeText}>✓ MASTERED</Text></View>}
 
         {!isFlipped ? (
           /* Front Side: Chemical Symbol & Atomic Number */
@@ -202,6 +203,8 @@ const FC = StyleSheet.create({
     justifyContent: 'center',
     ...SHADOWS.glow,
   },
+  masteredBadge: { position: 'absolute', top: 14, right: 14, paddingHorizontal: 9, paddingVertical: 5, borderRadius: RADIUS.full, backgroundColor: 'rgba(52,211,153,0.14)', borderWidth: 1, borderColor: 'rgba(52,211,153,0.35)' },
+  masteredBadgeText: { color: '#34d399', fontSize: 9, fontWeight: '900' },
   cardFront: {
     alignItems: 'center',
     justifyContent: 'center',
