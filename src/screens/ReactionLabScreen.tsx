@@ -40,6 +40,7 @@ export default function ReactionLabScreen({ onClose }: { onClose: () => void }) 
         {TYPES.map(type => <TouchableOpacity key={type} onPress={() => setFilter(type)} style={[S.chip, filter === type && S.chipActive]}><Text style={[S.chipText, filter === type && S.chipTextActive]}>{type.toUpperCase()}</Text></TouchableOpacity>)}
       </ScrollView>
       <ScrollView contentContainerStyle={S.list}>
+        {visible.length === 0 && <View style={S.empty}><Text style={S.emptyIcon}>⚗️</Text><Text style={S.emptyTitle}>No matching reactions</Text><Text style={S.emptyText}>Try another formula, category, or favorites filter.</Text></View>}
         {visible.map(reaction => {
           const active = selected === reaction.id;
           return <TouchableOpacity key={reaction.id} onPress={() => runReaction(reaction)} style={[S.card, active && S.cardActive]} activeOpacity={0.82}>
@@ -78,5 +79,6 @@ const S = StyleSheet.create({
   name: { color: COLORS.text, fontSize: 15, fontWeight: '800', marginTop: 5 },
   equation: { color: '#34d399', fontSize: 19, fontWeight: '900', marginTop: 10 },
   details: { borderTopWidth: 1, borderTopColor: COLORS.borderLight, marginTop: 12, paddingTop: 10 },
+  empty: { alignItems: 'center', paddingVertical: 52 }, emptyIcon: { fontSize: 34 }, emptyTitle: { color: COLORS.text, fontSize: 16, fontWeight: '800', marginTop: 10 }, emptyText: { color: COLORS.textSecondary, fontSize: 12, marginTop: 5 },
   enthalpy: { color: '#fbbf24', fontSize: 11, fontWeight: '700' }, description: { color: COLORS.textSecondary, fontSize: 12, lineHeight: 18, marginTop: 5 },
 });
