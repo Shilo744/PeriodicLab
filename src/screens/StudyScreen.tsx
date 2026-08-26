@@ -121,6 +121,7 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
         <TouchableOpacity
           style={[S.tabBtn, selectedTab === 'overview' && S.tabBtnActive]}
           onPress={() => setSelectedTab('overview')}
+          accessibilityRole="tab" accessibilityState={{ selected: selectedTab === 'overview' }} accessibilityLabel="Element overview"
           activeOpacity={0.8}
         >
           <Text style={[S.tabBtnTxt, selectedTab === 'overview' && S.tabBtnTxtActive]}>Overview</Text>
@@ -172,14 +173,14 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
 
         {/* Navigation Slider */}
         <View style={S.sliderRow}>
-          <TouchableOpacity style={S.sliderBtn} onPress={() => adjust(-1)} activeOpacity={0.65}>
+          <TouchableOpacity style={S.sliderBtn} onPress={() => adjust(-1)} activeOpacity={0.65} accessibilityLabel="Previous element">
             <Text style={S.sliderTxt}>{'\u2212'}</Text>
           </TouchableOpacity>
           <View style={S.track}>
             <LinearGradient colors={[cat, cat + '40']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
               style={[S.trackFill, { width: `${(p / 118) * 100}%` }]} />
           </View>
-          <TouchableOpacity style={S.sliderBtn} onPress={() => adjust(1)} activeOpacity={0.65}>
+          <TouchableOpacity style={S.sliderBtn} onPress={() => adjust(1)} activeOpacity={0.65} accessibilityLabel="Next element">
             <Text style={S.sliderTxt}>+</Text>
           </TouchableOpacity>
         </View>
