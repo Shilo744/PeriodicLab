@@ -20,12 +20,14 @@ export default function FlashcardScreen({ onClose, onMasterElement }: FlashcardS
   const [masteredZList, setMasteredZList] = useState<number[]>([]);
   const [deck, setDeck] = useState(() => ELEMENTS.slice(0, 36));
   const [deckFilter, setDeckFilter] = useState<(typeof DECK_FILTERS)[number]>('All');
+  const [hideMastered, setHideMastered] = useState(false);
 
   useEffect(() => {
     loadMasteredFlashcards().then(setMasteredZList);
   }, []);
 
-  const activeElements = deck;
+  const reviewDeck = hideMastered ? deck.filter(el => !masteredZList.includes(el.z)) : deck;
+  const activeElements = reviewDeck.length ? reviewDeck : deck;
   const currentEl = activeElements[currentIdx % activeElements.length];
   const catColor = getCategoryColor(currentEl.category);
 
@@ -89,6 +91,7 @@ export default function FlashcardScreen({ onClose, onMasterElement }: FlashcardS
       <View style={FC.progressTrack} accessibilityLabel={`${masteredZList.length} mastered flashcards`}>
         <LinearGradient colors={['#34d399', '#22d3ee']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[FC.progressFill, { width: `${Math.min(100, (masteredZList.length / 36) * 100)}%` }]} />
       </View>
+      <TouchableOpacity style={[FC.reviewToggle, hideMastered && FC.reviewToggleActive]} onPress={() => { setHideMastered(value => !value); setCurrentIdx(0); }}><Text style={FC.reviewToggleText}>{hideMastered ? 'Reviewing unmastered only' : 'Include mastered cards'}</Text></TouchableOpacity>
 
       {/* Interactive Flip Card */}
       <TouchableOpacity style={FC.cardContainer} onPress={flipCard} activeOpacity={0.9}>
@@ -180,6 +183,8 @@ const FC = StyleSheet.create({
   filterTextActive: { color: COLORS.primaryLight },
   progressTrack: { height: 5, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.06)', overflow: 'hidden', marginBottom: 8 },
   progressFill: { height: '100%', borderRadius: 3 },
+  reviewToggle: { alignSelf: 'center', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.full, borderWidth: 1, borderColor: COLORS.border },
+  reviewToggleActive: { borderColor: '#34d399', backgroundColor: 'rgba(52,211,153,0.10)' }, reviewToggleText: { color: '#34d399', fontSize: 9, fontWeight: '800' },
   closeTxt: {
     color: COLORS.textSecondary,
     fontSize: 14,
