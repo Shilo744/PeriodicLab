@@ -228,6 +228,10 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
                 <Text style={S.propLbl}>Crystal Structure</Text>
                 <Text style={S.propVal}>{el.crystalStructure || 'Not catalogued'}</Text>
               </View>
+              <View style={S.propItem}>
+                <Text style={S.propLbl}>Ionization Energy</Text>
+                <Text style={S.propVal}>{el.ionizationEnergy ? `${el.ionizationEnergy} kJ/mol` : 'Not catalogued'}</Text>
+              </View>
             </View>
           </>
         )}
