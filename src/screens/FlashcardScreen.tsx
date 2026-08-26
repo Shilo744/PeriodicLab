@@ -66,6 +66,7 @@ export default function FlashcardScreen({ onClose, onMasterElement }: FlashcardS
           <Text style={FC.sub}>Card {currentIdx + 1} of {activeElements.length} &bull; {masteredZList.length} Memorized</Text>
         </View>
         <View style={FC.headerActions}>
+          <TouchableOpacity style={FC.closeBtn} onPress={() => { setMasteredZList([]); saveMasteredFlashcards([]); }} accessibilityLabel="Reset flashcard mastery"><Text style={FC.closeTxt}>↺</Text></TouchableOpacity>
           <TouchableOpacity style={FC.closeBtn} onPress={() => {
             setDeck(prev => [...prev].sort(() => Math.random() - 0.5));
             setCurrentIdx(0);
