@@ -80,6 +80,7 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
     if (activeFilter === 'Radioactive') return el.z === 43 || el.z === 61 || el.z >= 84;
     return el.category.toLowerCase() === activeFilter.toLowerCase();
   };
+  const visibleCount = ELEMENTS.filter(el => matchesSearchAndFilter(el.z)).length;
 
   const handleCellPress = (z: number) => {
     if (z > 0) {
@@ -250,6 +251,7 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
             );
           })}
         </ScrollView>
+        <Text style={T.resultSummary}>{visibleCount} elements match the current view</Text>
       </View>
 
       {/* Interactive Matrix Grid ScrollViews */}
@@ -447,6 +449,7 @@ const T = StyleSheet.create({
     flexDirection: 'row',
     gap: 6,
   },
+  resultSummary: { color: COLORS.textTertiary, fontSize: 10, fontWeight: '700', marginTop: 6 },
   filterChip: {
     paddingHorizontal: 10,
     paddingVertical: 5,
