@@ -7,6 +7,7 @@ import { triggerHaptic, playSound } from '../services/feedback';
 import { loadMasteredFlashcards, saveMasteredFlashcards } from '../data/storage';
 import { shuffled } from '../utils/random';
 import { recordReview, nextReviewIndex } from '../data/flashcards';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const { width: W, height: H } = Dimensions.get('window');
 const DECK_FILTERS = ['All', 'Nonmetal', 'Noble gas', 'Metal'] as const;
@@ -18,6 +19,7 @@ interface FlashcardScreenProps {
 export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
   const reviewed = useRef(false);
   const [ready, setReady] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [masteredZList, setMasteredZList] = useState<number[]>([]);
@@ -82,7 +84,7 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
           <Text style={FC.sub}>Card {(currentIdx % activeElements.length) + 1} of {activeElements.length} · {masteredInDeck}/{deck.length} Memorized</Text>
         </View>
         <View style={FC.headerActions}>
-          <TouchableOpacity style={FC.closeBtn} onPress={() => { setMasteredZList([]); saveMasteredFlashcards([]); }} accessibilityLabel="Reset flashcard mastery"><Text style={FC.closeTxt}>↺</Text></TouchableOpacity>
+          <TouchableOpacity disabled={!ready} style={FC.closeBtn} onPress={() => setConfirmReset(true)} accessibilityLabel="Reset flashcard mastery"><Text style={FC.closeTxt}>↺</Text></TouchableOpacity>
           <TouchableOpacity style={FC.closeBtn} onPress={() => {
             setDeck(prev => shuffled(prev));
             setCurrentIdx(0);
@@ -143,6 +145,13 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
       </TouchableOpacity>
 
       {/* Review / Memorized Buttons */}
+      {confirmReset && <ConfirmDialog title="Reset all flashcard mastery?" message="This removes memorized marks from every deck. Quiz XP, discoveries, and achievements will not change." onCancel={() => setConfirmReset(false)} onConfirm={() => {
+        setConfirmReset(false);
+        setMasteredZList([]);
+        setCurrentIdx(0);
+        setIsFlipped(false);
+        void saveMasteredFlashcards([]);
+      }} />}
       <View style={FC.actionsRow}>
         <TouchableOpacity style={FC.previousBtn} onPress={() => { setIsFlipped(false); setCurrentIdx(i => (i - 1 + activeElements.length) % activeElements.length); }} accessibilityLabel="Previous flashcard"><Text style={FC.previousTxt}>←</Text></TouchableOpacity>
         <TouchableOpacity disabled={!ready || !isFlipped} style={[FC.actionBtn, FC.btnReview, (!ready || !isFlipped) && { opacity: 0.4 }]} onPress={() => handleNext(false)} activeOpacity={0.8}>
