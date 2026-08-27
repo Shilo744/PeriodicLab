@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getElement, ELEMENTS } from '../data/elements';
@@ -6,16 +6,18 @@ import { COLORS, RADIUS, SHADOWS, getCategoryColor } from '../theme';
 import { triggerHaptic, playSound } from '../services/feedback';
 import { loadMasteredFlashcards, saveMasteredFlashcards } from '../data/storage';
 import { shuffled } from '../utils/random';
+import { recordReview } from '../data/flashcards';
 
 const { width: W, height: H } = Dimensions.get('window');
 const DECK_FILTERS = ['All', 'Nonmetal', 'Noble gas', 'Metal'] as const;
 
 interface FlashcardScreenProps {
   onClose: () => void;
-  onMasterElement?: (z: number) => void;
 }
 
-export default function FlashcardScreen({ onClose, onMasterElement }: FlashcardScreenProps) {
+export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
+  const reviewed = useRef(false);
+  const [ready, setReady] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [masteredZList, setMasteredZList] = useState<number[]>([]);
@@ -24,7 +26,9 @@ export default function FlashcardScreen({ onClose, onMasterElement }: FlashcardS
   const [hideMastered, setHideMastered] = useState(false);
 
   useEffect(() => {
-    loadMasteredFlashcards().then(setMasteredZList);
+    let active = true;
+    loadMasteredFlashcards().then(saved => { if (active) { setMasteredZList(saved); setReady(true); } });
+    return () => { active = false; };
   }, []);
 
   const reviewDeck = hideMastered ? deck.filter(el => !masteredZList.includes(el.z)) : deck;
@@ -33,28 +37,28 @@ export default function FlashcardScreen({ onClose, onMasterElement }: FlashcardS
   const catColor = getCategoryColor(currentEl.category);
 
   const flipCard = useCallback(() => {
+    reviewed.current = false;
     triggerHaptic('light');
     playSound('click');
     setIsFlipped(f => !f);
   }, []);
 
   const handleNext = useCallback((known: boolean) => {
+    if (!ready || !isFlipped || reviewed.current) return;
+    reviewed.current = true;
+    const nextMastered = recordReview(masteredZList, currentEl.z, known);
+    setMasteredZList(nextMastered);
+    void saveMasteredFlashcards(nextMastered);
     if (known) {
       triggerHaptic('success');
       playSound('success');
-      setMasteredZList(prev => {
-        const next = prev.includes(currentEl.z) ? prev : [...prev, currentEl.z];
-        saveMasteredFlashcards(next);
-        return next;
-      });
-      if (onMasterElement) onMasterElement(currentEl.z);
     } else {
       triggerHaptic('error');
       playSound('error');
     }
     setIsFlipped(false);
     setCurrentIdx(i => (i + 1) % activeElements.length);
-  }, [currentEl.z, activeElements.length, onMasterElement]);
+  }, [currentEl.z, activeElements.length, ready, isFlipped, masteredZList]);
 
   return (
     <View style={FC.wrap}>
@@ -63,7 +67,7 @@ export default function FlashcardScreen({ onClose, onMasterElement }: FlashcardS
       {/* Header */}
       <View style={FC.header}>
         <View>
-          <Text style={FC.title}>SPACED FLASHCARDS</Text>
+          <Text style={FC.title}>PRACTICE FLASHCARDS</Text>
           <Text style={FC.sub}>Card {currentIdx + 1} of {activeElements.length} &bull; {masteredZList.length} Memorized</Text>
         </View>
         <View style={FC.headerActions}>
@@ -130,10 +134,10 @@ export default function FlashcardScreen({ onClose, onMasterElement }: FlashcardS
       {/* Review / Memorized Buttons */}
       <View style={FC.actionsRow}>
         <TouchableOpacity style={FC.previousBtn} onPress={() => { setIsFlipped(false); setCurrentIdx(i => (i - 1 + activeElements.length) % activeElements.length); }} accessibilityLabel="Previous flashcard"><Text style={FC.previousTxt}>←</Text></TouchableOpacity>
-        <TouchableOpacity style={[FC.actionBtn, FC.btnReview]} onPress={() => handleNext(false)} activeOpacity={0.8}>
+        <TouchableOpacity disabled={!ready || !isFlipped} style={[FC.actionBtn, FC.btnReview, (!ready || !isFlipped) && { opacity: 0.4 }]} onPress={() => handleNext(false)} activeOpacity={0.8}>
           <Text style={FC.btnReviewTxt}>Need Review ↻</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[FC.actionBtn, FC.btnMaster]} onPress={() => handleNext(true)} activeOpacity={0.8}>
+        <TouchableOpacity disabled={!ready || !isFlipped} style={[FC.actionBtn, FC.btnMaster, (!ready || !isFlipped) && { opacity: 0.4 }]} onPress={() => handleNext(true)} activeOpacity={0.8}>
           <Text style={FC.btnMasterTxt}>Memorized ✓</Text>
         </TouchableOpacity>
       </View>

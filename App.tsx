@@ -519,7 +519,7 @@ export default function App() {
   }[tab];
 
   if (showFlashcards) {
-    return <FlashcardScreen onClose={() => setShowFlashcards(false)} onMasterElement={handleCorrect} />;
+    return <FlashcardScreen onClose={() => setShowFlashcards(false)} />;
   }
   if (showReactions) {
     return <ReactionLabScreen onClose={() => setShowReactions(false)} />;
