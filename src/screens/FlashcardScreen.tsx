@@ -6,7 +6,7 @@ import { COLORS, RADIUS, SHADOWS, getCategoryColor } from '../theme';
 import { triggerHaptic, playSound } from '../services/feedback';
 import { loadMasteredFlashcards, saveMasteredFlashcards } from '../data/storage';
 import { shuffled } from '../utils/random';
-import { recordReview } from '../data/flashcards';
+import { recordReview, nextReviewIndex } from '../data/flashcards';
 
 const { width: W, height: H } = Dimensions.get('window');
 const DECK_FILTERS = ['All', 'Nonmetal', 'Noble gas', 'Metal'] as const;
@@ -32,8 +32,9 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
   }, []);
 
   const reviewDeck = hideMastered ? deck.filter(el => !masteredZList.includes(el.z)) : deck;
-  const activeElements = reviewDeck.length ? reviewDeck : deck;
-  const currentEl = activeElements[currentIdx % activeElements.length];
+  const activeElements = reviewDeck;
+  const currentEl = activeElements[currentIdx % activeElements.length] ?? deck[0];
+  const masteredInDeck = deck.filter(el => masteredZList.includes(el.z)).length;
   const catColor = getCategoryColor(currentEl.category);
 
   const flipCard = useCallback(() => {
@@ -57,8 +58,18 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
       playSound('error');
     }
     setIsFlipped(false);
-    setCurrentIdx(i => (i + 1) % activeElements.length);
-  }, [currentEl.z, activeElements.length, ready, isFlipped, masteredZList]);
+    const nextDeck = hideMastered ? deck.filter(el => !nextMastered.includes(el.z)) : deck;
+    setCurrentIdx(nextReviewIndex(activeElements.map(el => el.z), nextDeck.map(el => el.z), currentIdx));
+  }, [currentEl.z, activeElements, ready, isFlipped, masteredZList, hideMastered, deck, currentIdx]);
+
+  if (ready && !activeElements.length) {
+    return <View style={[FC.wrap, { justifyContent: 'center', gap: 24 }]}>
+      <Text style={FC.title}>✓ DECK COMPLETE</Text>
+      <Text style={FC.sub}>All {deck.length} cards in this deck are marked memorized. This is self-assessed practice, not a quiz score.</Text>
+      <TouchableOpacity style={[FC.actionBtn, FC.btnMaster, { flex: 0 }]} onPress={() => { setHideMastered(false); setCurrentIdx(0); setIsFlipped(false); }}><Text style={FC.btnMasterTxt}>Review the full deck</Text></TouchableOpacity>
+      <TouchableOpacity style={[FC.actionBtn, FC.btnReview, { flex: 0 }]} onPress={onClose}><Text style={FC.btnReviewTxt}>Back to home</Text></TouchableOpacity>
+    </View>;
+  }
 
   return (
     <View style={FC.wrap}>
@@ -68,7 +79,7 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
       <View style={FC.header}>
         <View>
           <Text style={FC.title}>PRACTICE FLASHCARDS</Text>
-          <Text style={FC.sub}>Card {currentIdx + 1} of {activeElements.length} &bull; {masteredZList.length} Memorized</Text>
+          <Text style={FC.sub}>Card {(currentIdx % activeElements.length) + 1} of {activeElements.length} · {masteredInDeck}/{deck.length} Memorized</Text>
         </View>
         <View style={FC.headerActions}>
           <TouchableOpacity style={FC.closeBtn} onPress={() => { setMasteredZList([]); saveMasteredFlashcards([]); }} accessibilityLabel="Reset flashcard mastery"><Text style={FC.closeTxt}>↺</Text></TouchableOpacity>
@@ -94,10 +105,10 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
           }}><Text style={[FC.filterText, deckFilter === filter && FC.filterTextActive]}>{filter}</Text></TouchableOpacity>
         ))}
       </ScrollView>
-      <View style={FC.progressTrack} accessibilityLabel={`${masteredZList.length} mastered flashcards`}>
-        <LinearGradient colors={['#34d399', '#22d3ee']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[FC.progressFill, { width: `${Math.min(100, (masteredZList.length / 36) * 100)}%` }]} />
+      <View style={FC.progressTrack} accessibilityLabel={`${masteredInDeck} of ${deck.length} mastered flashcards`}>
+        <LinearGradient colors={['#34d399', '#22d3ee']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[FC.progressFill, { width: `${(masteredInDeck / deck.length) * 100}%` }]} />
       </View>
-      <TouchableOpacity style={[FC.reviewToggle, hideMastered && FC.reviewToggleActive]} onPress={() => { setHideMastered(value => !value); setCurrentIdx(0); }}><Text style={FC.reviewToggleText}>{hideMastered ? 'Reviewing unmastered only' : 'Include mastered cards'}</Text></TouchableOpacity>
+      <TouchableOpacity style={[FC.reviewToggle, hideMastered && FC.reviewToggleActive]} onPress={() => { setHideMastered(value => !value); setCurrentIdx(0); setIsFlipped(false); }}><Text style={FC.reviewToggleText}>{hideMastered ? 'Unmastered only — tap to show all' : 'All cards — tap to hide mastered'}</Text></TouchableOpacity>
 
       {/* Interactive Flip Card */}
       <TouchableOpacity style={FC.cardContainer} onPress={flipCard} activeOpacity={0.9}>
