@@ -20,7 +20,7 @@ export default function ElementCompareModal({ initialZA = 11, initialZB = 17, on
   const catB = getCategoryColor(elB.category);
 
   return (
-    <Modal transparent animationType="slide" visible>
+    <Modal transparent animationType="slide" visible onRequestClose={onClose}>
       <View style={C.overlay}>
         <View style={C.box}>
           <LinearGradient colors={['rgba(10,14,26,0.98)', 'rgba(10,14,26,1.0)']} style={StyleSheet.absoluteFill} />
@@ -28,7 +28,7 @@ export default function ElementCompareModal({ initialZA = 11, initialZB = 17, on
           {/* Header */}
           <View style={C.header}>
             <Text style={C.title}>SIDE-BY-SIDE ELEMENT COMPARISON</Text>
-            <TouchableOpacity style={C.closeBtn} onPress={onClose}>
+            <TouchableOpacity style={C.closeBtn} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close element comparison">
               <Text style={C.closeTxt}>✕</Text>
             </TouchableOpacity>
           </View>
@@ -45,8 +45,8 @@ export default function ElementCompareModal({ initialZA = 11, initialZB = 17, on
                 <Text style={C.name}>{elA.nameEn}</Text>
                 <Text style={C.meta}>Z = {zA} &bull; {elA.category}</Text>
                 <View style={C.quickSwitchRow}>
-                  <TouchableOpacity style={C.miniBtn} onPress={() => setZA(z => Math.max(1, z - 1))}><Text style={C.miniBtnTxt}>-1</Text></TouchableOpacity>
-                  <TouchableOpacity style={C.miniBtn} onPress={() => setZA(z => Math.min(118, z + 1))}><Text style={C.miniBtnTxt}>+1</Text></TouchableOpacity>
+                  <TouchableOpacity disabled={zA === 1} accessibilityRole="button" accessibilityLabel="Previous left element" style={[C.miniBtn, zA === 1 && { opacity: 0.35 }]} onPress={() => setZA(z => z - 1)}><Text style={C.miniBtnTxt}>-1</Text></TouchableOpacity>
+                  <TouchableOpacity disabled={zA === 118} accessibilityRole="button" accessibilityLabel="Next left element" style={[C.miniBtn, zA === 118 && { opacity: 0.35 }]} onPress={() => setZA(z => z + 1)}><Text style={C.miniBtnTxt}>+1</Text></TouchableOpacity>
                 </View>
               </View>
 
@@ -69,8 +69,8 @@ export default function ElementCompareModal({ initialZA = 11, initialZB = 17, on
                 <Text style={C.name}>{elB.nameEn}</Text>
                 <Text style={C.meta}>Z = {zB} &bull; {elB.category}</Text>
                 <View style={C.quickSwitchRow}>
-                  <TouchableOpacity style={C.miniBtn} onPress={() => setZB(z => Math.max(1, z - 1))}><Text style={C.miniBtnTxt}>-1</Text></TouchableOpacity>
-                  <TouchableOpacity style={C.miniBtn} onPress={() => setZB(z => Math.min(118, z + 1))}><Text style={C.miniBtnTxt}>+1</Text></TouchableOpacity>
+                  <TouchableOpacity disabled={zB === 1} accessibilityRole="button" accessibilityLabel="Previous right element" style={[C.miniBtn, zB === 1 && { opacity: 0.35 }]} onPress={() => setZB(z => z - 1)}><Text style={C.miniBtnTxt}>-1</Text></TouchableOpacity>
+                  <TouchableOpacity disabled={zB === 118} accessibilityRole="button" accessibilityLabel="Next right element" style={[C.miniBtn, zB === 118 && { opacity: 0.35 }]} onPress={() => setZB(z => z + 1)}><Text style={C.miniBtnTxt}>+1</Text></TouchableOpacity>
                 </View>
               </View>
             </View>
@@ -171,14 +171,15 @@ const C = StyleSheet.create({
     borderBottomColor: COLORS.borderLight,
   },
   title: {
+    flex: 1,
     fontSize: 12,
     fontWeight: '800',
     color: COLORS.primaryLight,
     letterSpacing: 0.8,
   },
   closeBtn: {
-    width: 30,
-    height: 30,
+    width: 44,
+    height: 44,
     borderRadius: 15,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     alignItems: 'center',
@@ -232,6 +233,10 @@ const C = StyleSheet.create({
     marginTop: 8,
   },
   miniBtn: {
+    minWidth: 36,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.06)',
     paddingHorizontal: 8,
     paddingVertical: 2,

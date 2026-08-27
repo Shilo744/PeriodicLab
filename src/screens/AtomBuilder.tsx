@@ -489,7 +489,7 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
 
       {/* Full-Screen Congratulatory Discovery Modal (Elements) */}
       {showCongrats !== null && (
-        <Modal transparent animationType="fade" visible={showCongrats !== null}>
+        <Modal transparent animationType="fade" visible={showCongrats !== null} onRequestClose={() => setShowCongrats(null)}>
           <View style={A.modalOverlay}>
             <View style={A.modalBox}>
               <LinearGradient colors={['rgba(10,14,26,0.98)', 'rgba(10,14,26,1.0)']} style={StyleSheet.absoluteFill} />
@@ -531,7 +531,7 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
 
       {/* Full-Screen Compound Synthesis Modal */}
       {synthesizedCompound !== null && (
-        <Modal transparent animationType="fade" visible={synthesizedCompound !== null}>
+        <Modal transparent animationType="fade" visible={synthesizedCompound !== null} onRequestClose={() => setSynthesizedCompound(null)}>
           <View style={A.modalOverlay}>
             <View style={A.modalBox}>
               <LinearGradient colors={['rgba(10,14,26,0.98)', 'rgba(10,14,26,1.0)']} style={StyleSheet.absoluteFill} />

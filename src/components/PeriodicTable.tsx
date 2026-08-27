@@ -100,7 +100,7 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
     const reqXP = (selectedEl - 3) * 120;
 
     return (
-      <Modal transparent animationType="fade" visible={selectedEl !== null}>
+      <Modal transparent animationType="fade" visible={selectedEl !== null} onRequestClose={() => setSelectedEl(null)}>
         <View style={T.modalOverlay}>
           <View style={T.modalBox}>
             <LinearGradient colors={['rgba(10, 14, 26, 0.98)', 'rgba(10, 14, 26, 1.0)']} style={StyleSheet.absoluteFill} />
