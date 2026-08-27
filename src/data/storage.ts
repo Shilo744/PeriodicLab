@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createPersistence } from './persistence';
 import { REACTIONS } from './reactions';
-import { isElementId, isRecord, nonnegativeInteger, elementIds, stringIds, levelsRecord, preferences, AppPreferences } from './storageSchema';
+import { isElementId, nonnegativeInteger, elementIds, stringIds, levelsRecord, preferences, AppPreferences } from './storageSchema';
+import { normalizeStreak, advanceDailyStreak, DailyStreak } from './dailyStreak';
 export type { AppPreferences } from './storageSchema';
 
 // Keep existing key names so upgrades retain saved progress.
@@ -41,25 +42,14 @@ export const saveAchievements = (ids: string[]) => store.write(KEYS.ACHIEVEMENTS
 export const loadAchievements = () => store.read(KEYS.ACHIEVEMENTS, stringIds);
 
 export async function saveDailyStreak(streak: number, lastDate: string): Promise<void> {
-  await store.write(KEYS.DAILY, { streak: Math.max(1, nonnegativeInteger(streak)), lastDate });
+  await store.write(KEYS.DAILY, normalizeStreak({ streak, lastDate }));
 }
-export async function loadDailyStreak(): Promise<{ streak: number; lastDate: string }> {
-  return store.read(KEYS.DAILY, value => isRecord(value) && typeof value.lastDate === 'string'
-    ? { streak: Math.max(1, nonnegativeInteger(value.streak)), lastDate: value.lastDate }
-    : { streak: 1, lastDate: new Date().toISOString().split('T')[0] });
+export async function loadDailyStreak(): Promise<DailyStreak> {
+  return store.read(KEYS.DAILY, normalizeStreak);
 }
-function localDateKey(date = new Date()): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}
-export async function updateDailyStreak(): Promise<{ streak: number; lastDate: string }> {
-  const saved = await loadDailyStreak();
-  const today = localDateKey();
-  if (saved.lastDate === today) return saved;
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const streak = saved.lastDate === localDateKey(yesterday) ? saved.streak + 1 : 1;
-  await saveDailyStreak(streak, today);
-  return { streak, lastDate: today };
+export async function updateDailyStreak(): Promise<DailyStreak> {
+  const now = new Date();
+  return store.update(KEYS.DAILY, normalizeStreak, saved => advanceDailyStreak(saved, now));
 }
 export function isElementUnlocked(z: number, xp: number, levels: Record<number, number>): boolean {
   if (z <= 3) return true;
