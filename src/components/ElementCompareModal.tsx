@@ -97,7 +97,7 @@ export default function ElementCompareModal({ initialZA = 11, initialZB = 17, on
 
               <View style={C.tableRow}>
                 <Text style={C.colVal}>{elA.shells[elA.shells.length - 1]} e⁻</Text>
-                <Text style={C.colLabel}>VALENCE ELECTRONS</Text>
+                <Text style={C.colLabel}>OUTERMOST SHELL ELECTRONS</Text>
                 <Text style={C.colVal}>{elB.shells[elB.shells.length - 1]} e⁻</Text>
               </View>
 
@@ -132,14 +132,10 @@ export default function ElementCompareModal({ initialZA = 11, initialZB = 17, on
             {/* Electronegativity Difference & Bond Characterization */}
             {elA.electronegativity !== undefined && elB.electronegativity !== undefined && (
               <View style={C.bondCard}>
-                <Text style={C.bondTitle}>BOND CHARACTER PREDICTION</Text>
+                <Text style={C.bondTitle}>ELECTRONEGATIVITY DIFFERENCE</Text>
                 <Text style={C.bondDiff}>Δχ = {Math.abs(elA.electronegativity - elB.electronegativity).toFixed(2)}</Text>
                 <Text style={C.bondType}>
-                  {Math.abs(elA.electronegativity - elB.electronegativity) > 2.0
-                    ? '✨ Pure Ionic Bond Lattice (High Polarity)'
-                    : Math.abs(elA.electronegativity - elB.electronegativity) >= 0.4
-                    ? '⚡ Polar Covalent Molecule Bond'
-                    : '🔗 Nonpolar / Pure Covalent Sharing'}
+                  This is a comparison of tabulated values, not a prediction of a specific compound or bond.
                 </Text>
               </View>
             )}
@@ -311,6 +307,8 @@ const C = StyleSheet.create({
   },
   bondType: {
     fontSize: 11,
+    textAlign: 'center',
+    lineHeight: 17,
     fontWeight: '700',
     color: '#34d399',
   },
