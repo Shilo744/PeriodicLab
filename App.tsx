@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, StatusBar, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, StatusBar, ScrollView, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Path, Line, Rect, Polyline } from 'react-native-svg';
 
@@ -138,7 +138,6 @@ function HomeScreen({
 }) {
   const [showProfile, setShowProfile] = useState(false);
   const [mutedState, setMutedState] = useState(isAudioMuted());
-  useEffect(() => { loadPreferences().then(p => setMutedState(p.audioMuted)); }, []);
   const league = getLeague(xp);
   const nextXP = xp < 100 ? 100 : xp < 500 ? 500 : xp < 1500 ? 1500 : xp < 5000 ? 5000 : 0;
   const nextPct = nextXP ? Math.round((xp / nextXP) * 100) : 100;
@@ -369,6 +368,8 @@ export default function App() {
   const [showFlashcards, setShowFlashcards] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
   const [storageReady, setStorageReady] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     if (__DEV__) {
@@ -380,24 +381,21 @@ export default function App() {
   const toggleLocale = useCallback(() => {
     triggerHaptic('light');
     playSound('click');
-    setLocale(l => {
-      const next = l === 'en' ? 'he' : 'en';
-      savePreferences({ locale: next });
-      return next;
-    });
-  }, []);
+    const next = locale === 'en' ? 'he' : 'en';
+    setLocale(next);
+    void savePreferences({ locale: next });
+  }, [locale]);
 
   // Initial loading from Storage
   useEffect(() => {
+    let active = true;
+    setLoadError(false);
     async function loadSavedData() {
-      const savedXP = await loadXP();
-      const savedLevels = await loadLevels();
-      const savedPool = await loadStudyPool(INITIAL_POOL);
-      const savedAch = await loadAchievements();
-      const savedDaily = await updateDailyStreak();
-      const preferences = await loadPreferences();
-      const savedTab = await loadLastTab();
-      const savedElement = await loadLastElement();
+      const [savedXP, savedLevels, savedPool, savedAch, savedDaily, preferences, savedTab, savedElement] = await Promise.all([
+        loadXP(), loadLevels(), loadStudyPool(INITIAL_POOL), loadAchievements(),
+        updateDailyStreak(), loadPreferences(), loadLastTab(), loadLastElement(),
+      ]);
+      if (!active) return;
       
       setTotalXP(savedXP);
       setElementLevels(savedLevels);
@@ -412,8 +410,9 @@ export default function App() {
       
       setQuizZ(pickFromPool(savedPool, savedLevels));
     }
-    loadSavedData();
-  }, []);
+    loadSavedData().catch(error => { if (active) { console.warn('Could not restore progress:', error); setLoadError(true); } });
+    return () => { active = false; };
+  }, [loadAttempt]);
 
   useEffect(() => { if (storageReady) saveLastTab(tab); }, [tab, storageReady]);
   useEffect(() => { if (storageReady) saveLastElement(studyZ); }, [studyZ, storageReady]);
@@ -422,7 +421,7 @@ export default function App() {
 
   // Check achievements whenever discovered or totalXP updates
   useEffect(() => {
-    if (discovered.length === 0 && totalXP === 0) return;
+    if (!storageReady || (discovered.length === 0 && totalXP === 0)) return;
     const { newUnlocked, totalBonusXP } = checkAchievements(discovered, totalXP, unlockedAchievements);
     if (newUnlocked.length > 0) {
       const updated = [...unlockedAchievements, ...newUnlocked];
@@ -436,7 +435,7 @@ export default function App() {
         });
       }
     }
-  }, [discovered.length, totalXP, unlockedAchievements]);
+  }, [discovered.length, totalXP, unlockedAchievements, storageReady]);
 
   const handleCorrect = useCallback((z: number) => {
     const currentLevel = elementLevels[z] || 0;
@@ -491,6 +490,14 @@ export default function App() {
     setStudyZ(z);
     setTab('study');
   }, []);
+
+  if (!storageReady) {
+    return <View style={[S.root, { justifyContent: 'center', alignItems: 'center', padding: 24, gap: 16 }]}>
+      {!loadError && <ActivityIndicator color={COLORS.primaryLight} size="large" />}
+      <Text style={{ color: COLORS.text }}>{loadError ? 'Progress could not be loaded. No progress has been reset.' : 'Restoring your laboratory…'}</Text>
+      {loadError && <TouchableOpacity accessibilityRole="button" onPress={() => setLoadAttempt(value => value + 1)} style={{ padding: 16 }}><Text style={{ color: COLORS.primaryLight }}>Retry</Text></TouchableOpacity>}
+    </View>;
+  }
 
   const screen = {
     home: (
