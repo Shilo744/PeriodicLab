@@ -25,6 +25,7 @@ import { triggerHaptic, playSound, isAudioMuted, setAudioMuted, toggleAudioMuted
 import FlashcardScreen from './src/screens/FlashcardScreen';
 import ReactionLabScreen from './src/screens/ReactionLabScreen';
 import { validateScientificData } from './src/data/validation';
+import { shuffled } from './src/utils/random';
 
 type Tab = 'home' | 'table' | 'study' | 'builder' | 'quiz';
 
@@ -105,7 +106,7 @@ function maybeExpandPool(levels: Record<number, number>, currentPool: number[]):
   }
   if (candidates.length === 0) return currentPool;
   const addCount = Math.min(4, candidates.length);
-  return [...currentPool, ...candidates.sort(() => Math.random() - 0.5).slice(0, addCount)];
+  return [...currentPool, ...shuffled(candidates).slice(0, addCount)];
 }
 
 function pickFromPool(pool: number[], levels: Record<number, number>): number {

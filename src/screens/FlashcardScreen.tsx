@@ -5,6 +5,7 @@ import { getElement, ELEMENTS } from '../data/elements';
 import { COLORS, RADIUS, SHADOWS, getCategoryColor } from '../theme';
 import { triggerHaptic, playSound } from '../services/feedback';
 import { loadMasteredFlashcards, saveMasteredFlashcards } from '../data/storage';
+import { shuffled } from '../utils/random';
 
 const { width: W, height: H } = Dimensions.get('window');
 const DECK_FILTERS = ['All', 'Nonmetal', 'Noble gas', 'Metal'] as const;
@@ -68,7 +69,7 @@ export default function FlashcardScreen({ onClose, onMasterElement }: FlashcardS
         <View style={FC.headerActions}>
           <TouchableOpacity style={FC.closeBtn} onPress={() => { setMasteredZList([]); saveMasteredFlashcards([]); }} accessibilityLabel="Reset flashcard mastery"><Text style={FC.closeTxt}>↺</Text></TouchableOpacity>
           <TouchableOpacity style={FC.closeBtn} onPress={() => {
-            setDeck(prev => [...prev].sort(() => Math.random() - 0.5));
+            setDeck(prev => shuffled(prev));
             setCurrentIdx(0);
             setIsFlipped(false);
           }} accessibilityLabel="Shuffle flashcards"><Text style={FC.closeTxt}>⤨</Text></TouchableOpacity>
