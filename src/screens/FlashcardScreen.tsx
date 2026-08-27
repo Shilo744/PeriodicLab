@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { getElement, ELEMENTS } from '../data/elements';
+import { ELEMENTS } from '../data/elements';
 import { COLORS, RADIUS, SHADOWS, getCategoryColor } from '../theme';
 import { triggerHaptic, playSound } from '../services/feedback';
 import { loadMasteredFlashcards, saveMasteredFlashcards } from '../data/storage';
@@ -9,7 +9,6 @@ import { shuffled } from '../utils/random';
 import { recordReview, nextReviewIndex } from '../data/flashcards';
 import ConfirmDialog from '../components/ConfirmDialog';
 
-const { width: W, height: H } = Dimensions.get('window');
 const DECK_FILTERS = ['All', 'Nonmetal', 'Noble gas', 'Metal'] as const;
 
 interface FlashcardScreenProps {
@@ -74,7 +73,7 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
   }
 
   return (
-    <View style={FC.wrap}>
+    <ScrollView style={{ flex: 1, backgroundColor: COLORS.bg }} contentContainerStyle={FC.wrap}>
       <LinearGradient colors={['rgba(10,14,26,0.95)', 'rgba(10,14,26,1.0)']} style={StyleSheet.absoluteFill} />
 
       {/* Header */}
@@ -113,7 +112,7 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
       <TouchableOpacity style={[FC.reviewToggle, hideMastered && FC.reviewToggleActive]} onPress={() => { setHideMastered(value => !value); setCurrentIdx(0); setIsFlipped(false); }}><Text style={FC.reviewToggleText}>{hideMastered ? 'Unmastered only — tap to show all' : 'All cards — tap to hide mastered'}</Text></TouchableOpacity>
 
       {/* Interactive Flip Card */}
-      <TouchableOpacity style={FC.cardContainer} onPress={flipCard} activeOpacity={0.9}>
+      <TouchableOpacity style={FC.cardContainer} onPress={flipCard} activeOpacity={0.9} accessibilityRole="button" accessibilityLabel={isFlipped ? 'Hide flashcard answer' : 'Reveal flashcard answer'}>
         <LinearGradient
           colors={isFlipped ? ['rgba(99, 102, 241, 0.12)', 'rgba(10, 14, 26, 0.95)'] : ['rgba(255, 255, 255, 0.04)', 'rgba(10, 14, 26, 0.9)']}
           style={StyleSheet.absoluteFill}
@@ -161,13 +160,14 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
           <Text style={FC.btnMasterTxt}>Memorized ✓</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const FC = StyleSheet.create({
   wrap: {
-    flex: 1,
+    flexGrow: 1,
+    gap: 12,
     backgroundColor: COLORS.bg,
     paddingTop: 50,
     paddingHorizontal: 20,
@@ -176,6 +176,8 @@ const FC = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingBottom: 14,
@@ -218,7 +220,7 @@ const FC = StyleSheet.create({
     fontWeight: '700',
   },
   cardContainer: {
-    height: H * 0.52,
+    minHeight: 360,
     borderRadius: RADIUS.xl,
     borderWidth: 1.5,
     borderColor: COLORS.border,
@@ -311,10 +313,12 @@ const FC = StyleSheet.create({
   },
   actionsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
   },
   actionBtn: {
     flex: 1,
+    minWidth: 110,
     paddingVertical: 16,
     borderRadius: RADIUS.md,
     alignItems: 'center',
