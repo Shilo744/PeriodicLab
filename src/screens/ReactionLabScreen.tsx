@@ -19,7 +19,26 @@ export default function ReactionLabScreen({ onClose }: { onClose: () => void }) 
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [spotlight, setSpotlight] = useState<string | null>(null);
   const listRef = useRef<ScrollView>(null);
-  useEffect(() => { loadFavoriteReactions().then(setFavorites); }, []);
+  const favoritesRef = useRef<string[]>([]);
+  const [favoritesReady, setFavoritesReady] = useState(false);
+  useEffect(() => {
+    let active = true;
+    loadFavoriteReactions().then(ids => {
+      if (!active) return;
+      favoritesRef.current = ids.filter(id => REACTIONS.some(r => r.id === id));
+      setFavorites(favoritesRef.current);
+      setFavoritesReady(true);
+    });
+    return () => { active = false; };
+  }, []);
+  const toggleFavorite = (id: string) => {
+    if (!favoritesReady) return;
+    const previous = favoritesRef.current;
+    const next = previous.includes(id) ? previous.filter(value => value !== id) : [...previous, id];
+    favoritesRef.current = next;
+    setFavorites(next);
+    void saveFavoriteReactions(next);
+  };
   const visible = useMemo(() => {
     return REACTIONS.filter(r => (!favoritesOnly || favorites.includes(r.id)) && (filter === 'all' || r.type === filter) && matchesReactionQuery(r, query));
   }, [filter, query, favoritesOnly, favorites]);
@@ -55,12 +74,17 @@ export default function ReactionLabScreen({ onClose }: { onClose: () => void }) 
         {visible.length === 0 && <View style={S.empty}><Text style={S.emptyIcon}>⚗️</Text><Text style={S.emptyTitle}>No matching reactions</Text><Text style={S.emptyText}>Try another formula, category, or favorites filter.</Text></View>}
         {ordered.map(reaction => {
           const active = selected === reaction.id;
-          return <TouchableOpacity key={reaction.id} onPress={() => runReaction(reaction)} style={[S.card, active && S.cardActive]} activeOpacity={0.82}>
-            <View style={S.cardHeader}><Text style={S.kind}>{reaction.type.toUpperCase()} · +{reaction.xpReward} XP</Text><TouchableOpacity onPress={() => setFavorites(prev => { const next = prev.includes(reaction.id) ? prev.filter(id => id !== reaction.id) : [...prev, reaction.id]; saveFavoriteReactions(next); return next; })} accessibilityLabel="Toggle favorite reaction"><Text style={S.star}>{favorites.includes(reaction.id) ? '★' : '☆'}</Text></TouchableOpacity></View>
-            <Text style={S.name}>{reaction.name}</Text>
-            <Text style={S.equation}>{reaction.equation}</Text>
-            {active && <View style={S.details}><Text style={S.enthalpy}>{reaction.enthalpy}</Text><Text style={S.description}>{reaction.description}</Text></View>}
-          </TouchableOpacity>;
+          return <View key={reaction.id} style={[S.card, active && S.cardActive]}>
+            <View style={S.cardHeader}>
+              <Text style={S.kind}>{reaction.type.toUpperCase()} · REFERENCE</Text>
+              <TouchableOpacity disabled={!favoritesReady} style={S.favoriteButton} accessibilityRole="button" accessibilityState={{ disabled: !favoritesReady, selected: favorites.includes(reaction.id) }} onPress={() => toggleFavorite(reaction.id)} accessibilityLabel={`${favorites.includes(reaction.id) ? 'Remove' : 'Add'} ${reaction.name} ${favorites.includes(reaction.id) ? 'from' : 'to'} favorites`}><Text style={S.star}>{favorites.includes(reaction.id) ? '★' : '☆'}</Text></TouchableOpacity>
+            </View>
+            <TouchableOpacity accessibilityRole="button" accessibilityState={{ expanded: active }} accessibilityLabel={`Inspect ${reaction.name}`} onPress={() => runReaction(reaction)} activeOpacity={0.82}>
+              <Text style={S.name}>{reaction.name}</Text>
+              <Text style={S.equation}>{reaction.equation}</Text>
+            </TouchableOpacity>
+            {active && <View style={S.details}><Text style={S.enthalpy}>{reaction.enthalpy}</Text><Text style={S.description}>{reaction.description}</Text><Text style={S.description}>Reactants: {reaction.reactants.map(item => `${item.count} × ${item.name}`).join(' + ')}</Text><Text style={S.description}>Products: {reaction.products.map(item => `${item.count} × ${item.name}`).join(' + ')}</Text></View>}
+          </View>;
         })}
       </ScrollView>
     </View>
@@ -90,6 +114,7 @@ const S = StyleSheet.create({
   kind: { color: COLORS.primaryLight, fontSize: 9, fontWeight: '900', letterSpacing: 0.8 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   star: { color: '#fbbf24', fontSize: 22 },
+  favoriteButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   name: { color: COLORS.text, fontSize: 15, fontWeight: '800', marginTop: 5 },
   equation: { color: '#34d399', fontSize: 19, fontWeight: '900', marginTop: 10 },
   details: { borderTopWidth: 1, borderTopColor: COLORS.borderLight, marginTop: 12, paddingTop: 10 },
