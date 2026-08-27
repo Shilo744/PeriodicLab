@@ -5,6 +5,7 @@ import { ChemicalReaction, REACTIONS } from '../data/reactions';
 import { COLORS, RADIUS } from '../theme';
 import { playSound, triggerHaptic } from '../services/feedback';
 import { loadFavoriteReactions, saveFavoriteReactions } from '../data/storage';
+import { matchesReactionQuery } from '../data/reactionSearch';
 
 type ReactionType = ChemicalReaction['type'] | 'all';
 const TYPES: ReactionType[] = ['all', 'combustion', 'synthesis', 'neutralization', 'redox'];
@@ -17,8 +18,7 @@ export default function ReactionLabScreen({ onClose }: { onClose: () => void }) 
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   useEffect(() => { loadFavoriteReactions().then(setFavorites); }, []);
   const visible = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    return REACTIONS.filter(r => (!favoritesOnly || favorites.includes(r.id)) && (filter === 'all' || r.type === filter) && (!normalized || `${r.name} ${r.nameHe} ${r.equation} ${r.description}`.toLowerCase().includes(normalized)));
+    return REACTIONS.filter(r => (!favoritesOnly || favorites.includes(r.id)) && (filter === 'all' || r.type === filter) && matchesReactionQuery(r, query));
   }, [filter, query, favoritesOnly, favorites]);
 
   const runReaction = (reaction: ChemicalReaction) => {
