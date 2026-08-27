@@ -1,5 +1,6 @@
 import { ELEMENTS } from './elements';
 import { REACTIONS } from './reactions';
+import { reactionBalance } from './reactionBalance';
 
 export interface DataValidationResult { valid: boolean; errors: string[]; }
 
@@ -19,6 +20,9 @@ export function validateScientificData(): DataValidationResult {
 
   const reactionIds = new Set<string>();
   for (const reaction of REACTIONS) {
+    try {
+      if (!reactionBalance(reaction).balanced) errors.push(`${reaction.id}: atoms are not conserved`);
+    } catch (error) { errors.push(`${reaction.id}: ${String(error)}`); }
     if (reactionIds.has(reaction.id)) errors.push(`Duplicate reaction id: ${reaction.id}`);
     reactionIds.add(reaction.id);
     if (!reaction.equation.includes('➔')) errors.push(`${reaction.id}: equation is missing an arrow`);

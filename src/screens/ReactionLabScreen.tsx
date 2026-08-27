@@ -7,6 +7,7 @@ import { playSound, triggerHaptic } from '../services/feedback';
 import { loadFavoriteReactions, saveFavoriteReactions } from '../data/storage';
 import { matchesReactionQuery } from '../data/reactionSearch';
 import { randomAlternative } from '../utils/random';
+import { reactionBalance } from '../data/reactionBalance';
 
 type ReactionType = ChemicalReaction['type'] | 'all';
 const TYPES: ReactionType[] = ['all', 'combustion', 'synthesis', 'neutralization', 'redox'];
@@ -84,6 +85,10 @@ export default function ReactionLabScreen({ onClose }: { onClose: () => void }) 
               <Text style={S.equation}>{reaction.equation}</Text>
             </TouchableOpacity>
             {active && <View style={S.details}><Text style={S.enthalpy}>{reaction.enthalpy}</Text><Text style={S.description}>{reaction.description}</Text><Text style={S.description}>Reactants: {reaction.reactants.map(item => `${item.count} × ${item.name}`).join(' + ')}</Text><Text style={S.description}>Products: {reaction.products.map(item => `${item.count} × ${item.name}`).join(' + ')}</Text></View>}
+            {active && <View style={S.details}>
+              <Text style={S.kind}>ATOM CONSERVATION · REACTANTS / PRODUCTS</Text>
+              {reactionBalance(reaction).rows.map(row => <Text key={row.symbol} style={S.description}>{row.symbol}: {row.reactants} / {row.products} {row.reactants === row.products ? '✓' : '≠'}</Text>)}
+            </View>}
           </View>;
         })}
       </ScrollView>
