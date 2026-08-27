@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChemicalReaction, REACTIONS } from '../data/reactions';
@@ -6,6 +6,7 @@ import { COLORS, RADIUS } from '../theme';
 import { playSound, triggerHaptic } from '../services/feedback';
 import { loadFavoriteReactions, saveFavoriteReactions } from '../data/storage';
 import { matchesReactionQuery } from '../data/reactionSearch';
+import { randomAlternative } from '../utils/random';
 
 type ReactionType = ChemicalReaction['type'] | 'all';
 const TYPES: ReactionType[] = ['all', 'combustion', 'synthesis', 'neutralization', 'redox'];
@@ -16,6 +17,8 @@ export default function ReactionLabScreen({ onClose }: { onClose: () => void }) 
   const [query, setQuery] = useState('');
   const [favorites, setFavorites] = useState<string[]>([]);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [spotlight, setSpotlight] = useState<string | null>(null);
+  const listRef = useRef<ScrollView>(null);
   useEffect(() => { loadFavoriteReactions().then(setFavorites); }, []);
   const visible = useMemo(() => {
     return REACTIONS.filter(r => (!favoritesOnly || favorites.includes(r.id)) && (filter === 'all' || r.type === filter) && matchesReactionQuery(r, query));
@@ -26,13 +29,21 @@ export default function ReactionLabScreen({ onClose }: { onClose: () => void }) 
     triggerHaptic('success');
     playSound(reaction.type === 'combustion' ? 'fusion' : 'synthesize');
   };
+  const pickRandom = () => {
+    const choice = randomAlternative(visible, visible.find(r => r.id === selected));
+    if (!choice) return;
+    setSpotlight(choice.id);
+    runReaction(choice);
+    listRef.current?.scrollTo({ y: 0, animated: true });
+  };
+  const ordered = [...visible].sort((a, b) => Number(b.id === spotlight) - Number(a.id === spotlight));
 
   return (
     <View style={S.root}>
       <LinearGradient colors={['#07111f', COLORS.bg]} style={StyleSheet.absoluteFill} />
       <View style={S.header}>
         <View><Text style={S.title}>REACTION LAB</Text><Text style={S.subtitle}>Explore balanced chemical equations</Text></View>
-        <View style={S.headerActions}><TouchableOpacity onPress={() => runReaction(REACTIONS[Math.floor(Math.random() * REACTIONS.length)])} style={S.close} accessibilityLabel="Pick random reaction"><Text style={S.closeText}>⚄</Text></TouchableOpacity><TouchableOpacity onPress={onClose} style={S.close}><Text style={S.closeText}>✕</Text></TouchableOpacity></View>
+        <View style={S.headerActions}><TouchableOpacity disabled={!visible.length} onPress={pickRandom} style={[S.close, !visible.length && { opacity: 0.4 }]} accessibilityRole="button" accessibilityLabel="Pick random matching reaction"><Text style={S.closeText}>⚄</Text></TouchableOpacity><TouchableOpacity onPress={onClose} style={S.close}><Text style={S.closeText}>✕</Text></TouchableOpacity></View>
       </View>
       <TextInput value={query} onChangeText={setQuery} placeholder="Search name, formula, or description…" placeholderTextColor={COLORS.textTertiary} style={S.search} autoCorrect={false} accessibilityLabel="Search reactions" />
       <TouchableOpacity style={[S.favoriteFilter, favoritesOnly && S.favoriteFilterActive]} onPress={() => setFavoritesOnly(value => !value)}><Text style={S.favoriteFilterText}>{favoritesOnly ? '★ Showing favorites' : '☆ Show favorites only'}</Text></TouchableOpacity>
@@ -40,9 +51,9 @@ export default function ReactionLabScreen({ onClose }: { onClose: () => void }) 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={S.filters} contentContainerStyle={S.filterContent}>
         {TYPES.map(type => <TouchableOpacity key={type} onPress={() => setFilter(type)} style={[S.chip, filter === type && S.chipActive]}><Text style={[S.chipText, filter === type && S.chipTextActive]}>{type.toUpperCase()}</Text></TouchableOpacity>)}
       </ScrollView>
-      <ScrollView contentContainerStyle={S.list}>
+      <ScrollView ref={listRef} contentContainerStyle={S.list}>
         {visible.length === 0 && <View style={S.empty}><Text style={S.emptyIcon}>⚗️</Text><Text style={S.emptyTitle}>No matching reactions</Text><Text style={S.emptyText}>Try another formula, category, or favorites filter.</Text></View>}
-        {visible.map(reaction => {
+        {ordered.map(reaction => {
           const active = selected === reaction.id;
           return <TouchableOpacity key={reaction.id} onPress={() => runReaction(reaction)} style={[S.card, active && S.cardActive]} activeOpacity={0.82}>
             <View style={S.cardHeader}><Text style={S.kind}>{reaction.type.toUpperCase()} · +{reaction.xpReward} XP</Text><TouchableOpacity onPress={() => setFavorites(prev => { const next = prev.includes(reaction.id) ? prev.filter(id => id !== reaction.id) : [...prev, reaction.id]; saveFavoriteReactions(next); return next; })} accessibilityLabel="Toggle favorite reaction"><Text style={S.star}>{favorites.includes(reaction.id) ? '★' : '☆'}</Text></TouchableOpacity></View>

@@ -7,3 +7,9 @@ export function shuffled<T>(items: readonly T[], random: () => number = Math.ran
   }
   return result;
 }
+
+export function randomAlternative<T>(items: readonly T[], current: T | undefined, random: () => number = Math.random): T | undefined {
+  const others = items.filter(item => item !== current);
+  const candidates = others.length ? others : items;
+  return candidates.length ? candidates[Math.floor(random() * candidates.length)] : undefined;
+}
