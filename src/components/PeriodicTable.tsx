@@ -231,7 +231,7 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
             autoCapitalize="none"
           />
           {search.length > 0 && (
-            <TouchableOpacity style={T.clearBtn} onPress={() => setSearch('')}>
+            <TouchableOpacity style={T.clearBtn} onPress={() => setSearch('')} accessibilityRole="button" accessibilityLabel="Clear element search">
               <Text style={T.clearBtnTxt}>✕</Text>
             </TouchableOpacity>
           )}
@@ -247,6 +247,9 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
                 style={[T.filterChip, isActive && T.filterChipActive]}
                 onPress={() => setActiveFilter(tag)}
                 activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isActive }}
+                accessibilityLabel={`Filter elements by ${tag}`}
               >
                 <Text style={[T.filterChipText, isActive && T.filterChipTextActive]}>{tag}</Text>
               </TouchableOpacity>
