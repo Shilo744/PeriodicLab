@@ -3,6 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { ELEMENTS, getElement } = require('../src/data/elements.ts');
 const { REACTIONS } = require('../src/data/reactions.ts');
+const { validateScientificData } = require('../src/data/validation.ts');
 
 test('catalog contains every atomic number exactly once', () => {
   assert.deepEqual(ELEMENTS.map(e => e.z).sort((a, b) => a - b), Array.from({ length: 118 }, (_, i) => i + 1));
@@ -16,4 +17,10 @@ test('reactions have unique ids and positive integral coefficients', () => {
     assert.ok(r.reactants.length && r.products.length, r.id);
     for (const side of [...r.reactants, ...r.products]) assert.ok(Number.isInteger(side.count) && side.count > 0, r.id);
   }
+});
+
+test('the full scientific catalog passes startup validation', () => {
+  const result = validateScientificData();
+  assert.equal(result.valid, true, result.errors.join('\n'));
+  assert.deepEqual(result.errors, []);
 });
