@@ -25,6 +25,8 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
   const [deck, setDeck] = useState(() => ELEMENTS.slice(0, 36));
   const [deckFilter, setDeckFilter] = useState<(typeof DECK_FILTERS)[number]>('All');
   const [hideMastered, setHideMastered] = useState(false);
+  const [sessionReviewed, setSessionReviewed] = useState(0);
+  const [sessionKnown, setSessionKnown] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -48,6 +50,8 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
   const handleNext = useCallback((known: boolean) => {
     if (!ready || !isFlipped || reviewed.current) return;
     reviewed.current = true;
+    setSessionReviewed(value => value + 1);
+    if (known) setSessionKnown(value => value + 1);
     const nextMastered = recordReview(masteredZList, currentEl.z, known);
     setMasteredZList(nextMastered);
     void saveMasteredFlashcards(nextMastered);
@@ -80,7 +84,7 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
       <View style={FC.header}>
         <View>
           <Text style={FC.title}>PRACTICE FLASHCARDS</Text>
-          <Text style={FC.sub}>Card {(currentIdx % activeElements.length) + 1} of {activeElements.length} · {masteredInDeck}/{deck.length} Memorized</Text>
+          <Text style={FC.sub}>Card {(currentIdx % activeElements.length) + 1} of {activeElements.length} · {masteredInDeck}/{deck.length} Memorized · Session {sessionKnown}/{sessionReviewed}</Text>
         </View>
         <View style={FC.headerActions}>
           <TouchableOpacity disabled={!ready} style={FC.closeBtn} onPress={() => setConfirmReset(true)} accessibilityLabel="Reset flashcard mastery"><Text style={FC.closeTxt}>↺</Text></TouchableOpacity>
