@@ -19,6 +19,7 @@ export default function ReactionLabScreen({ onClose }: { onClose: () => void }) 
   const [favorites, setFavorites] = useState<string[]>([]);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [spotlight, setSpotlight] = useState<string | null>(null);
+  const [alphabetical, setAlphabetical] = useState(false);
   const listRef = useRef<ScrollView>(null);
   const favoritesRef = useRef<string[]>([]);
   const [favoritesReady, setFavoritesReady] = useState(false);
@@ -56,7 +57,7 @@ export default function ReactionLabScreen({ onClose }: { onClose: () => void }) 
     runReaction(choice);
     listRef.current?.scrollTo({ y: 0, animated: true });
   };
-  const ordered = [...visible].sort((a, b) => Number(b.id === spotlight) - Number(a.id === spotlight));
+  const ordered = [...visible].sort((a, b) => Number(b.id === spotlight) - Number(a.id === spotlight) || (alphabetical ? a.name.localeCompare(b.name) : 0));
 
   return (
     <View style={S.root}>
@@ -68,6 +69,7 @@ export default function ReactionLabScreen({ onClose }: { onClose: () => void }) 
       <TextInput value={query} onChangeText={setQuery} placeholder="Search name, formula, or description…" placeholderTextColor={COLORS.textTertiary} style={S.search} autoCorrect={false} accessibilityLabel="Search reactions" />
       <TouchableOpacity style={[S.favoriteFilter, favoritesOnly && S.favoriteFilterActive]} onPress={() => setFavoritesOnly(value => !value)}><Text style={S.favoriteFilterText}>{favoritesOnly ? '★ Showing favorites' : '☆ Show favorites only'}</Text></TouchableOpacity>
       <Text style={S.resultCount}>{visible.length} experiments · {favorites.length} favorites</Text>
+      <TouchableOpacity style={S.favoriteFilter} onPress={() => setAlphabetical(value => !value)}><Text style={S.favoriteFilterText}>{alphabetical ? 'A→Z order' : 'Catalog order'}</Text></TouchableOpacity>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={S.filters} contentContainerStyle={S.filterContent}>
         {TYPES.map(type => <TouchableOpacity key={type} onPress={() => setFilter(type)} style={[S.chip, filter === type && S.chipActive]}><Text style={[S.chipText, filter === type && S.chipTextActive]}>{type.toUpperCase()}</Text></TouchableOpacity>)}
       </ScrollView>
