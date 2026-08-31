@@ -7,9 +7,12 @@ export interface DataValidationResult { valid: boolean; errors: string[]; }
 export function validateScientificData(): DataValidationResult {
   const errors: string[] = [];
   const atomicNumbers = new Set<number>();
+  const symbols = new Set<string>();
   for (const element of ELEMENTS) {
     if (atomicNumbers.has(element.z)) errors.push(`Duplicate atomic number: ${element.z}`);
     atomicNumbers.add(element.z);
+    if (symbols.has(element.sym)) errors.push(`Duplicate element symbol: ${element.sym}`);
+    symbols.add(element.sym);
     if (element.shells.reduce((sum, count) => sum + count, 0) !== element.z) errors.push(`${element.sym}: electron shells do not total Z`);
     if (element.mass <= 0) errors.push(`${element.sym}: atomic mass must be positive`);
     if (element.density !== undefined && element.density <= 0) errors.push(`${element.sym}: density must be positive`);
@@ -17,6 +20,7 @@ export function validateScientificData(): DataValidationResult {
     if (element.ionizationEnergy !== undefined && element.ionizationEnergy <= 0) errors.push(`${element.sym}: ionization energy must be positive`);
   }
   if (ELEMENTS.length !== 118) errors.push(`Expected 118 elements, found ${ELEMENTS.length}`);
+  for (let z = 1; z <= 118; z += 1) if (!atomicNumbers.has(z)) errors.push(`Missing atomic number: ${z}`);
 
   const reactionIds = new Set<string>();
   for (const reaction of REACTIONS) {
