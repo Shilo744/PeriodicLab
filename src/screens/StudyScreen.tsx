@@ -218,6 +218,10 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
                 <Text style={S.propVal}>{el.state.toUpperCase()}</Text>
               </View>
               <View style={S.propItem}>
+                <Text style={S.propLbl}>Density</Text>
+                <Text style={S.propVal}>{el.density !== undefined ? `${el.density} g/cm³` : 'Not catalogued'}</Text>
+              </View>
+              <View style={S.propItem}>
                 <Text style={S.propLbl}>Melting / Boiling</Text>
                 <Text style={S.propVal}>{el.meltingPoint ?? 'N/A'}°C / {el.boilingPoint ?? 'N/A'}°C</Text>
               </View>
