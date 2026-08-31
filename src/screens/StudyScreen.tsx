@@ -238,6 +238,10 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
                 <Text style={S.propVal}>{el.ionizationEnergy ? `${el.ionizationEnergy} kJ/mol` : 'Not catalogued'}</Text>
               </View>
               <View style={S.propItem}>
+                <Text style={S.propLbl}>Electronegativity</Text>
+                <Text style={S.propVal}>{el.electronegativity ?? 'Not catalogued'}</Text>
+              </View>
+              <View style={S.propItem}>
                 <Text style={S.propLbl}>Atomic Radius</Text>
                 <Text style={S.propVal}>{el.atomicRadius ? `${el.atomicRadius} pm` : 'Not catalogued'}</Text>
               </View>
