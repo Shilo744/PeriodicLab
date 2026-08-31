@@ -219,7 +219,7 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
               </View>
               <View style={S.propItem}>
                 <Text style={S.propLbl}>Melting / Boiling</Text>
-                <Text style={S.propVal}>{el.meltingPoint !== undefined ? `${el.meltingPoint}°C` : 'N/A'}</Text>
+                <Text style={S.propVal}>{el.meltingPoint ?? 'N/A'}°C / {el.boilingPoint ?? 'N/A'}°C</Text>
               </View>
               <View style={S.propItem}>
                 <Text style={S.propLbl}>Discovered</Text>
