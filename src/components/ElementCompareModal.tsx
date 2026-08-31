@@ -82,6 +82,11 @@ export default function ElementCompareModal({ initialZA = 11, initialZB = 17, on
                 <Text style={C.colLabel}>ATOMIC MASS</Text>
                 <Text style={C.colVal}>{elB.mass.toFixed(2)} u</Text>
               </View>
+              <View style={C.tableRow}>
+                <Text style={C.colVal}>{elA.density !== undefined ? `${elA.density} g/cm³` : 'N/A'}</Text>
+                <Text style={C.colLabel}>DENSITY</Text>
+                <Text style={C.colVal}>{elB.density !== undefined ? `${elB.density} g/cm³` : 'N/A'}</Text>
+              </View>
 
               <View style={C.tableRow}>
                 <Text style={C.colVal}>{elA.electronegativity ?? 'N/A'}</Text>
