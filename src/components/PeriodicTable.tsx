@@ -254,6 +254,11 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
           })}
         </ScrollView>
         <Text style={T.resultSummary}>{visibleCount} elements match the current view</Text>
+        {(search.length > 0 || activeFilter !== 'All') && (
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Reset periodic table view" onPress={() => { setSearch(''); setActiveFilter('All'); }}>
+            <Text style={T.resultSummary}>Reset search and filters</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Interactive Matrix Grid ScrollViews */}
