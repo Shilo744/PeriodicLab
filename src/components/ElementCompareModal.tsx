@@ -137,6 +137,11 @@ export default function ElementCompareModal({ initialZA = 11, initialZB = 17, on
                 <Text style={C.colLabel}>CRYSTAL STRUCTURE</Text>
                 <Text style={C.colVal}>{elB.crystalStructure ?? 'N/A'}</Text>
               </View>
+              <View style={C.tableRow}>
+                <Text style={C.colVal}>{String(elA.discovered)}</Text>
+                <Text style={C.colLabel}>DISCOVERED</Text>
+                <Text style={C.colVal}>{String(elB.discovered)}</Text>
+              </View>
             </View>
 
             {/* Electronegativity Difference & Bond Characterization */}
