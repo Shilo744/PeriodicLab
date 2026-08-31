@@ -99,7 +99,7 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={FC.filters} contentContainerStyle={FC.filtersContent}>
         {DECK_FILTERS.map(filter => (
-          <TouchableOpacity key={filter} style={[FC.filterChip, deckFilter === filter && FC.filterChipActive]} onPress={() => {
+          <TouchableOpacity key={filter} style={[FC.filterChip, deckFilter === filter && FC.filterChipActive]} accessibilityRole="button" accessibilityState={{ selected: deckFilter === filter }} accessibilityLabel={`${filter} flashcard deck`} onPress={() => {
             const base = ELEMENTS.slice(0, 36);
             const metalFamilies = ['Alkali metal', 'Alkaline earth', 'Transition metal', 'Post-transition'];
             const next = filter === 'All' ? base : filter === 'Metal' ? base.filter(el => metalFamilies.includes(el.category)) : base.filter(el => el.category === filter);
@@ -113,7 +113,7 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
       <View style={FC.progressTrack} accessibilityLabel={`${masteredInDeck} of ${deck.length} mastered flashcards`}>
         <LinearGradient colors={['#34d399', '#22d3ee']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[FC.progressFill, { width: `${(masteredInDeck / deck.length) * 100}%` }]} />
       </View>
-      <TouchableOpacity style={[FC.reviewToggle, hideMastered && FC.reviewToggleActive]} onPress={() => { setHideMastered(value => !value); setCurrentIdx(0); setIsFlipped(false); }}><Text style={FC.reviewToggleText}>{hideMastered ? 'Unmastered only — tap to show all' : 'All cards — tap to hide mastered'}</Text></TouchableOpacity>
+      <TouchableOpacity style={[FC.reviewToggle, hideMastered && FC.reviewToggleActive]} accessibilityRole="switch" accessibilityState={{ checked: hideMastered }} accessibilityLabel="Hide mastered flashcards" onPress={() => { setHideMastered(value => !value); setCurrentIdx(0); setIsFlipped(false); }}><Text style={FC.reviewToggleText}>{hideMastered ? 'Unmastered only — tap to show all' : 'All cards — tap to hide mastered'}</Text></TouchableOpacity>
 
       {/* Interactive Flip Card */}
       <TouchableOpacity style={FC.cardContainer} onPress={flipCard} activeOpacity={0.9} accessibilityRole="button" accessibilityLabel={isFlipped ? 'Hide flashcard answer' : 'Reveal flashcard answer'}>
