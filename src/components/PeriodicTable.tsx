@@ -67,7 +67,9 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
       const matchSym = el.sym.toLowerCase().includes(q);
       const matchName = el.nameEn.toLowerCase().includes(q);
       const matchZ = el.z.toString() === q;
-      if (!matchSym && !matchName && !matchZ) return false;
+      const matchCategory = el.category.toLowerCase().includes(q);
+      const matchDiscovery = String(el.discovered).toLowerCase().includes(q) || (el.discoveredBy ?? '').toLowerCase().includes(q);
+      if (!matchSym && !matchName && !matchZ && !matchCategory && !matchDiscovery) return false;
     }
 
     // Category / State filter
@@ -222,7 +224,7 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
         <View style={T.searchContainer}>
           <TextInput
             style={T.searchInput}
-            placeholder="Search by symbol (Fe), name (Iron), or Z (26)..."
+            placeholder="Search name, symbol, category, discoverer, year, or Z..."
             placeholderTextColor={COLORS.textTertiary}
             value={search}
             onChangeText={setSearch}
