@@ -83,7 +83,7 @@ export default function ReactionLabScreen({ onClose }: { onClose: () => void }) 
               <Text style={S.kind}>{reaction.type.toUpperCase()} · REFERENCE</Text>
               <TouchableOpacity disabled={!favoritesReady} style={S.favoriteButton} accessibilityRole="button" accessibilityState={{ disabled: !favoritesReady, selected: favorites.includes(reaction.id) }} onPress={() => toggleFavorite(reaction.id)} accessibilityLabel={`${favorites.includes(reaction.id) ? 'Remove' : 'Add'} ${reaction.name} ${favorites.includes(reaction.id) ? 'from' : 'to'} favorites`}><Text style={S.star}>{favorites.includes(reaction.id) ? '★' : '☆'}</Text></TouchableOpacity>
             </View>
-            <TouchableOpacity accessibilityRole="button" accessibilityState={{ expanded: active }} accessibilityLabel={`Inspect ${reaction.name}`} onPress={() => runReaction(reaction)} activeOpacity={0.82}>
+            <TouchableOpacity accessibilityRole="button" accessibilityState={{ expanded: active }} accessibilityLabel={`${active ? 'Collapse' : 'Inspect'} ${reaction.name}`} onPress={() => active ? setSelected('') : runReaction(reaction)} activeOpacity={0.82}>
               <Text style={S.name}>{reaction.name}</Text>
               <Text style={S.equation}>{reaction.equation}</Text>
             </TouchableOpacity>
