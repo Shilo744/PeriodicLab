@@ -9,7 +9,7 @@ import { shuffled } from '../utils/random';
 import { recordReview, nextReviewIndex } from '../data/flashcards';
 import ConfirmDialog from '../components/ConfirmDialog';
 
-const DECK_FILTERS = ['All', 'Nonmetal', 'Noble gas', 'Metal'] as const;
+const DECK_FILTERS = ['All', 'Nonmetal', 'Noble gas', 'Halogen', 'Alkali metal', 'Transition metal', 'Metal'] as const;
 
 interface FlashcardScreenProps {
   onClose: () => void;
