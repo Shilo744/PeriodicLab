@@ -118,6 +118,11 @@ export default function ElementCompareModal({ initialZA = 11, initialZB = 17, on
                 <Text style={C.colVal}>{elB.meltingPoint !== undefined ? `${elB.meltingPoint}°C` : 'N/A'}</Text>
               </View>
               <View style={C.tableRow}>
+                <Text style={C.colVal}>{elA.boilingPoint !== undefined ? `${elA.boilingPoint}°C` : 'N/A'}</Text>
+                <Text style={C.colLabel}>BOILING POINT</Text>
+                <Text style={C.colVal}>{elB.boilingPoint !== undefined ? `${elB.boilingPoint}°C` : 'N/A'}</Text>
+              </View>
+              <View style={C.tableRow}>
                 <Text style={C.colVal}>{elA.atomicRadius ? `${elA.atomicRadius} pm` : 'N/A'}</Text>
                 <Text style={C.colLabel}>ATOMIC RADIUS</Text>
                 <Text style={C.colVal}>{elB.atomicRadius ? `${elB.atomicRadius} pm` : 'N/A'}</Text>
