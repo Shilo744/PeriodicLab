@@ -147,7 +147,7 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
               </View>
               <View style={T.propCell}>
                 <Text style={T.propLabel}>Melting / Boiling</Text>
-                <Text style={T.propVal}>{el.meltingPoint !== undefined ? `${el.meltingPoint}°C` : 'N/A'}</Text>
+                <Text style={T.propVal}>{el.meltingPoint ?? 'N/A'}°C / {el.boilingPoint ?? 'N/A'}°C</Text>
               </View>
             </View>
 
