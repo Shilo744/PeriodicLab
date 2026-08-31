@@ -70,6 +70,7 @@ export default function ReactionLabScreen({ onClose }: { onClose: () => void }) 
       <TouchableOpacity style={[S.favoriteFilter, favoritesOnly && S.favoriteFilterActive]} onPress={() => setFavoritesOnly(value => !value)}><Text style={S.favoriteFilterText}>{favoritesOnly ? '★ Showing favorites' : '☆ Show favorites only'}</Text></TouchableOpacity>
       <Text style={S.resultCount}>{visible.length} experiments · {favorites.length} favorites</Text>
       <TouchableOpacity style={S.favoriteFilter} onPress={() => setAlphabetical(value => !value)}><Text style={S.favoriteFilterText}>{alphabetical ? 'A→Z order' : 'Catalog order'}</Text></TouchableOpacity>
+      {(query || filter !== 'all' || favoritesOnly) && <TouchableOpacity style={S.favoriteFilter} onPress={() => { setQuery(''); setFilter('all'); setFavoritesOnly(false); setSpotlight(null); }}><Text style={S.favoriteFilterText}>Clear search & filters</Text></TouchableOpacity>}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={S.filters} contentContainerStyle={S.filterContent}>
         {TYPES.map(type => <TouchableOpacity key={type} onPress={() => setFilter(type)} style={[S.chip, filter === type && S.chipActive]}><Text style={[S.chipText, filter === type && S.chipTextActive]}>{type.toUpperCase()}</Text></TouchableOpacity>)}
       </ScrollView>
