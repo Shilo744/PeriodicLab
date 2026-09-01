@@ -153,6 +153,7 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
         <TouchableOpacity
           style={[S.tabBtn, selectedTab === 'thermal' && S.tabBtnActive]}
           onPress={() => setSelectedTab('thermal')}
+          accessibilityRole="tab" accessibilityState={{ selected: selectedTab === 'thermal' }} accessibilityLabel="Thermal phase simulator"
           activeOpacity={0.8}
         >
           <Text style={[S.tabBtnTxt, selectedTab === 'thermal' && S.tabBtnTxtActive]}>Thermal 🌡️</Text>
