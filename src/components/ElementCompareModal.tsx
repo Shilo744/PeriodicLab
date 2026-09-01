@@ -40,7 +40,7 @@ export default function ElementCompareModal({ initialZA = 11, initialZB = 17, on
             {/* Top Cards Comparison */}
           <View style={C.cardsRow}>
               {/* Element A */}
-              <View style={[C.elCard, { borderColor: catA }]}>
+              <View style={[C.elCard, { borderColor: catA }]} accessible accessibilityLabel={`Left element: ${elA.nameEn}, atomic number ${zA}`}>
                 <Text style={[C.sym, { color: catA }]}>{elA.sym}</Text>
                 <Text style={C.name}>{elA.nameEn}</Text>
                 <Text style={C.meta}>Z = {zA} &bull; {elA.category}</Text>
