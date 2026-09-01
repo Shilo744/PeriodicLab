@@ -64,7 +64,7 @@ export default function ReactionLabScreen({ onClose }: { onClose: () => void }) 
       <LinearGradient colors={['#07111f', COLORS.bg]} style={StyleSheet.absoluteFill} />
       <View style={S.header}>
         <View><Text style={S.title}>REACTION LAB</Text><Text style={S.subtitle}>Explore balanced chemical equations</Text></View>
-        <View style={S.headerActions}><TouchableOpacity disabled={!visible.length} onPress={pickRandom} style={[S.close, !visible.length && { opacity: 0.4 }]} accessibilityRole="button" accessibilityLabel="Pick random matching reaction"><Text style={S.closeText}>⚄</Text></TouchableOpacity><TouchableOpacity onPress={onClose} style={S.close}><Text style={S.closeText}>✕</Text></TouchableOpacity></View>
+        <View style={S.headerActions}><TouchableOpacity disabled={!visible.length} onPress={pickRandom} style={[S.close, !visible.length && { opacity: 0.4 }]} accessibilityRole="button" accessibilityLabel="Pick random matching reaction"><Text style={S.closeText}>⚄</Text></TouchableOpacity><TouchableOpacity onPress={onClose} style={S.close} accessibilityRole="button" accessibilityLabel="Close reaction lab"><Text style={S.closeText}>✕</Text></TouchableOpacity></View>
       </View>
       <TextInput value={query} onChangeText={setQuery} placeholder="Search name, formula, or description…" placeholderTextColor={COLORS.textTertiary} style={S.search} autoCorrect={false} accessibilityLabel="Search reactions" />
       <TouchableOpacity style={[S.favoriteFilter, favoritesOnly && S.favoriteFilterActive]} onPress={() => setFavoritesOnly(value => !value)}><Text style={S.favoriteFilterText}>{favoritesOnly ? '★ Showing favorites' : '☆ Show favorites only'}</Text></TouchableOpacity>
