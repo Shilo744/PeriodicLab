@@ -64,7 +64,7 @@ export default function ElementCompareModal({ initialZA = 11, initialZB = 17, on
               </View>
 
               {/* Element B */}
-              <View style={[C.elCard, { borderColor: catB }]}>
+              <View style={[C.elCard, { borderColor: catB }]} accessible accessibilityLabel={`Right element: ${elB.nameEn}, atomic number ${zB}`}>
                 <Text style={[C.sym, { color: catB }]}>{elB.sym}</Text>
                 <Text style={C.name}>{elB.nameEn}</Text>
                 <Text style={C.meta}>Z = {zB} &bull; {elB.category}</Text>
