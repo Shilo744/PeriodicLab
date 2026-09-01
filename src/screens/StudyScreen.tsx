@@ -395,19 +395,19 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
 
               {/* Thermal Step Buttons */}
               <View style={S.tempBtnsRow}>
-                <TouchableOpacity style={S.tempBtn} onPress={() => setTempK(t => Math.max(0, t - 200))}>
+                <TouchableOpacity style={S.tempBtn} accessibilityRole="button" accessibilityLabel="Decrease temperature by 200 kelvin" onPress={() => setTempK(t => Math.max(0, t - 200))}>
                   <Text style={S.tempBtnTxt}>-200K</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={S.tempBtn} onPress={() => setTempK(t => Math.max(0, t - 50))}>
+                <TouchableOpacity style={S.tempBtn} accessibilityRole="button" accessibilityLabel="Decrease temperature by 50 kelvin" onPress={() => setTempK(t => Math.max(0, t - 50))}>
                   <Text style={S.tempBtnTxt}>-50K</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={S.tempBtn} onPress={() => setTempK(298.15)}>
+                <TouchableOpacity style={S.tempBtn} accessibilityRole="button" accessibilityLabel="Reset temperature to room temperature" onPress={() => setTempK(298.15)}>
                   <Text style={[S.tempBtnTxt, { color: '#fbbf24' }]}>25°C</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={S.tempBtn} onPress={() => setTempK(t => Math.min(6000, t + 50))}>
+                <TouchableOpacity style={S.tempBtn} accessibilityRole="button" accessibilityLabel="Increase temperature by 50 kelvin" onPress={() => setTempK(t => Math.min(6000, t + 50))}>
                   <Text style={S.tempBtnTxt}>+50K</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={S.tempBtn} onPress={() => setTempK(t => Math.min(6000, t + 200))}>
+                <TouchableOpacity style={S.tempBtn} accessibilityRole="button" accessibilityLabel="Increase temperature by 200 kelvin" onPress={() => setTempK(t => Math.min(6000, t + 200))}>
                   <Text style={S.tempBtnTxt}>+200K</Text>
                 </TouchableOpacity>
               </View>
