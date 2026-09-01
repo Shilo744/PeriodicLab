@@ -364,6 +364,8 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
                     onPress={() => handleCellPress(z)}
                     activeOpacity={0.7}
                     style={{ opacity: isMatch ? 1.0 : 0.2 }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${el.nameEn}, actinide, atomic number ${z}`}
                   >
                     <View style={[
                       T.cell,
