@@ -145,6 +145,7 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
         <TouchableOpacity
           style={[S.tabBtn, selectedTab === 'spectra' && S.tabBtnActive]}
           onPress={() => setSelectedTab('spectra')}
+          accessibilityRole="tab" accessibilityState={{ selected: selectedTab === 'spectra' }} accessibilityLabel="Emission spectrum"
           activeOpacity={0.8}
         >
           <Text style={[S.tabBtnTxt, selectedTab === 'spectra' && S.tabBtnTxtActive]}>Spectra 🌈</Text>
