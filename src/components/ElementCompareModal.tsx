@@ -35,7 +35,7 @@ export default function ElementCompareModal({ initialZA = 11, initialZB = 17, on
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={C.scroll}>
             <View style={C.presets}>
-              {[[1, 17, 'H–Cl'], [6, 8, 'C–O'], [26, 29, 'Fe–Cu']].map(([a, b, label]) => <TouchableOpacity key={String(label)} style={C.presetBtn} onPress={() => { setZA(Number(a)); setZB(Number(b)); }}><Text style={C.presetText}>{label}</Text></TouchableOpacity>)}
+              {[[1, 17, 'H–Cl'], [6, 8, 'C–O'], [26, 29, 'Fe–Cu']].map(([a, b, label]) => <TouchableOpacity key={String(label)} style={C.presetBtn} accessibilityRole="button" accessibilityLabel={`Compare ${label}`} onPress={() => { setZA(Number(a)); setZB(Number(b)); }}><Text style={C.presetText}>{label}</Text></TouchableOpacity>)}
             </View>
             {/* Top Cards Comparison */}
           <View style={C.cardsRow}>
