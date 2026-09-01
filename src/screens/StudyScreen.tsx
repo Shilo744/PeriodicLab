@@ -129,6 +129,7 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
         <TouchableOpacity
           style={[S.tabBtn, selectedTab === 'shells' && S.tabBtnActive]}
           onPress={() => setSelectedTab('shells')}
+          accessibilityRole="tab" accessibilityState={{ selected: selectedTab === 'shells' }} accessibilityLabel="Electron shells"
           activeOpacity={0.8}
         >
           <Text style={[S.tabBtnTxt, selectedTab === 'shells' && S.tabBtnTxtActive]}>Shells</Text>
