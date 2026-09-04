@@ -212,7 +212,7 @@ function HomeScreen({
           </View>
           <View style={{ flex: 1, marginLeft: 16 }}>
             <View style={HS.profileHeader}>
-              <Text style={HS.leagueName}>{league.name.toUpperCase()} (STATS ➔)</Text>
+              <Text style={HS.leagueName}>{league.name.toUpperCase()} · {locale === 'he' ? 'ההתקדמות שלי' : 'MY PROGRESS'} ➔</Text>
               <View style={HS.streakPill}>
                 <Text style={HS.streakText}>🔥 {dailyStreak}d Streak</Text>
               </View>
@@ -239,7 +239,7 @@ function HomeScreen({
           <View style={HS.nextStepNumber}><Text style={HS.nextStepNumberText}>{nextLearningEl.sym}</Text></View>
           <View style={{ flex: 1 }}>
             <Text style={HS.nextStepTag}>{locale === 'he' ? 'הצעד הבא שלכם' : 'YOUR NEXT STEP'}</Text>
-            <Text style={HS.nextStepTitle}>{locale === 'he' ? `לומדים את ${nextLearningEl.nameEn}` : `Master ${nextLearningEl.nameEn}`}</Text>
+            <Text style={HS.nextStepTitle}>{locale === 'he' ? `לומדים את ${nextLearningEl.nameEn}` : `Learn ${nextLearningEl.nameEn}`}</Text>
             <Text style={HS.nextStepMeta}>{locale === 'he' ? `כ־3 דקות · פרק ${currentChapter.id}` : `About 3 min · Chapter ${currentChapter.id}`}</Text>
           </View>
         </View>
@@ -336,12 +336,12 @@ function HomeScreen({
         <TouchableOpacity style={HS.moduleCard} onPress={onGoReactions} activeOpacity={0.85}>
           <LinearGradient colors={['rgba(251, 146, 60, 0.10)', 'rgba(251, 146, 60, 0.01)']} style={StyleSheet.absoluteFill} />
           <View style={[HS.iconWrapper, { backgroundColor: 'rgba(251, 146, 60, 0.12)' }]}><Text style={{ fontSize: 18 }}>⚗️</Text></View>
-          <View style={HS.moduleTextContainer}><Text style={HS.moduleLabel}>Reaction Lab</Text><Text style={HS.moduleDesc}>Run balanced equations</Text></View>
+          <View style={HS.moduleTextContainer}><Text style={HS.moduleLabel}>{locale === 'he' ? 'תגובות' : 'Reactions'}</Text><Text style={HS.moduleDesc}>{locale === 'he' ? 'רואים איך אטומים משתנים' : 'See how atoms transform'}</Text></View>
         </TouchableOpacity>
         <TouchableOpacity style={HS.moduleCard} onPress={onGoFlashcards} activeOpacity={0.85}>
           <LinearGradient colors={['rgba(52, 211, 153, 0.10)', 'rgba(52, 211, 153, 0.01)']} style={StyleSheet.absoluteFill} />
           <View style={[HS.iconWrapper, { backgroundColor: 'rgba(52, 211, 153, 0.12)' }]}><Text style={{ fontSize: 18 }}>🧠</Text></View>
-          <View style={HS.moduleTextContainer}><Text style={HS.moduleLabel}>Flashcards</Text><Text style={HS.moduleDesc}>Practice active recall</Text></View>
+          <View style={HS.moduleTextContainer}><Text style={HS.moduleLabel}>{locale === 'he' ? 'כרטיסיות' : 'Flashcards'}</Text><Text style={HS.moduleDesc}>{locale === 'he' ? 'חזרה קצרה בלי לחץ' : 'Quick, pressure-free recall'}</Text></View>
         </TouchableOpacity>
       </View>}
 
