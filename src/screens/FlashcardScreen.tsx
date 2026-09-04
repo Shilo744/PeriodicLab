@@ -24,6 +24,7 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
   const [masteredZList, setMasteredZList] = useState<number[]>([]);
   const [deck, setDeck] = useState(() => ELEMENTS.slice(0, 36));
   const [deckFilter, setDeckFilter] = useState<(typeof DECK_FILTERS)[number]>('All');
+  const [showDecks, setShowDecks] = useState(false);
   const [hideMastered, setHideMastered] = useState(false);
   const [sessionReviewed, setSessionReviewed] = useState(0);
   const [sessionKnown, setSessionKnown] = useState(0);
@@ -69,8 +70,8 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
 
   if (ready && !activeElements.length) {
     return <View style={[FC.wrap, { justifyContent: 'center', gap: 24 }]}>
-      <Text style={FC.title}>✓ DECK COMPLETE</Text>
-      <Text style={FC.sub}>All {deck.length} cards in this deck are marked memorized. This is self-assessed practice, not a quiz score.</Text>
+      <Text style={FC.title}>Deck complete 🎉</Text>
+      <Text style={FC.sub}>You remembered all {deck.length} cards. Come back later for a quick refresh.</Text>
       <TouchableOpacity style={[FC.actionBtn, FC.btnMaster, { flex: 0 }]} onPress={() => { setHideMastered(false); setCurrentIdx(0); setIsFlipped(false); }}><Text style={FC.btnMasterTxt}>Review the full deck</Text></TouchableOpacity>
       <TouchableOpacity style={[FC.actionBtn, FC.btnReview, { flex: 0 }]} onPress={onClose}><Text style={FC.btnReviewTxt}>Back to home</Text></TouchableOpacity>
     </View>;
@@ -83,21 +84,27 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
       {/* Header */}
       <View style={FC.header}>
         <View>
-          <Text style={FC.title}>PRACTICE FLASHCARDS</Text>
-          <Text style={FC.sub}>Card {(currentIdx % activeElements.length) + 1} of {activeElements.length} · {masteredInDeck}/{deck.length} Memorized · Session {sessionKnown}/{sessionReviewed}</Text>
+          <Text style={FC.title}>Quick recall</Text>
+          <Text style={FC.sub}>Card {(currentIdx % activeElements.length) + 1} of {activeElements.length} · You remembered {sessionKnown} of {sessionReviewed} this session</Text>
         </View>
         <View style={FC.headerActions}>
-          <TouchableOpacity disabled={!ready} style={FC.closeBtn} onPress={() => setConfirmReset(true)} accessibilityLabel="Reset flashcard mastery"><Text style={FC.closeTxt}>↺</Text></TouchableOpacity>
-          <TouchableOpacity style={FC.closeBtn} onPress={() => {
-            setDeck(prev => shuffled(prev));
-            setCurrentIdx(0);
-            setIsFlipped(false);
-          }} accessibilityLabel="Shuffle flashcards"><Text style={FC.closeTxt}>⤨</Text></TouchableOpacity>
-          <TouchableOpacity style={FC.closeBtn} onPress={onClose}><Text style={FC.closeTxt}>✕</Text></TouchableOpacity>
+          <TouchableOpacity style={FC.closeBtn} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close flashcards"><Text style={FC.closeTxt}>✕</Text></TouchableOpacity>
         </View>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={FC.filters} contentContainerStyle={FC.filtersContent}>
+      <View style={FC.deckTools}>
+        <TouchableOpacity style={FC.toolBtn} onPress={() => setShowDecks(value => !value)} accessibilityRole="button">
+          <Text style={FC.toolText}>{showDecks ? 'Hide decks' : `Deck: ${deckFilter} ▾`}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={FC.toolBtn} onPress={() => {
+          setDeck(prev => shuffled(prev));
+          setCurrentIdx(0);
+          setIsFlipped(false);
+        }} accessibilityRole="button" accessibilityLabel="Shuffle flashcards"><Text style={FC.toolText}>Shuffle</Text></TouchableOpacity>
+        <TouchableOpacity disabled={!ready} style={FC.toolBtn} onPress={() => setConfirmReset(true)} accessibilityRole="button" accessibilityLabel="Reset flashcard mastery"><Text style={FC.toolText}>Reset</Text></TouchableOpacity>
+      </View>
+
+      {showDecks && <ScrollView horizontal showsHorizontalScrollIndicator={false} style={FC.filters} contentContainerStyle={FC.filtersContent}>
         {DECK_FILTERS.map(filter => (
           <TouchableOpacity key={filter} style={[FC.filterChip, deckFilter === filter && FC.filterChipActive]} accessibilityRole="button" accessibilityState={{ selected: deckFilter === filter }} accessibilityLabel={`${filter} flashcard deck`} onPress={() => {
             const base = ELEMENTS.slice(0, 36);
@@ -109,7 +116,7 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
             setIsFlipped(false);
           }}><Text style={[FC.filterText, deckFilter === filter && FC.filterTextActive]}>{filter}</Text></TouchableOpacity>
         ))}
-      </ScrollView>
+      </ScrollView>}
       <View style={FC.progressTrack} accessibilityLabel={`${masteredInDeck} of ${deck.length} mastered flashcards`}>
         <LinearGradient colors={['#34d399', '#22d3ee']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[FC.progressFill, { width: `${(masteredInDeck / deck.length) * 100}%` }]} />
       </View>
@@ -126,11 +133,12 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
         {!isFlipped ? (
           /* Front Side: Chemical Symbol & Atomic Number */
           <View style={FC.cardFront}>
+            <Text style={FC.recallPrompt}>What element is this?</Text>
             <Text style={FC.frontZ}>Atomic Number Z = {currentEl.z}</Text>
             <View style={[FC.symBox, { borderColor: catColor, backgroundColor: catColor + '15' }]}>
               <Text style={[FC.symText, { color: catColor }]}>{currentEl.sym}</Text>
             </View>
-            <Text style={FC.tapHint}>Tap anywhere to flip card ↺</Text>
+            <Text style={FC.tapHint}>Tap to reveal the answer</Text>
           </View>
         ) : (
           /* Back Side: Name, Category, Discovery Lore, and Electron Config */
@@ -156,12 +164,12 @@ export default function FlashcardScreen({ onClose }: FlashcardScreenProps) {
         void saveMasteredFlashcards([]);
       }} />}
       <View style={FC.actionsRow}>
-        <TouchableOpacity style={FC.previousBtn} onPress={() => { setIsFlipped(false); setCurrentIdx(i => (i - 1 + activeElements.length) % activeElements.length); }} accessibilityLabel="Previous flashcard"><Text style={FC.previousTxt}>←</Text></TouchableOpacity>
-        <TouchableOpacity disabled={!ready || !isFlipped} style={[FC.actionBtn, FC.btnReview, (!ready || !isFlipped) && { opacity: 0.4 }]} onPress={() => handleNext(false)} activeOpacity={0.8}>
-          <Text style={FC.btnReviewTxt}>Need Review ↻</Text>
+        <TouchableOpacity style={FC.previousBtn} onPress={() => { setIsFlipped(false); setCurrentIdx(i => (i - 1 + activeElements.length) % activeElements.length); }} accessibilityRole="button" accessibilityLabel="Previous flashcard"><Text style={FC.previousTxt}>←</Text></TouchableOpacity>
+        <TouchableOpacity disabled={!ready || !isFlipped} style={[FC.actionBtn, FC.btnReview, (!ready || !isFlipped) && { opacity: 0.4 }]} onPress={() => handleNext(false)} activeOpacity={0.8} accessibilityRole="button">
+          <Text style={FC.btnReviewTxt}>Still learning</Text>
         </TouchableOpacity>
-        <TouchableOpacity disabled={!ready || !isFlipped} style={[FC.actionBtn, FC.btnMaster, (!ready || !isFlipped) && { opacity: 0.4 }]} onPress={() => handleNext(true)} activeOpacity={0.8}>
-          <Text style={FC.btnMasterTxt}>Memorized ✓</Text>
+        <TouchableOpacity disabled={!ready || !isFlipped} style={[FC.actionBtn, FC.btnMaster, (!ready || !isFlipped) && { opacity: 0.4 }]} onPress={() => handleNext(true)} activeOpacity={0.8} accessibilityRole="button">
+          <Text style={FC.btnMasterTxt}>I knew this ✓</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -208,6 +216,16 @@ const FC = StyleSheet.create({
     justifyContent: 'center',
   },
   headerActions: { flexDirection: 'row', gap: 8 },
+  deckTools: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  toolBtn: {
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  toolText: { color: COLORS.textSecondary, fontSize: 10, fontWeight: '700' },
   filters: { flexGrow: 0, marginVertical: 10 },
   filtersContent: { gap: 8 },
   filterChip: { paddingHorizontal: 11, paddingVertical: 6, borderRadius: RADIUS.full, borderWidth: 1, borderColor: COLORS.border },
@@ -242,6 +260,7 @@ const FC = StyleSheet.create({
     flex: 1,
     gap: 16,
   },
+  recallPrompt: { color: COLORS.text, fontSize: 18, fontWeight: '800' },
   frontZ: {
     fontSize: 14,
     fontWeight: '800',
