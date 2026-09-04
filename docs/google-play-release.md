@@ -24,6 +24,7 @@
 - Confirm developer identity and real-device verification.
 - If this is a personal developer account created after November 13, 2023, run a closed test with at least 12 opted-in testers continuously for 14 days before applying for production access.
 - Create the app in Play Console with the confirmed package name, enable Play App Signing, upload the AAB, complete declarations, add store graphics/screenshots, and submit the appropriate testing track.
+- Paste the finalized localized copy from `docs/play-store-listing.md`, upload `assets/store/feature-graphic.jpg`, and capture the release screenshots specified in `docs/store-assets.md`.
 - Install the Play-delivered build on at least one low-end and one modern Android device; verify cold start, RTL/Hebrew, offline use, daily quest rollover, progress persistence, and process restoration.
 
 ## Growth validation after launch

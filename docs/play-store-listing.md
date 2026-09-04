@@ -1,50 +1,81 @@
-# Google Play Listing Draft
+# Google Play Store Listing — Production Copy
 
-## App name
+All copy below stays within Google Play's current limits: 30 characters for the app name, 80 for the short description, and 4,000 for the full description.
+
+## English (en-US)
+
+### App name — 29/30 characters
 
 Periodic Lab: Learn Chemistry
 
-## Short description
+### Short description — 75/80 characters
 
-Master all 118 elements with 3D atoms, quizzes, flashcards and daily quests.
+Learn all 118 elements with interactive atoms, quizzes and daily challenges
 
-## Full description
+### Full description
 
-Turn the periodic table into an interactive laboratory.
+Chemistry makes more sense when you can explore it.
 
-Periodic Lab helps students and curious minds understand chemistry through active exploration instead of memorizing a static chart. Build atoms, inspect electron shells and isotopes, compare element properties, explore balanced reactions, and test yourself with fast quizzes and focused flashcard decks.
+Periodic Lab turns the periodic table into an interactive learning laboratory. Build atoms, see how electrons fill their shells, investigate isotopes and spectra, and connect element properties to real chemical reactions.
 
-Come back each day for a featured-element research quest, build a learning streak, earn XP, unlock chapters, and complete chemistry-family achievements. Your progress stays on your device, with no account, ads, or tracking.
-
-Key features:
+Learn at your own pace:
 
 - Explore all 118 elements in a searchable, filterable periodic table
-- Study electron shells, isotopes, spectra, phase changes, and key properties
-- Build atoms by tuning protons, neutrons, and electrons
-- Practice with quizzes, streak multipliers, and flashcards by chemical family
-- Inspect balanced reactions and atom conservation
-- Compare two elements side by side
-- Complete daily quests, chapters, and achievements
-- Learn in English or Hebrew
-- Use the core experience offline with locally stored progress
+- Inspect interactive atoms, electron shells, isotopes, spectra and phase changes
+- Build atoms by adjusting protons, neutrons and electrons
+- Understand balanced reactions through atom conservation
+- Compare element properties side by side
+- Practice with science quizzes, speed rounds and focused flashcard decks
+- Follow five guided chapters that always show what to learn next
+- Complete a different recall challenge each day and build a genuine learning streak
+- Earn XP and unlock chemistry achievements as your knowledge grows
 
-Designed for chemistry students, teachers, science enthusiasts, and anyone who wants a more visual way to learn the periodic table.
+Periodic Lab is designed for students, teachers and curious minds who want more than a static reference chart. Short activities make it useful for exam preparation, classroom review or a few minutes of science discovery each day.
 
-## Suggested category and tags
+No account is required. There are no ads. Learning progress is stored locally on your device, and the core experience works offline.
+
+Available in English and Hebrew.
+
+## Hebrew (he-IL)
+
+### App name — 22/30 characters
+
+המעבדה המחזורית: כימיה
+
+### Short description — 63/80 characters
+
+למדו 118 יסודות עם אטומים אינטראקטיביים, חידונים ואתגרים יומיים
+
+### Full description
+
+קל יותר להבין כימיה כשאפשר לחקור אותה בעצמכם.
+
+המעבדה המחזורית הופכת את הטבלה המחזורית למעבדת לימוד אינטראקטיבית. בנו אטומים, ראו כיצד אלקטרונים מסתדרים בקליפות, חקרו איזוטופים וספקטרום פליטה, וחברו בין תכונות היסודות לתגובות כימיות אמיתיות.
+
+לומדים בקצב שלכם:
+
+- חוקרים את כל 118 היסודות בטבלה ניתנת לחיפוש ולסינון
+- בוחנים אטומים אינטראקטיביים, קליפות אלקטרונים, איזוטופים ושינויי מצב צבירה
+- בונים אטומים באמצעות פרוטונים, נויטרונים ואלקטרונים
+- מבינים איזון תגובות בעזרת שימור אטומים
+- משווים תכונות של שני יסודות זה לצד זה
+- מתרגלים עם חידונים, סבבי מהירות וכרטיסיות לפי משפחות כימיות
+- מתקדמים בחמישה פרקי לימוד שמציגים תמיד מה כדאי ללמוד עכשיו
+- משלימים בכל יום אתגר זיכרון משתנה ובונים רצף למידה אמיתי
+- צוברים XP ופותחים הישגים ככל שהידע גדל
+
+האפליקציה מתאימה לתלמידים, למורים ולכל מי שסקרן לגבי מדע ורוצה יותר מטבלת מידע סטטית. הפעילויות הקצרות מתאימות להכנה למבחן, לחזרה בכיתה או לכמה דקות של גילוי מדעי בכל יום.
+
+אין צורך בחשבון ואין פרסומות. ההתקדמות נשמרת מקומית במכשיר, וחוויית הליבה פועלת גם ללא חיבור לרשת.
+
+## Store classification
 
 - Category: Education
 - Tags: Chemistry, Education, Exam preparation, Science
-- Initial audience recommendation: ages 13 and above, subject to the Play Console target-audience questionnaire
+- Initial audience: ages 13 and above, subject to the Play Console questionnaire
+- Ads: No
+- App access: No sign-in required
 
-## Screenshot story
+## Accuracy guardrail
 
-1. "The periodic table becomes your laboratory" — home and progression
-2. "Explore every element in depth" — 3D study view
-3. "Build atoms and unlock discoveries" — atom builder
-4. "Turn knowledge into streaks" — quiz
-5. "Master chemistry family by family" — flashcards
-6. "See why reactions balance" — reaction lab
-7. "Compare properties side by side" — comparison view
-8. "A new element every day" — daily quest
-
-Do not publish screenshots containing debug overlays, placeholder data, emulator navigation controls, or unsupported claims.
+The listing intentionally avoids claims about rankings, download counts, guaranteed grades, AI, multiplayer, cloud sync, notifications, or content not present in the release build.
