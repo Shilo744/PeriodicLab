@@ -59,8 +59,7 @@ export async function saveDailyStreak(streak: number, lastDate: string): Promise
 export async function loadDailyStreak(): Promise<DailyStreak> {
   return store.read(KEYS.DAILY, normalizeStreak);
 }
-export async function updateDailyStreak(): Promise<DailyStreak> {
-  const now = new Date();
+export async function updateDailyStreak(now: Date = new Date()): Promise<DailyStreak> {
   return store.update(KEYS.DAILY, normalizeStreak, saved => advanceDailyStreak(saved, now));
 }
 export function isElementUnlocked(z: number, xp: number, levels: Record<number, number>): boolean {

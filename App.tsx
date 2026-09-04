@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, StatusBar, ScrollView, ActivityIndicator, Share } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Path, Line, Rect, Polyline } from 'react-native-svg';
@@ -14,7 +14,7 @@ import {
   saveLevels, loadLevels, 
   saveStudyPool, loadStudyPool,
   saveAchievements, loadAchievements,
-  updateDailyStreak, loadPreferences, savePreferences, loadLastTab, saveLastTab, loadLastElement, saveLastElement,
+  updateDailyStreak, loadDailyStreak, loadPreferences, savePreferences, loadLastTab, saveLastTab, loadLastElement, saveLastElement,
   loadDailyQuestCompletion, saveDailyQuestCompletion
   , loadOnboardingComplete, saveOnboardingComplete
   , loadWeeklyGoal, saveWeeklyGoal
@@ -383,7 +383,7 @@ export default function App() {
   const [totalXP, setTotalXP] = useState(0);
   const [studyPool, setStudyPool] = useState<number[]>(INITIAL_POOL);
   const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
-  const [dailyStreak, setDailyStreak] = useState(1);
+  const [dailyStreak, setDailyStreak] = useState(0);
   const [dailyQuestDate, setDailyQuestDate] = useState('');
   const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [weeklyGoal, setWeeklyGoal] = useState<WeeklyGoal>(() => normalizeWeeklyGoal(null));
@@ -395,6 +395,7 @@ export default function App() {
   const [storageReady, setStorageReady] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
+  const dailyQuestClaimDateRef = useRef('');
 
   useEffect(() => {
     if (__DEV__) {
@@ -418,7 +419,7 @@ export default function App() {
     async function loadSavedData() {
       const [savedXP, savedLevels, savedPool, savedAch, savedDaily, preferences, savedTab, savedElement, savedDailyQuest, savedOnboarding, savedWeeklyGoal] = await Promise.all([
         loadXP(), loadLevels(), loadStudyPool(INITIAL_POOL), loadAchievements(),
-        updateDailyStreak(), loadPreferences(), loadLastTab(), loadLastElement(), loadDailyQuestCompletion(), loadOnboardingComplete(), loadWeeklyGoal(),
+        loadDailyStreak(), loadPreferences(), loadLastTab(), loadLastElement(), loadDailyQuestCompletion(), loadOnboardingComplete(), loadWeeklyGoal(),
       ]);
       if (!active) return;
       
@@ -588,9 +589,11 @@ export default function App() {
 
   const handleDailyQuest = useCallback((z: number) => {
     const daily = getDailyFeaturedElement();
-    if (dailyQuestDate !== daily.dateStr) {
+    if (dailyQuestDate !== daily.dateStr && dailyQuestClaimDateRef.current !== daily.dateStr) {
+      dailyQuestClaimDateRef.current = daily.dateStr;
       setDailyQuestDate(daily.dateStr);
       void saveDailyQuestCompletion(daily.dateStr);
+      void updateDailyStreak().then(saved => setDailyStreak(saved.streak));
       setTotalXP(previous => {
         const next = previous + daily.bonusXP;
         void saveXP(next);

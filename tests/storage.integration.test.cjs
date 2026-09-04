@@ -12,6 +12,7 @@ const disk = new Map([
   ['periodic_lab_last_tab', 'study'],
   ['periodic_lab_flashcards', '[2,2,10,null,999]'],
   ['periodic_lab_preferences', '{"locale":"he","audioMuted":true}'],
+  ['periodic_lab_daily', '{"streak":4,"lastDate":"2026-08-26"}'],
 ]);
 const adapter = { getItem: async key => disk.get(key) ?? null, setItem: async (key, value) => { disk.set(key, value); } };
 const originalLoad = Module._load;
@@ -40,4 +41,10 @@ test('public preferences API merges rapid edits and persists a selected element'
   await storage.saveLastElement(7);
   assert.equal(await storage.loadLastElement(), 7);
   assert.equal(JSON.parse(disk.get('periodic_lab_last_element')), 7);
+});
+
+test('restoring progress does not advance the learning streak', async () => {
+  assert.deepEqual(await storage.loadDailyStreak(), { streak: 4, lastDate: '2026-08-26' });
+  assert.equal(disk.get('periodic_lab_daily'), '{"streak":4,"lastDate":"2026-08-26"}');
+  assert.deepEqual(await storage.updateDailyStreak(new Date(2026, 7, 27, 18)), { streak: 5, lastDate: '2026-08-27' });
 });

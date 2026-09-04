@@ -29,7 +29,7 @@ test('missed days, future dates, and impossible dates reset safely', () => {
     assert.equal(advanceDailyStreak({ streak: 3, lastDate }, new Date(2026, 7, 27)).streak, 1);
   }
 });
-test('concurrent launches persist the first day once', async () => {
+test('concurrent daily completions persist the first day once', async () => {
   let raw = null;
   const store = createPersistence({ getItem: async () => raw, setItem: async (_, value) => { raw = value; } });
   const now = new Date(2026, 7, 27);
