@@ -16,6 +16,7 @@ import {
   saveAchievements, loadAchievements,
   updateDailyStreak, loadPreferences, savePreferences, loadLastTab, saveLastTab, loadLastElement, saveLastElement,
   loadDailyQuestCompletion, saveDailyQuestCompletion
+  , loadOnboardingComplete, saveOnboardingComplete
 } from './src/data/storage';
 import { 
   ACHIEVEMENTS_LIST, CHAPTERS, 
@@ -27,6 +28,7 @@ import FlashcardScreen from './src/screens/FlashcardScreen';
 import ReactionLabScreen from './src/screens/ReactionLabScreen';
 import { validateScientificData } from './src/data/validation';
 import { shuffled } from './src/utils/random';
+import OnboardingScreen from './src/components/OnboardingScreen';
 
 type Tab = 'home' | 'table' | 'study' | 'builder' | 'quiz';
 
@@ -366,6 +368,7 @@ export default function App() {
   const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
   const [dailyStreak, setDailyStreak] = useState(1);
   const [dailyQuestDate, setDailyQuestDate] = useState('');
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [studyZ, setStudyZ] = useState(6);
   const [quizZ, setQuizZ] = useState(() => pickFromPool(INITIAL_POOL, {}));
   const [showFlashcards, setShowFlashcards] = useState(false);
@@ -394,9 +397,9 @@ export default function App() {
     let active = true;
     setLoadError(false);
     async function loadSavedData() {
-      const [savedXP, savedLevels, savedPool, savedAch, savedDaily, preferences, savedTab, savedElement, savedDailyQuest] = await Promise.all([
+      const [savedXP, savedLevels, savedPool, savedAch, savedDaily, preferences, savedTab, savedElement, savedDailyQuest, savedOnboarding] = await Promise.all([
         loadXP(), loadLevels(), loadStudyPool(INITIAL_POOL), loadAchievements(),
-        updateDailyStreak(), loadPreferences(), loadLastTab(), loadLastElement(), loadDailyQuestCompletion(),
+        updateDailyStreak(), loadPreferences(), loadLastTab(), loadLastElement(), loadDailyQuestCompletion(), loadOnboardingComplete(),
       ]);
       if (!active) return;
       
@@ -406,6 +409,8 @@ export default function App() {
       setUnlockedAchievements(savedAch);
       setDailyStreak(savedDaily.streak);
       setDailyQuestDate(savedDailyQuest);
+      // Do not interrupt returning users who installed before onboarding existed.
+      setOnboardingComplete(savedOnboarding || savedXP > 0 || Object.keys(savedLevels).length > 0);
       setLocale(preferences.locale);
       setAudioMuted(preferences.audioMuted);
       if (TABS.some(item => item.key === savedTab)) setTab(savedTab as Tab);
@@ -516,6 +521,10 @@ export default function App() {
       <Text style={{ color: COLORS.text }}>{loadError ? 'Progress could not be loaded. No progress has been reset.' : 'Restoring your laboratory…'}</Text>
       {loadError && <TouchableOpacity accessibilityRole="button" onPress={() => setLoadAttempt(value => value + 1)} style={{ padding: 16 }}><Text style={{ color: COLORS.primaryLight }}>Retry</Text></TouchableOpacity>}
     </View>;
+  }
+
+  if (!onboardingComplete) {
+    return <OnboardingScreen locale={locale} onLocaleChange={next => { setLocale(next); void savePreferences({ locale: next }); }} onComplete={() => { setOnboardingComplete(true); void saveOnboardingComplete(); }} />;
   }
 
   const screen = {

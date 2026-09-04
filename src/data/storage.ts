@@ -12,6 +12,7 @@ const KEYS = {
   FLASHCARDS: 'periodic_lab_flashcards', FAVORITE_REACTIONS: 'periodic_lab_favorite_reactions',
   PREFERENCES: 'periodic_lab_preferences', LAST_TAB: 'periodic_lab_last_tab', LAST_ELEMENT: 'periodic_lab_last_element',
   DAILY_QUEST: 'periodic_lab_daily_quest',
+  ONBOARDING: 'periodic_lab_onboarding_complete',
 };
 const store = createPersistence(AsyncStorage);
 const validTab = (value: unknown): string => typeof value === 'string' && ['home', 'table', 'study', 'builder', 'quiz'].includes(value) ? value : 'home';
@@ -21,6 +22,8 @@ const validDateKey = (value: unknown): string => typeof value === 'string' && /^
 
 export const saveDailyQuestCompletion = (date: string) => store.write(KEYS.DAILY_QUEST, validDateKey(date));
 export const loadDailyQuestCompletion = () => store.read(KEYS.DAILY_QUEST, validDateKey);
+export const saveOnboardingComplete = () => store.write(KEYS.ONBOARDING, true);
+export const loadOnboardingComplete = () => store.read(KEYS.ONBOARDING, value => value === true);
 
 export const saveLastElement = (z: number) => store.write(KEYS.LAST_ELEMENT, validElement(z));
 export const loadLastElement = () => store.read(KEYS.LAST_ELEMENT, validElement);
