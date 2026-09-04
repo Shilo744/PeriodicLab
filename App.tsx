@@ -30,6 +30,7 @@ import ReactionLabScreen from './src/screens/ReactionLabScreen';
 import { validateScientificData } from './src/data/validation';
 import { shuffled } from './src/utils/random';
 import OnboardingScreen from './src/components/OnboardingScreen';
+import DailyChallengeModal from './src/components/DailyChallengeModal';
 import { WeeklyGoal, WEEKLY_GOAL_REWARD, WEEKLY_GOAL_TARGET, normalizeWeeklyGoal, recordWeeklyAction } from './src/data/weeklyGoal';
 
 type Tab = 'home' | 'table' | 'study' | 'builder' | 'quiz';
@@ -142,6 +143,7 @@ function HomeScreen({
   onSelectElement: (z: number) => void;
 }) {
   const [showProfile, setShowProfile] = useState(false);
+  const [showDailyChallenge, setShowDailyChallenge] = useState(false);
   const [mutedState, setMutedState] = useState(isAudioMuted());
   const league = getLeague(xp);
   const nextXP = xp < 100 ? 100 : xp < 500 ? 500 : xp < 1500 ? 1500 : xp < 5000 ? 5000 : 0;
@@ -167,6 +169,7 @@ function HomeScreen({
 
   return (
     <ScrollView style={HS.scroll} contentContainerStyle={HS.container} showsVerticalScrollIndicator={false}>
+      <DailyChallengeModal visible={showDailyChallenge} completed={dailyQuestCompleted} locale={locale} onClose={() => setShowDailyChallenge(false)} onComplete={z => { setShowDailyChallenge(false); onSelectElement(z); }} />
       <LinearGradient colors={['rgba(99, 102, 241, 0.08)', 'rgba(10, 14, 26, 0.2)']} style={HS.hero}>
         <View style={HS.headerTop}>
           <View>
@@ -233,8 +236,8 @@ function HomeScreen({
             <Text style={HS.dailySub}>{dailyQuestCompleted ? (locale === 'he' ? 'הושלם — חזרו מחר למשימה חדשה!' : 'Completed — come back tomorrow!') : (locale === 'he' ? `למדו את הסיפור שלו וקבלו היום ${daily.bonusXP}+ XP` : `Learn its story and earn +${daily.bonusXP} XP today!`)}</Text>
           </View>
           <View style={HS.dailyActions}>
-            <TouchableOpacity style={HS.dailyBtn} onPress={() => onSelectElement(daily.z)} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={`Explore today's element, ${dailyEl.nameEn}`}>
-              <Text style={HS.dailyBtnTxt}>{dailyQuestCompleted ? (locale === 'he' ? 'שוב' : 'Review') : (locale === 'he' ? 'קבלו' : 'Claim')}</Text>
+            <TouchableOpacity style={HS.dailyBtn} onPress={() => setShowDailyChallenge(true)} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={`Take today's element challenge, ${dailyEl.nameEn}`}>
+              <Text style={HS.dailyBtnTxt}>{dailyQuestCompleted ? (locale === 'he' ? 'שוב' : 'Replay') : (locale === 'he' ? 'לאתגר' : 'Challenge')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={HS.dailyShareBtn} onPress={() => void Share.share({ message: locale === 'he' ? `יסוד היום שלי במעבדה המחזורית הוא ${dailyEl.nameEn} (${dailyEl.sym}), מספר אטומי ${dailyEl.z}. תוכלו לשלוט בו גם?` : `Today's Periodic Lab element is ${dailyEl.nameEn} (${dailyEl.sym}), atomic number ${dailyEl.z}. Can you master it too?` })} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={locale === 'he' ? 'שיתוף יסוד היום' : "Share today's element"}>
               <Text style={HS.dailyShareTxt}>{locale === 'he' ? 'שיתוף' : 'Share'}</Text>

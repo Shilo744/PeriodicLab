@@ -6,6 +6,7 @@ const { REACTIONS } = require('../src/data/reactions.ts');
 const { validateScientificData } = require('../src/data/validation.ts');
 const { QUIZZES } = require('../src/data/quiz.ts');
 const { ACHIEVEMENTS_LIST, getAchievement } = require('../src/data/achievements.ts');
+const { getDailyChallenge } = require('../src/data/dailyChallenge.ts');
 
 test('catalog contains every atomic number exactly once', () => {
   assert.deepEqual(ELEMENTS.map(e => e.z).sort((a, b) => a - b), Array.from({ length: 118 }, (_, i) => i + 1));
@@ -41,4 +42,16 @@ test('achievement catalog has unique ids and event-driven rewards', () => {
     assert.ok(achievement, id);
     assert.ok(achievement.xpReward > 0, id);
   }
+});
+
+test('daily recall is deterministic, valid, and changes with the local day', () => {
+  const today = getDailyChallenge(new Date(2026, 7, 25, 0, 5));
+  const repeated = getDailyChallenge(new Date(2026, 7, 25, 23, 55));
+  const tomorrow = getDailyChallenge(new Date(2026, 7, 26, 0, 5));
+  assert.deepEqual(today, repeated);
+  assert.notEqual(today.dateStr, tomorrow.dateStr);
+  assert.equal(today.options.length, 4);
+  assert.equal(new Set(today.options).size, 4);
+  assert.equal(today.options[today.correctIndex], today.z);
+  assert.ok(today.explanation.length > 40);
 });
