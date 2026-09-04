@@ -34,12 +34,13 @@ function xpForLevel(level: number): number { return 10 + level * 5; }
 type QuizMode = '3d_atom' | 'trivia';
 
 import SpeedBlitzScreen from './SpeedBlitzScreen';
+import { Locale } from '../data/i18n';
 
 export default function QuizScreen({
-  z, elementLevels, discovered, pool,
+  z, elementLevels, discovered, pool, locale,
   onCorrect, onTriviaCorrect, onNext, onBlitzFinish, onStreakMilestone,
 }: {
-  z: number; elementLevels: Record<number, number>; discovered: number[];
+  z: number; elementLevels: Record<number, number>; discovered: number[]; locale: Locale;
   pool: number[]; onCorrect: (z: number, xpGained: number) => void; onTriviaCorrect: (xpGained: number) => void; onNext: () => void; onBlitzFinish: (score: number, xpGained: number) => void; onStreakMilestone: (streak: number) => void;
 }) {
   const [mode, setMode] = useState<QuizMode>('3d_atom');
@@ -169,6 +170,7 @@ export default function QuizScreen({
   if (showBlitz) {
     return (
       <SpeedBlitzScreen
+        locale={locale}
         onFinish={(score, gainedXP) => {
           setShowBlitz(false);
           onBlitzFinish(score, gainedXP);

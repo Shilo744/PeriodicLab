@@ -1,18 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Share } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getElement, ELEMENTS } from '../data/elements';
 import { COLORS, RADIUS, SHADOWS } from '../theme';
 import { triggerHaptic, playSound } from '../services/feedback';
+import { Locale } from '../data/i18n';
+import { buildBlitzShareMessage } from '../data/sharing';
 
 const { width: W } = Dimensions.get('window');
 
 interface SpeedBlitzProps {
   onFinish: (score: number, xpGained: number) => void;
   onClose: () => void;
+  locale: Locale;
 }
 
-export default function SpeedBlitzScreen({ onFinish, onClose }: SpeedBlitzProps) {
+export default function SpeedBlitzScreen({ onFinish, onClose, locale }: SpeedBlitzProps) {
   const [timeLeft, setTimeLeft] = useState(60);
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
@@ -83,6 +86,7 @@ export default function SpeedBlitzScreen({ onFinish, onClose }: SpeedBlitzProps)
       <Text style={B.scoreLabel}>ELEMENTS IDENTIFIED</Text>
       <View style={B.resultStats}><Text style={B.resultStat}>Best combo: {bestCombo}</Text><Text style={B.resultXP}>+{earnedXP} XP</Text></View>
       <TouchableOpacity accessibilityRole="button" accessibilityLabel="Collect Blitz XP and return to quiz" style={B.collectBtn} onPress={() => onFinish(score, earnedXP)}><Text style={B.collectText}>Collect XP</Text></TouchableOpacity>
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Share Speed Blitz score" style={B.shareBtn} onPress={() => void Share.share({ message: buildBlitzShareMessage(score, bestCombo, locale) })}><Text style={B.shareText}>{locale === 'he' ? 'שיתוף התוצאה' : 'Share score'}</Text></TouchableOpacity>
     </View>;
   }
 
@@ -198,6 +202,8 @@ const B = StyleSheet.create({
   resultXP: { color: '#34d399', fontSize: 15, fontWeight: '900' },
   collectBtn: { minWidth: 220, minHeight: 54, borderRadius: RADIUS.md, backgroundColor: '#f472b6', alignItems: 'center', justifyContent: 'center', marginTop: 18 },
   collectText: { color: '#0a0e1a', fontSize: 15, fontWeight: '900' },
+  shareBtn: { minWidth: 220, minHeight: 48, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(244,114,182,0.55)', alignItems: 'center', justifyContent: 'center' },
+  shareText: { color: '#f9a8d4', fontSize: 13, fontWeight: '900' },
   hud: {
     alignItems: 'center',
     marginVertical: 10,

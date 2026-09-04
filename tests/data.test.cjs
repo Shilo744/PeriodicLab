@@ -7,6 +7,7 @@ const { validateScientificData } = require('../src/data/validation.ts');
 const { QUIZZES } = require('../src/data/quiz.ts');
 const { ACHIEVEMENTS_LIST, CHAPTERS, getAchievement, getNextChapterElement } = require('../src/data/achievements.ts');
 const { getDailyChallenge } = require('../src/data/dailyChallenge.ts');
+const { PLAY_STORE_URL, buildDailyShareMessage, buildBlitzShareMessage } = require('../src/data/sharing.ts');
 
 test('catalog contains every atomic number exactly once', () => {
   assert.deepEqual(ELEMENTS.map(e => e.z).sort((a, b) => a - b), Array.from({ length: 118 }, (_, i) => i + 1));
@@ -80,4 +81,14 @@ test('daily recall rotates through every science prompt with one valid answer', 
     assert.ok(challenge.options[challenge.correctIndex]);
   }
   assert.deepEqual([...kinds].sort(), ['atomic-number', 'category', 'state', 'valence-electrons']);
+});
+
+test('share messages carry truthful results and a canonical install route', () => {
+  const dailyEnglish = buildDailyShareMessage('Carbon', 'C', 6, 'en');
+  const dailyHebrew = buildDailyShareMessage('Carbon', 'C', 6, 'he');
+  const blitz = buildBlitzShareMessage(17.9, 6.4, 'en');
+  for (const message of [dailyEnglish, dailyHebrew, blitz]) assert.ok(message.endsWith(PLAY_STORE_URL));
+  assert.match(dailyEnglish, /Carbon \(C\).*6/);
+  assert.match(dailyHebrew, /Carbon \(C\).*6/);
+  assert.match(blitz, /17 elements.*combo of 6/);
 });

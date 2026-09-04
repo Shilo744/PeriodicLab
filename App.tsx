@@ -32,6 +32,7 @@ import { shuffled } from './src/utils/random';
 import OnboardingScreen from './src/components/OnboardingScreen';
 import DailyChallengeModal from './src/components/DailyChallengeModal';
 import { WeeklyGoal, WEEKLY_GOAL_REWARD, WEEKLY_GOAL_TARGET, normalizeWeeklyGoal, recordWeeklyAction } from './src/data/weeklyGoal';
+import { buildDailyShareMessage } from './src/data/sharing';
 
 type Tab = 'home' | 'table' | 'study' | 'builder' | 'quiz';
 
@@ -240,7 +241,7 @@ function HomeScreen({
             <TouchableOpacity style={HS.dailyBtn} onPress={() => setShowDailyChallenge(true)} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={`Take today's element challenge, ${dailyEl.nameEn}`}>
               <Text style={HS.dailyBtnTxt}>{dailyQuestCompleted ? (locale === 'he' ? 'שוב' : 'Replay') : (locale === 'he' ? 'לאתגר' : 'Challenge')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={HS.dailyShareBtn} onPress={() => void Share.share({ message: locale === 'he' ? `יסוד היום שלי במעבדה המחזורית הוא ${dailyEl.nameEn} (${dailyEl.sym}), מספר אטומי ${dailyEl.z}. תוכלו לשלוט בו גם?` : `Today's Periodic Lab element is ${dailyEl.nameEn} (${dailyEl.sym}), atomic number ${dailyEl.z}. Can you master it too?` })} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={locale === 'he' ? 'שיתוף יסוד היום' : "Share today's element"}>
+            <TouchableOpacity style={HS.dailyShareBtn} onPress={() => void Share.share({ message: buildDailyShareMessage(dailyEl.nameEn, dailyEl.sym, dailyEl.z, locale) })} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={locale === 'he' ? 'שיתוף יסוד היום' : "Share today's element"}>
               <Text style={HS.dailyShareTxt}>{locale === 'he' ? 'שיתוף' : 'Share'}</Text>
             </TouchableOpacity>
           </View>
@@ -645,7 +646,7 @@ export default function App() {
     ),
     study: <StudyScreen z={studyZ} onChange={setStudyZ} xp={totalXP} levels={elementLevels} discovered={discovered} onGoBuilder={(z) => { setStudyZ(z); setTab('builder'); }} />,
     builder: <AtomBuilder z={studyZ} found={discovered} onDiscover={handleDiscover} xp={totalXP} levels={elementLevels} />,
-    quiz: <QuizScreen z={quizZ} elementLevels={elementLevels} discovered={discovered} pool={studyPool} onCorrect={handleCorrect} onTriviaCorrect={handleTriviaCorrect} onNext={handleNextQuiz} onBlitzFinish={handleBlitzFinish} onStreakMilestone={handleStreakMilestone} />,
+    quiz: <QuizScreen z={quizZ} elementLevels={elementLevels} discovered={discovered} pool={studyPool} locale={locale} onCorrect={handleCorrect} onTriviaCorrect={handleTriviaCorrect} onNext={handleNextQuiz} onBlitzFinish={handleBlitzFinish} onStreakMilestone={handleStreakMilestone} />,
     table: <PeriodicTable discovered={discovered} levels={elementLevels} xp={totalXP} onSelect={handleSelectTableElement} onGoBuilder={(z) => { setStudyZ(z); setTab('builder'); }} />,
   }[tab];
 
