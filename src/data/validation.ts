@@ -1,6 +1,7 @@
 import { ELEMENTS } from './elements';
 import { REACTIONS } from './reactions';
 import { reactionBalance } from './reactionBalance';
+import { QUIZZES } from './quiz';
 
 export interface DataValidationResult { valid: boolean; errors: string[]; }
 
@@ -33,6 +34,15 @@ export function validateScientificData(): DataValidationResult {
     if (!reaction.reactants.length || !reaction.products.length) errors.push(`${reaction.id}: reaction sides cannot be empty`);
     if ([...reaction.reactants, ...reaction.products].some(item => item.count <= 0)) errors.push(`${reaction.id}: stoichiometric coefficients must be positive`);
     if (reaction.xpReward <= 0) errors.push(`${reaction.id}: XP reward must be positive`);
+  }
+  const questionIds = new Set<number>();
+  for (const question of QUIZZES) {
+    if (questionIds.has(question.id)) errors.push(`Duplicate quiz question id: ${question.id}`);
+    questionIds.add(question.id);
+    if (question.options.length !== 4) errors.push(`Question ${question.id}: expected four options`);
+    if (question.correctIndex < 0 || question.correctIndex >= question.options.length) errors.push(`Question ${question.id}: invalid correct answer`);
+    if (!question.question.trim() || !question.explanation.trim()) errors.push(`Question ${question.id}: missing educational content`);
+    if (question.difficulty < 1 || question.difficulty > 5 || question.rewardPoints <= 0) errors.push(`Question ${question.id}: invalid difficulty or reward`);
   }
   return { valid: errors.length === 0, errors };
 }

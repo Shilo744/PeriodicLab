@@ -16,6 +16,7 @@ export default function SpeedBlitzScreen({ onFinish, onClose }: SpeedBlitzProps)
   const [timeLeft, setTimeLeft] = useState(60);
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
+  const [bestCombo, setBestCombo] = useState(0);
   const [currentZ, setCurrentZ] = useState(1);
   const [options, setOptions] = useState<number[]>([]);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
@@ -51,13 +52,6 @@ export default function SpeedBlitzScreen({ onFinish, onClose }: SpeedBlitzProps)
     };
   }, [generateQuestion]);
 
-  useEffect(() => {
-    if (timeLeft === 0) {
-      const earnedXP = score * 10 + combo * 5;
-      onFinish(score, earnedXP);
-    }
-  }, [timeLeft, score, combo, onFinish]);
-
   const handleGuess = (guessZ: number) => {
     if (feedback !== null || timeLeft === 0) return;
 
@@ -65,7 +59,7 @@ export default function SpeedBlitzScreen({ onFinish, onClose }: SpeedBlitzProps)
       triggerHaptic('success');
       playSound('success');
       setScore(s => s + 1);
-      setCombo(c => c + 1);
+      setCombo(c => { const next = c + 1; setBestCombo(best => Math.max(best, next)); return next; });
       setFeedback('correct');
       setTimeout(generateQuestion, 400);
     } else {
@@ -78,6 +72,19 @@ export default function SpeedBlitzScreen({ onFinish, onClose }: SpeedBlitzProps)
   };
 
   const targetEl = getElement(currentZ);
+  const earnedXP = score * 10 + bestCombo * 5;
+
+  if (timeLeft === 0) {
+    return <View style={[B.container, B.results]}>
+      <LinearGradient colors={['rgba(244,114,182,0.18)', 'rgba(10,14,26,1)']} style={StyleSheet.absoluteFill} />
+      <Text style={B.resultIcon}>⚡</Text>
+      <Text style={B.resultTitle}>BLITZ COMPLETE</Text>
+      <Text style={B.resultScore}>{score}</Text>
+      <Text style={B.scoreLabel}>ELEMENTS IDENTIFIED</Text>
+      <View style={B.resultStats}><Text style={B.resultStat}>Best combo: {bestCombo}</Text><Text style={B.resultXP}>+{earnedXP} XP</Text></View>
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Collect Blitz XP and return to quiz" style={B.collectBtn} onPress={() => onFinish(score, earnedXP)}><Text style={B.collectText}>Collect XP</Text></TouchableOpacity>
+    </View>;
+  }
 
   return (
     <View style={B.container}>
@@ -182,6 +189,15 @@ const B = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
   },
+  results: { alignItems: 'center', justifyContent: 'center', gap: 12 },
+  resultIcon: { fontSize: 56 },
+  resultTitle: { color: '#f472b6', fontSize: 15, fontWeight: '900', letterSpacing: 1.5 },
+  resultScore: { color: COLORS.text, fontSize: 72, fontWeight: '900' },
+  resultStats: { flexDirection: 'row', gap: 18, marginTop: 10 },
+  resultStat: { color: COLORS.textSecondary, fontSize: 13, fontWeight: '700' },
+  resultXP: { color: '#34d399', fontSize: 15, fontWeight: '900' },
+  collectBtn: { minWidth: 220, minHeight: 54, borderRadius: RADIUS.md, backgroundColor: '#f472b6', alignItems: 'center', justifyContent: 'center', marginTop: 18 },
+  collectText: { color: '#0a0e1a', fontSize: 15, fontWeight: '900' },
   hud: {
     alignItems: 'center',
     marginVertical: 10,

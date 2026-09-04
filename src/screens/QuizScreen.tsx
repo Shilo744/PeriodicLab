@@ -6,6 +6,7 @@ import Atom3D from '../components/Atom3D';
 import { LinearGradient } from 'expo-linear-gradient';
 import { QUIZZES, Question } from '../data/quiz';
 import { triggerHaptic, playSound } from '../services/feedback';
+import { shuffled } from '../utils/random';
 
 const { height: H } = Dimensions.get('window');
 
@@ -36,10 +37,10 @@ import SpeedBlitzScreen from './SpeedBlitzScreen';
 
 export default function QuizScreen({
   z, elementLevels, discovered, pool,
-  onCorrect, onNext,
+  onCorrect, onTriviaCorrect, onNext, onBlitzFinish,
 }: {
   z: number; elementLevels: Record<number, number>; discovered: number[];
-  pool: number[]; onCorrect: (z: number) => void; onNext: () => void;
+  pool: number[]; onCorrect: (z: number, xpGained: number) => void; onTriviaCorrect: (xpGained: number) => void; onNext: () => void; onBlitzFinish: (score: number, xpGained: number) => void;
 }) {
   const [mode, setMode] = useState<QuizMode>('3d_atom');
   const [showBlitz, setShowBlitz] = useState(false);
@@ -53,8 +54,8 @@ export default function QuizScreen({
   const timerRef = useRef<any>(null);
 
   const filteredQuizzes = React.useMemo(() => {
-    if (triviaCategory === 'all') return QUIZZES;
-    return QUIZZES.filter(q => q.category === triviaCategory);
+    const questions = triviaCategory === 'all' ? QUIZZES : QUIZZES.filter(q => q.category === triviaCategory);
+    return shuffled(questions);
   }, [triviaCategory]);
 
   const activeTriviaList = filteredQuizzes.length > 0 ? filteredQuizzes : QUIZZES;
@@ -110,7 +111,7 @@ export default function QuizScreen({
       setState('correct');
       setStreak(s => s + 1);
       setTimeout(() => {
-        onCorrect(z);
+        onCorrect(z, totalEarnedXP);
         locked.current = false;
         setSelectedOpt(null);
         setState('playing');
@@ -127,7 +128,7 @@ export default function QuizScreen({
         onNext();
       }, 2800);
     }
-  }, [z, onCorrect, onNext]);
+  }, [z, totalEarnedXP, onCorrect, onNext]);
 
   // Handle trivia question guess
   const handleTriviaGuess = useCallback((optionIdx: number) => {
@@ -142,7 +143,7 @@ export default function QuizScreen({
       setState('correct');
       setStreak(s => s + 1);
       setTimeout(() => {
-        onCorrect(z);
+        onTriviaCorrect(totalEarnedXP);
         setTriviaIndex(i => i + 1);
         locked.current = false;
         setSelectedOpt(null);
@@ -161,7 +162,7 @@ export default function QuizScreen({
         onNext();
       }, 3000);
     }
-  }, [currentTrivia, z, onCorrect, onNext]);
+  }, [currentTrivia, totalEarnedXP, onTriviaCorrect, onNext]);
 
   const atomSize = H * 0.28;
 
@@ -170,7 +171,7 @@ export default function QuizScreen({
       <SpeedBlitzScreen
         onFinish={(score, gainedXP) => {
           setShowBlitz(false);
-          onCorrect(z);
+          onBlitzFinish(score, gainedXP);
         }}
         onClose={() => setShowBlitz(false)}
       />
@@ -273,7 +274,7 @@ export default function QuizScreen({
         <View style={Q.triviaContainer}>
           {/* Category Filter Chips */}
           <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-            {['all', 'structure', 'trends', 'bonding', 'history', 'superheavy'].map(catKey => (
+            {['all', 'structure', 'groups', 'trends', 'bonding', 'reactions', 'applications', 'history', 'superheavy'].map(catKey => (
               <TouchableOpacity
                 key={catKey}
                 style={[
@@ -284,6 +285,9 @@ export default function QuizScreen({
                   setTriviaCategory(catKey);
                   setTriviaIndex(0);
                 }}
+                disabled={state !== 'playing'}
+                accessibilityRole="button"
+                accessibilityState={{ selected: triviaCategory === catKey, disabled: state !== 'playing' }}
               >
                 <Text style={{ fontSize: 9, fontWeight: '800', color: triviaCategory === catKey ? COLORS.primaryLight : COLORS.textTertiary }}>
                   {catKey.toUpperCase()}

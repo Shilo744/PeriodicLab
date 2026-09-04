@@ -4,7 +4,9 @@ export type QuestionCategory =
   | 'trends' 
   | 'reactions' 
   | 'history' 
-  | 'applications';
+  | 'applications'
+  | 'bonding'
+  | 'superheavy';
 
 export type Question = {
   id: number;
@@ -266,6 +268,106 @@ export const QUIZZES: Question[] = [
     correctIndex: 1,
     explanation: 'In Beta-minus (β⁻) decay, a down quark transforms into an up quark, converting a neutron into a proton and increasing Z by +1.',
     rewardPoints: 35
+  },
+
+  // --- Chemical Bonding & Molecular Shape ---
+  {
+    id: 31, category: 'bonding', difficulty: 1,
+    question: 'What happens to valence electrons when a typical ionic bond forms?',
+    options: ['They disappear', 'They remain equally shared', 'They are transferred between atoms', 'They become neutrons'],
+    correctIndex: 2,
+    explanation: 'Ionic bonding typically begins with electron transfer, creating oppositely charged ions that attract electrostatically.',
+    rewardPoints: 15
+  },
+  {
+    id: 32, category: 'bonding', difficulty: 1,
+    question: 'What is the defining feature of a covalent bond?',
+    options: ['Transferred protons', 'Shared electron pairs', 'Free-moving nuclei', 'Radioactive decay'],
+    correctIndex: 1,
+    explanation: 'A covalent bond forms when atoms share one or more pairs of valence electrons.',
+    rewardPoints: 15
+  },
+  {
+    id: 33, category: 'bonding', difficulty: 2,
+    question: 'Which model best describes bonding in a solid metal?',
+    options: ['Separate neutral molecules', 'Alternating neutrons and protons', 'Only localized electron pairs', 'Positive ions in delocalized electrons'],
+    correctIndex: 3,
+    explanation: 'Metallic bonding is modeled as positive metal ions held together by mobile, delocalized valence electrons.',
+    rewardPoints: 20
+  },
+  {
+    id: 34, category: 'bonding', difficulty: 2,
+    question: 'Why is a water molecule bent rather than linear?',
+    options: ['Hydrogen has d orbitals', 'Oxygen has no valence electrons', 'Two lone pairs repel bonding pairs', 'Gravity bends the bonds'],
+    correctIndex: 2,
+    explanation: 'Four electron domains surround oxygen; two are lone pairs whose stronger repulsion produces a bent molecular shape.',
+    rewardPoints: 20
+  },
+  {
+    id: 35, category: 'bonding', difficulty: 3,
+    question: 'What is the molecular geometry of carbon dioxide, CO₂?',
+    options: ['Bent', 'Linear', 'Trigonal pyramidal', 'Tetrahedral'],
+    correctIndex: 1,
+    explanation: 'Carbon has two electron domains in CO₂, so VSEPR predicts a linear O=C=O geometry with a 180° angle.',
+    rewardPoints: 25
+  },
+  {
+    id: 36, category: 'bonding', difficulty: 3,
+    question: 'Which intermolecular attraction explains water\'s unusually high boiling point?',
+    options: ['Metallic bonding', 'Ionic bonding', 'Nuclear attraction', 'Hydrogen bonding'],
+    correctIndex: 3,
+    explanation: 'Strong hydrogen bonds form between the partially positive hydrogen of one molecule and oxygen of another.',
+    rewardPoints: 25
+  },
+
+  // --- Superheavy Elements & Modern Discovery ---
+  {
+    id: 37, category: 'superheavy', difficulty: 2,
+    question: 'Which atomic-number range is commonly called the transactinide elements?',
+    options: ['1 through 10', '57 through 71', 'Greater than 103', '89 through 103'],
+    correctIndex: 2,
+    explanation: 'Transactinides follow lawrencium (Z=103), beginning with rutherfordium at atomic number 104.',
+    rewardPoints: 20
+  },
+  {
+    id: 38, category: 'superheavy', difficulty: 3,
+    question: 'What does the proposed island of stability describe?',
+    options: ['A continent rich in uranium', 'Superheavy nuclei with relatively longer half-lives', 'A group of inert gases', 'A stable electron orbital'],
+    correctIndex: 1,
+    explanation: 'Certain predicted combinations of proton and neutron shell closures may make some superheavy nuclei live longer than their neighbors.',
+    rewardPoints: 25
+  },
+  {
+    id: 39, category: 'superheavy', difficulty: 3,
+    question: 'Which element has atomic number 114?',
+    options: ['Livermorium (Lv)', 'Nihonium (Nh)', 'Flerovium (Fl)', 'Moscovium (Mc)'],
+    correctIndex: 2,
+    explanation: 'Flerovium is element 114 and was named for the Flerov Laboratory of Nuclear Reactions.',
+    rewardPoints: 25
+  },
+  {
+    id: 40, category: 'superheavy', difficulty: 3,
+    question: 'Which halogen-named element occupies atomic number 117?',
+    options: ['Oganesson (Og)', 'Copernicium (Cn)', 'Darmstadtium (Ds)', 'Tennessine (Ts)'],
+    correctIndex: 3,
+    explanation: 'Tennessine, element 117, occupies group 17 beneath astatine, although its chemistry is known only from predictions and scarce atoms.',
+    rewardPoints: 25
+  },
+  {
+    id: 41, category: 'superheavy', difficulty: 4,
+    question: 'How are most superheavy elements produced in laboratories?',
+    options: ['Cooling noble gases', 'Bombarding heavy target nuclei with accelerated ions', 'Electrolyzing seawater', 'Splitting light with a prism'],
+    correctIndex: 1,
+    explanation: 'Accelerators drive ion beams into heavy targets; extremely rare fusion events can form a new, heavier nucleus.',
+    rewardPoints: 30
+  },
+  {
+    id: 42, category: 'superheavy', difficulty: 4,
+    question: 'Why is direct chemistry with the heaviest elements especially difficult?',
+    options: ['They cannot contain electrons', 'They are invisible to detectors', 'Only a few atoms are made and they decay quickly', 'They exist only below absolute zero'],
+    correctIndex: 2,
+    explanation: 'Production rates may be only a few atoms, and short half-lives leave little time for chemical experiments.',
+    rewardPoints: 30
   }
 ];
 

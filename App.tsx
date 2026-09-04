@@ -477,9 +477,9 @@ export default function App() {
     });
   }, []);
 
-  const handleCorrect = useCallback((z: number) => {
+  const handleCorrect = useCallback((z: number, earnedXP?: number) => {
     const currentLevel = elementLevels[z] || 0;
-    const gained = xpForLevel(currentLevel);
+    const gained = earnedXP ?? xpForLevel(currentLevel);
     const newLevels = { ...elementLevels, [z]: currentLevel + 1 };
     
     setElementLevels(newLevels);
@@ -502,9 +502,29 @@ export default function App() {
     recordLearningAction();
   }, [elementLevels, studyPool, recordLearningAction]);
 
+  const handleTriviaCorrect = useCallback((xpGained: number) => {
+    setTotalXP(previous => {
+      const next = previous + xpGained;
+      void saveXP(next);
+      return next;
+    });
+    recordLearningAction();
+  }, [recordLearningAction]);
+
   const handleNextQuiz = useCallback(() => {
     setQuizZ(pickFromPool(studyPool, elementLevels));
   }, [studyPool, elementLevels]);
+
+  const handleBlitzFinish = useCallback((score: number, xpGained: number) => {
+    if (xpGained > 0) {
+      setTotalXP(previous => {
+        const next = previous + xpGained;
+        void saveXP(next);
+        return next;
+      });
+    }
+    if (score > 0) recordLearningAction();
+  }, [recordLearningAction]);
 
   const handleDiscover = useCallback((z: number) => {
     const currentLevel = elementLevels[z] || 0;
@@ -585,7 +605,7 @@ export default function App() {
     ),
     study: <StudyScreen z={studyZ} onChange={setStudyZ} xp={totalXP} levels={elementLevels} discovered={discovered} onGoBuilder={(z) => { setStudyZ(z); setTab('builder'); }} />,
     builder: <AtomBuilder z={studyZ} found={discovered} onDiscover={handleDiscover} xp={totalXP} levels={elementLevels} />,
-    quiz: <QuizScreen z={quizZ} elementLevels={elementLevels} discovered={discovered} pool={studyPool} onCorrect={handleCorrect} onNext={handleNextQuiz} />,
+    quiz: <QuizScreen z={quizZ} elementLevels={elementLevels} discovered={discovered} pool={studyPool} onCorrect={handleCorrect} onTriviaCorrect={handleTriviaCorrect} onNext={handleNextQuiz} onBlitzFinish={handleBlitzFinish} />,
     table: <PeriodicTable discovered={discovered} levels={elementLevels} xp={totalXP} onSelect={handleSelectTableElement} onGoBuilder={(z) => { setStudyZ(z); setTab('builder'); }} />,
   }[tab];
 
