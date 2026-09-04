@@ -17,6 +17,7 @@ import {
   updateDailyStreak, loadPreferences, savePreferences, loadLastTab, saveLastTab, loadLastElement, saveLastElement,
   loadDailyQuestCompletion, saveDailyQuestCompletion
   , loadOnboardingComplete, saveOnboardingComplete
+  , loadWeeklyGoal, saveWeeklyGoal
 } from './src/data/storage';
 import { 
   ACHIEVEMENTS_LIST, CHAPTERS, 
@@ -29,6 +30,7 @@ import ReactionLabScreen from './src/screens/ReactionLabScreen';
 import { validateScientificData } from './src/data/validation';
 import { shuffled } from './src/utils/random';
 import OnboardingScreen from './src/components/OnboardingScreen';
+import { WeeklyGoal, WEEKLY_GOAL_REWARD, WEEKLY_GOAL_TARGET, normalizeWeeklyGoal, recordWeeklyAction } from './src/data/weeklyGoal';
 
 type Tab = 'home' | 'table' | 'study' | 'builder' | 'quiz';
 
@@ -129,11 +131,11 @@ function xpForLevel(level: number): number { return 10 + level * 5; }
 import ProfileScreen from './src/screens/ProfileScreen';
 
 function HomeScreen({ 
-  xp, discovered, levels, studyPool, unlockedAchievements, dailyStreak, dailyQuestCompleted, locale, onToggleLocale,
+  xp, discovered, levels, studyPool, unlockedAchievements, dailyStreak, dailyQuestCompleted, weeklyGoal, locale, onToggleLocale,
   onGoStudy, onGoQuiz, onGoBuilder, onGoTable, onGoFlashcards, onGoReactions, onSelectElement
 }: {
   xp: number; discovered: number[]; levels: Record<number, number>; studyPool: number[];
-  unlockedAchievements: string[]; dailyStreak: number; dailyQuestCompleted: boolean; locale: Locale; onToggleLocale: () => void;
+  unlockedAchievements: string[]; dailyStreak: number; dailyQuestCompleted: boolean; weeklyGoal: WeeklyGoal; locale: Locale; onToggleLocale: () => void;
   onGoStudy: () => void; onGoQuiz: () => void; onGoBuilder: () => void; onGoTable: () => void;
   onGoFlashcards: () => void;
   onGoReactions: () => void;
@@ -227,18 +229,30 @@ function HomeScreen({
         <View style={HS.dailyContent}>
           <View style={HS.dailyLeft}>
             <Text style={HS.dailyTag}>{t('dailyQuest', locale)}</Text>
-            <Text style={HS.dailyTitle}>Explore {dailyEl.nameEn} ({dailyEl.sym})</Text>
-            <Text style={HS.dailySub}>{dailyQuestCompleted ? 'Completed — come back tomorrow!' : `Learn its story and earn +${daily.bonusXP} XP today!`}</Text>
+            <Text style={HS.dailyTitle}>{locale === 'he' ? `חקרו את ${dailyEl.nameEn} (${dailyEl.sym})` : `Explore ${dailyEl.nameEn} (${dailyEl.sym})`}</Text>
+            <Text style={HS.dailySub}>{dailyQuestCompleted ? (locale === 'he' ? 'הושלם — חזרו מחר למשימה חדשה!' : 'Completed — come back tomorrow!') : (locale === 'he' ? `למדו את הסיפור שלו וקבלו היום ${daily.bonusXP}+ XP` : `Learn its story and earn +${daily.bonusXP} XP today!`)}</Text>
           </View>
           <View style={HS.dailyActions}>
             <TouchableOpacity style={HS.dailyBtn} onPress={() => onSelectElement(daily.z)} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={`Explore today's element, ${dailyEl.nameEn}`}>
-              <Text style={HS.dailyBtnTxt}>{dailyQuestCompleted ? 'Review' : 'Claim'}</Text>
+              <Text style={HS.dailyBtnTxt}>{dailyQuestCompleted ? (locale === 'he' ? 'שוב' : 'Review') : (locale === 'he' ? 'קבלו' : 'Claim')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={HS.dailyShareBtn} onPress={() => void Share.share({ message: `Today's Periodic Lab element is ${dailyEl.nameEn} (${dailyEl.sym}), atomic number ${dailyEl.z}. Can you master it too?` })} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Share today's element">
-              <Text style={HS.dailyShareTxt}>Share</Text>
+            <TouchableOpacity style={HS.dailyShareBtn} onPress={() => void Share.share({ message: locale === 'he' ? `יסוד היום שלי במעבדה המחזורית הוא ${dailyEl.nameEn} (${dailyEl.sym}), מספר אטומי ${dailyEl.z}. תוכלו לשלוט בו גם?` : `Today's Periodic Lab element is ${dailyEl.nameEn} (${dailyEl.sym}), atomic number ${dailyEl.z}. Can you master it too?` })} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={locale === 'he' ? 'שיתוף יסוד היום' : "Share today's element"}>
+              <Text style={HS.dailyShareTxt}>{locale === 'he' ? 'שיתוף' : 'Share'}</Text>
             </TouchableOpacity>
           </View>
         </View>
+      </View>
+
+      <View style={HS.weeklyCard} accessible accessibilityLabel={`Weekly research goal: ${weeklyGoal.actions} of ${WEEKLY_GOAL_TARGET} learning actions complete`}>
+        <View style={HS.weeklyHeader}>
+          <View>
+            <Text style={HS.weeklyTag}>{locale === 'he' ? 'יעד מחקר שבועי' : 'WEEKLY RESEARCH GOAL'}</Text>
+            <Text style={HS.weeklyTitle}>{weeklyGoal.rewarded ? (locale === 'he' ? 'המשימה הושלמה!' : 'Mission complete!') : (locale === 'he' ? `עוד ${WEEKLY_GOAL_TARGET - weeklyGoal.actions} פעולות לקבלת הפרס` : `${WEEKLY_GOAL_TARGET - weeklyGoal.actions} actions to your reward`)}</Text>
+          </View>
+          <Text style={HS.weeklyReward}>{weeklyGoal.rewarded ? '✓' : `+${WEEKLY_GOAL_REWARD} XP`}</Text>
+        </View>
+        <View style={HS.weeklyTrack}><LinearGradient colors={['#34d399', '#22d3ee']} style={[HS.weeklyFill, { width: `${Math.round((weeklyGoal.actions / WEEKLY_GOAL_TARGET) * 100)}%` }]} /></View>
+        <Text style={HS.weeklyMeta}>{weeklyGoal.actions}/{WEEKLY_GOAL_TARGET} · {locale === 'he' ? 'תשובות בחידון, תגליות והמשימה היומית נחשבות' : 'Quiz answers, discoveries and the daily quest count'}</Text>
       </View>
 
       {/* Main Actions Panel */}
@@ -369,6 +383,7 @@ export default function App() {
   const [dailyStreak, setDailyStreak] = useState(1);
   const [dailyQuestDate, setDailyQuestDate] = useState('');
   const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [weeklyGoal, setWeeklyGoal] = useState<WeeklyGoal>(() => normalizeWeeklyGoal(null));
   const [studyZ, setStudyZ] = useState(6);
   const [quizZ, setQuizZ] = useState(() => pickFromPool(INITIAL_POOL, {}));
   const [showFlashcards, setShowFlashcards] = useState(false);
@@ -397,9 +412,9 @@ export default function App() {
     let active = true;
     setLoadError(false);
     async function loadSavedData() {
-      const [savedXP, savedLevels, savedPool, savedAch, savedDaily, preferences, savedTab, savedElement, savedDailyQuest, savedOnboarding] = await Promise.all([
+      const [savedXP, savedLevels, savedPool, savedAch, savedDaily, preferences, savedTab, savedElement, savedDailyQuest, savedOnboarding, savedWeeklyGoal] = await Promise.all([
         loadXP(), loadLevels(), loadStudyPool(INITIAL_POOL), loadAchievements(),
-        updateDailyStreak(), loadPreferences(), loadLastTab(), loadLastElement(), loadDailyQuestCompletion(), loadOnboardingComplete(),
+        updateDailyStreak(), loadPreferences(), loadLastTab(), loadLastElement(), loadDailyQuestCompletion(), loadOnboardingComplete(), loadWeeklyGoal(),
       ]);
       if (!active) return;
       
@@ -411,6 +426,7 @@ export default function App() {
       setDailyQuestDate(savedDailyQuest);
       // Do not interrupt returning users who installed before onboarding existed.
       setOnboardingComplete(savedOnboarding || savedXP > 0 || Object.keys(savedLevels).length > 0);
+      setWeeklyGoal(savedWeeklyGoal);
       setLocale(preferences.locale);
       setAudioMuted(preferences.audioMuted);
       if (TABS.some(item => item.key === savedTab)) setTab(savedTab as Tab);
@@ -446,6 +462,21 @@ export default function App() {
     }
   }, [discovered.length, totalXP, unlockedAchievements, storageReady]);
 
+  const recordLearningAction = useCallback(() => {
+    setWeeklyGoal(previous => {
+      const next = recordWeeklyAction(previous);
+      void saveWeeklyGoal(next);
+      if (!previous.rewarded && next.rewarded) {
+        setTotalXP(currentXP => {
+          const rewardedXP = currentXP + WEEKLY_GOAL_REWARD;
+          void saveXP(rewardedXP);
+          return rewardedXP;
+        });
+      }
+      return next;
+    });
+  }, []);
+
   const handleCorrect = useCallback((z: number) => {
     const currentLevel = elementLevels[z] || 0;
     const gained = xpForLevel(currentLevel);
@@ -468,7 +499,8 @@ export default function App() {
     } else {
       setQuizZ(pickFromPool(studyPool, newLevels));
     }
-  }, [elementLevels, studyPool]);
+    recordLearningAction();
+  }, [elementLevels, studyPool, recordLearningAction]);
 
   const handleNextQuiz = useCallback(() => {
     setQuizZ(pickFromPool(studyPool, elementLevels));
@@ -492,8 +524,9 @@ export default function App() {
         setStudyPool(newPool);
         saveStudyPool(newPool);
       }
+      recordLearningAction();
     }
-  }, [elementLevels, studyPool]);
+  }, [elementLevels, studyPool, recordLearningAction]);
 
   const handleSelectTableElement = useCallback((z: number) => {
     setStudyZ(z);
@@ -510,10 +543,11 @@ export default function App() {
         void saveXP(next);
         return next;
       });
+      recordLearningAction();
     }
     setStudyZ(z);
     setTab('study');
-  }, [dailyQuestDate]);
+  }, [dailyQuestDate, recordLearningAction]);
 
   if (!storageReady) {
     return <View style={[S.root, { justifyContent: 'center', alignItems: 'center', padding: 24, gap: 16 }]}>
@@ -537,6 +571,7 @@ export default function App() {
         unlockedAchievements={unlockedAchievements}
         dailyStreak={dailyStreak}
         dailyQuestCompleted={dailyQuestDate === getDailyFeaturedElement().dateStr}
+        weeklyGoal={weeklyGoal}
         locale={locale}
         onToggleLocale={toggleLocale}
         onGoStudy={() => setTab('study')} 
@@ -789,6 +824,14 @@ const HS = StyleSheet.create({
     fontWeight: '800',
     color: '#0a0e1a',
   },
+  weeklyCard: { marginHorizontal: 16, marginBottom: 16, padding: 14, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(52,211,153,0.25)', backgroundColor: 'rgba(52,211,153,0.06)' },
+  weeklyHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
+  weeklyTag: { color: '#34d399', fontSize: 8, fontWeight: '900', letterSpacing: 0.8 },
+  weeklyTitle: { color: COLORS.text, fontSize: 13, fontWeight: '800', marginTop: 3 },
+  weeklyReward: { color: '#34d399', fontSize: 12, fontWeight: '900' },
+  weeklyTrack: { height: 7, borderRadius: 4, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.06)', marginTop: 12 },
+  weeklyFill: { height: '100%', borderRadius: 4 },
+  weeklyMeta: { color: COLORS.textSecondary, fontSize: 9.5, marginTop: 7 },
 
   sectionLabel: { fontSize: 9.5, fontWeight: '800', color: COLORS.textSecondary, letterSpacing: 1.0, marginHorizontal: 20, marginBottom: 8, marginTop: 4 },
 

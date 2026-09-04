@@ -3,6 +3,7 @@ import { createPersistence } from './persistence';
 import { REACTIONS } from './reactions';
 import { isElementId, nonnegativeInteger, elementIds, stringIds, levelsRecord, preferences, AppPreferences } from './storageSchema';
 import { normalizeStreak, advanceDailyStreak, DailyStreak } from './dailyStreak';
+import { normalizeWeeklyGoal, WeeklyGoal } from './weeklyGoal';
 export type { AppPreferences } from './storageSchema';
 
 // Keep existing key names so upgrades retain saved progress.
@@ -13,6 +14,7 @@ const KEYS = {
   PREFERENCES: 'periodic_lab_preferences', LAST_TAB: 'periodic_lab_last_tab', LAST_ELEMENT: 'periodic_lab_last_element',
   DAILY_QUEST: 'periodic_lab_daily_quest',
   ONBOARDING: 'periodic_lab_onboarding_complete',
+  WEEKLY_GOAL: 'periodic_lab_weekly_goal',
 };
 const store = createPersistence(AsyncStorage);
 const validTab = (value: unknown): string => typeof value === 'string' && ['home', 'table', 'study', 'builder', 'quiz'].includes(value) ? value : 'home';
@@ -24,6 +26,8 @@ export const saveDailyQuestCompletion = (date: string) => store.write(KEYS.DAILY
 export const loadDailyQuestCompletion = () => store.read(KEYS.DAILY_QUEST, validDateKey);
 export const saveOnboardingComplete = () => store.write(KEYS.ONBOARDING, true);
 export const loadOnboardingComplete = () => store.read(KEYS.ONBOARDING, value => value === true);
+export const saveWeeklyGoal = (goal: WeeklyGoal) => store.write(KEYS.WEEKLY_GOAL, normalizeWeeklyGoal(goal));
+export const loadWeeklyGoal = () => store.read(KEYS.WEEKLY_GOAL, value => normalizeWeeklyGoal(value));
 
 export const saveLastElement = (z: number) => store.write(KEYS.LAST_ELEMENT, validElement(z));
 export const loadLastElement = () => store.read(KEYS.LAST_ELEMENT, validElement);
