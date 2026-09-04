@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, StatusBar, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, StatusBar, ScrollView, ActivityIndicator, Share } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Path, Line, Rect, Polyline } from 'react-native-svg';
 
@@ -14,7 +14,8 @@ import {
   saveLevels, loadLevels, 
   saveStudyPool, loadStudyPool,
   saveAchievements, loadAchievements,
-  updateDailyStreak, loadPreferences, savePreferences, loadLastTab, saveLastTab, loadLastElement, saveLastElement
+  updateDailyStreak, loadPreferences, savePreferences, loadLastTab, saveLastTab, loadLastElement, saveLastElement,
+  loadDailyQuestCompletion, saveDailyQuestCompletion
 } from './src/data/storage';
 import { 
   ACHIEVEMENTS_LIST, CHAPTERS, 
@@ -126,11 +127,11 @@ function xpForLevel(level: number): number { return 10 + level * 5; }
 import ProfileScreen from './src/screens/ProfileScreen';
 
 function HomeScreen({ 
-  xp, discovered, levels, studyPool, unlockedAchievements, dailyStreak, locale, onToggleLocale,
+  xp, discovered, levels, studyPool, unlockedAchievements, dailyStreak, dailyQuestCompleted, locale, onToggleLocale,
   onGoStudy, onGoQuiz, onGoBuilder, onGoTable, onGoFlashcards, onGoReactions, onSelectElement
 }: {
   xp: number; discovered: number[]; levels: Record<number, number>; studyPool: number[];
-  unlockedAchievements: string[]; dailyStreak: number; locale: Locale; onToggleLocale: () => void;
+  unlockedAchievements: string[]; dailyStreak: number; dailyQuestCompleted: boolean; locale: Locale; onToggleLocale: () => void;
   onGoStudy: () => void; onGoQuiz: () => void; onGoBuilder: () => void; onGoTable: () => void;
   onGoFlashcards: () => void;
   onGoReactions: () => void;
@@ -224,16 +225,17 @@ function HomeScreen({
         <View style={HS.dailyContent}>
           <View style={HS.dailyLeft}>
             <Text style={HS.dailyTag}>{t('dailyQuest', locale)}</Text>
-            <Text style={HS.dailyTitle}>Synthesize {dailyEl.nameEn} ({dailyEl.sym})</Text>
-            <Text style={HS.dailySub}>Earn +{daily.bonusXP} bonus XP today!</Text>
+            <Text style={HS.dailyTitle}>Explore {dailyEl.nameEn} ({dailyEl.sym})</Text>
+            <Text style={HS.dailySub}>{dailyQuestCompleted ? 'Completed — come back tomorrow!' : `Learn its story and earn +${daily.bonusXP} XP today!`}</Text>
           </View>
-          <TouchableOpacity 
-            style={HS.dailyBtn} 
-            onPress={() => onSelectElement(daily.z)}
-            activeOpacity={0.8}
-          >
-            <Text style={HS.dailyBtnTxt}>Launch</Text>
-          </TouchableOpacity>
+          <View style={HS.dailyActions}>
+            <TouchableOpacity style={HS.dailyBtn} onPress={() => onSelectElement(daily.z)} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={`Explore today's element, ${dailyEl.nameEn}`}>
+              <Text style={HS.dailyBtnTxt}>{dailyQuestCompleted ? 'Review' : 'Claim'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={HS.dailyShareBtn} onPress={() => void Share.share({ message: `Today's Periodic Lab element is ${dailyEl.nameEn} (${dailyEl.sym}), atomic number ${dailyEl.z}. Can you master it too?` })} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Share today's element">
+              <Text style={HS.dailyShareTxt}>Share</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -363,6 +365,7 @@ export default function App() {
   const [studyPool, setStudyPool] = useState<number[]>(INITIAL_POOL);
   const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
   const [dailyStreak, setDailyStreak] = useState(1);
+  const [dailyQuestDate, setDailyQuestDate] = useState('');
   const [studyZ, setStudyZ] = useState(6);
   const [quizZ, setQuizZ] = useState(() => pickFromPool(INITIAL_POOL, {}));
   const [showFlashcards, setShowFlashcards] = useState(false);
@@ -391,9 +394,9 @@ export default function App() {
     let active = true;
     setLoadError(false);
     async function loadSavedData() {
-      const [savedXP, savedLevels, savedPool, savedAch, savedDaily, preferences, savedTab, savedElement] = await Promise.all([
+      const [savedXP, savedLevels, savedPool, savedAch, savedDaily, preferences, savedTab, savedElement, savedDailyQuest] = await Promise.all([
         loadXP(), loadLevels(), loadStudyPool(INITIAL_POOL), loadAchievements(),
-        updateDailyStreak(), loadPreferences(), loadLastTab(), loadLastElement(),
+        updateDailyStreak(), loadPreferences(), loadLastTab(), loadLastElement(), loadDailyQuestCompletion(),
       ]);
       if (!active) return;
       
@@ -402,6 +405,7 @@ export default function App() {
       setStudyPool(savedPool);
       setUnlockedAchievements(savedAch);
       setDailyStreak(savedDaily.streak);
+      setDailyQuestDate(savedDailyQuest);
       setLocale(preferences.locale);
       setAudioMuted(preferences.audioMuted);
       if (TABS.some(item => item.key === savedTab)) setTab(savedTab as Tab);
@@ -491,6 +495,21 @@ export default function App() {
     setTab('study');
   }, []);
 
+  const handleDailyQuest = useCallback((z: number) => {
+    const daily = getDailyFeaturedElement();
+    if (dailyQuestDate !== daily.dateStr) {
+      setDailyQuestDate(daily.dateStr);
+      void saveDailyQuestCompletion(daily.dateStr);
+      setTotalXP(previous => {
+        const next = previous + daily.bonusXP;
+        void saveXP(next);
+        return next;
+      });
+    }
+    setStudyZ(z);
+    setTab('study');
+  }, [dailyQuestDate]);
+
   if (!storageReady) {
     return <View style={[S.root, { justifyContent: 'center', alignItems: 'center', padding: 24, gap: 16 }]}>
       {!loadError && <ActivityIndicator color={COLORS.primaryLight} size="large" />}
@@ -508,6 +527,7 @@ export default function App() {
         studyPool={studyPool}
         unlockedAchievements={unlockedAchievements}
         dailyStreak={dailyStreak}
+        dailyQuestCompleted={dailyQuestDate === getDailyFeaturedElement().dateStr}
         locale={locale}
         onToggleLocale={toggleLocale}
         onGoStudy={() => setTab('study')} 
@@ -516,7 +536,7 @@ export default function App() {
         onGoTable={() => setTab('table')} 
         onGoFlashcards={() => setShowFlashcards(true)}
         onGoReactions={() => setShowReactions(true)}
-        onSelectElement={(z) => { setStudyZ(z); setTab('builder'); }}
+        onSelectElement={handleDailyQuest}
       />
     ),
     study: <StudyScreen z={studyZ} onChange={setStudyZ} xp={totalXP} levels={elementLevels} discovered={discovered} onGoBuilder={(z) => { setStudyZ(z); setTab('builder'); }} />,
@@ -752,6 +772,9 @@ const HS = StyleSheet.create({
     borderRadius: RADIUS.sm,
     marginLeft: 10,
   },
+  dailyActions: { gap: 8, alignItems: 'stretch' },
+  dailyShareBtn: { borderWidth: 1, borderColor: 'rgba(251,191,36,0.45)', borderRadius: RADIUS.md, paddingHorizontal: 14, paddingVertical: 8, alignItems: 'center' },
+  dailyShareTxt: { color: '#fbbf24', fontSize: 11, fontWeight: '800' },
   dailyBtnTxt: {
     fontSize: 11,
     fontWeight: '800',

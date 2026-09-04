@@ -1,3 +1,5 @@
+import { localDateKey } from './dailyStreak';
+
 export interface Achievement {
   id: string;
   title: string;
@@ -129,11 +131,10 @@ export function checkAchievements(
 }
 
 // Daily Quest Generator based on calendar day
-export function getDailyFeaturedElement(): { z: number; dateStr: string; bonusXP: number } {
-  const today = new Date();
-  const dateStr = today.toISOString().split('T')[0];
+export function getDailyFeaturedElement(today: Date = new Date()): { z: number; dateStr: string; bonusXP: number } {
+  const dateStr = localDateKey(today);
   // Deterministic daily element based on day of year
-  const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+  const dayOfYear = Math.floor((Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) - Date.UTC(today.getFullYear(), 0, 0)) / 86400000);
   const z = (dayOfYear % 118) + 1;
   return { z, dateStr, bonusXP: 100 };
 }

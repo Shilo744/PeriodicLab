@@ -2,7 +2,15 @@ require('./load-ts.cjs');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { advanceDailyStreak, normalizeStreak, localDateKey } = require('../src/data/dailyStreak.ts');
+const { getDailyFeaturedElement } = require('../src/data/achievements.ts');
 const { createPersistence } = require('../src/data/persistence.ts');
+test('daily featured element follows the local calendar date', () => {
+  const early = getDailyFeaturedElement(new Date(2026, 8, 1, 0, 1));
+  const late = getDailyFeaturedElement(new Date(2026, 8, 1, 23, 59));
+  assert.deepEqual(early, late);
+  assert.equal(late.dateStr, '2026-09-01');
+  assert.ok(late.z >= 1 && late.z <= 118);
+});
 test('first visit starts at one even just after local midnight', () => {
   const now = new Date(2026, 7, 27, 0, 5);
   assert.deepEqual(advanceDailyStreak(normalizeStreak(null), now), { streak: 1, lastDate: '2026-08-27' });

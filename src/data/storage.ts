@@ -11,11 +11,16 @@ const KEYS = {
   ACHIEVEMENTS: 'periodic_lab_achievements', DAILY: 'periodic_lab_daily',
   FLASHCARDS: 'periodic_lab_flashcards', FAVORITE_REACTIONS: 'periodic_lab_favorite_reactions',
   PREFERENCES: 'periodic_lab_preferences', LAST_TAB: 'periodic_lab_last_tab', LAST_ELEMENT: 'periodic_lab_last_element',
+  DAILY_QUEST: 'periodic_lab_daily_quest',
 };
 const store = createPersistence(AsyncStorage);
 const validTab = (value: unknown): string => typeof value === 'string' && ['home', 'table', 'study', 'builder', 'quiz'].includes(value) ? value : 'home';
 const validElement = (value: unknown): number => isElementId(value) ? value : 6;
 const validFavorites = (value: unknown) => stringIds(value).filter(id => REACTIONS.some(r => r.id === id));
+const validDateKey = (value: unknown): string => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : '';
+
+export const saveDailyQuestCompletion = (date: string) => store.write(KEYS.DAILY_QUEST, validDateKey(date));
+export const loadDailyQuestCompletion = () => store.read(KEYS.DAILY_QUEST, validDateKey);
 
 export const saveLastElement = (z: number) => store.write(KEYS.LAST_ELEMENT, validElement(z));
 export const loadLastElement = () => store.read(KEYS.LAST_ELEMENT, validElement);
