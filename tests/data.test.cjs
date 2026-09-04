@@ -5,6 +5,7 @@ const { ELEMENTS, getElement } = require('../src/data/elements.ts');
 const { REACTIONS } = require('../src/data/reactions.ts');
 const { validateScientificData } = require('../src/data/validation.ts');
 const { QUIZZES } = require('../src/data/quiz.ts');
+const { ACHIEVEMENTS_LIST, getAchievement } = require('../src/data/achievements.ts');
 
 test('catalog contains every atomic number exactly once', () => {
   assert.deepEqual(ELEMENTS.map(e => e.z).sort((a, b) => a - b), Array.from({ length: 118 }, (_, i) => i + 1));
@@ -31,4 +32,13 @@ test('quiz library has deep coverage and valid category filters', () => {
   assert.ok(QUIZZES.length >= 40);
   for (const category of ['structure', 'groups', 'trends', 'bonding', 'reactions', 'applications', 'history', 'superheavy']) assert.ok(categories.has(category), category);
   assert.equal(new Set(QUIZZES.map(question => question.id)).size, QUIZZES.length);
+});
+
+test('achievement catalog has unique ids and event-driven rewards', () => {
+  assert.equal(new Set(ACHIEVEMENTS_LIST.map(item => item.id)).size, ACHIEVEMENTS_LIST.length);
+  for (const id of ['fusion_pioneer', 'streak_master']) {
+    const achievement = getAchievement(id);
+    assert.ok(achievement, id);
+    assert.ok(achievement.xpReward > 0, id);
+  }
 });

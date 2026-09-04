@@ -21,7 +21,7 @@ import {
 } from './src/data/storage';
 import { 
   ACHIEVEMENTS_LIST, CHAPTERS, 
-  checkAchievements, getDailyFeaturedElement 
+  checkAchievements, getDailyFeaturedElement, getAchievement
 } from './src/data/achievements';
 import { Locale, t } from './src/data/i18n';
 import { triggerHaptic, playSound, isAudioMuted, setAudioMuted, toggleAudioMuted } from './src/services/feedback';
@@ -384,6 +384,7 @@ export default function App() {
   const [dailyQuestDate, setDailyQuestDate] = useState('');
   const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [weeklyGoal, setWeeklyGoal] = useState<WeeklyGoal>(() => normalizeWeeklyGoal(null));
+  const [recentAchievement, setRecentAchievement] = useState<string | null>(null);
   const [studyZ, setStudyZ] = useState(6);
   const [quizZ, setQuizZ] = useState(() => pickFromPool(INITIAL_POOL, {}));
   const [showFlashcards, setShowFlashcards] = useState(false);
@@ -451,6 +452,7 @@ export default function App() {
     if (newUnlocked.length > 0) {
       const updated = [...unlockedAchievements, ...newUnlocked];
       setUnlockedAchievements(updated);
+      setRecentAchievement(newUnlocked[0]);
       saveAchievements(updated);
       if (totalBonusXP > 0) {
         setTotalXP(prev => {
@@ -461,6 +463,33 @@ export default function App() {
       }
     }
   }, [discovered.length, totalXP, unlockedAchievements, storageReady]);
+
+  useEffect(() => {
+    if (!recentAchievement) return;
+    const timer = setTimeout(() => setRecentAchievement(null), 4200);
+    return () => clearTimeout(timer);
+  }, [recentAchievement]);
+
+  const unlockEventAchievement = useCallback((id: string) => {
+    setUnlockedAchievements(previous => {
+      if (previous.includes(id)) return previous;
+      const achievement = getAchievement(id);
+      if (!achievement) return previous;
+      const next = [...previous, id];
+      void saveAchievements(next);
+      setRecentAchievement(id);
+      setTotalXP(currentXP => {
+        const rewardedXP = currentXP + achievement.xpReward;
+        void saveXP(rewardedXP);
+        return rewardedXP;
+      });
+      return next;
+    });
+  }, []);
+
+  const handleStreakMilestone = useCallback((streak: number) => {
+    if (streak >= 5) unlockEventAchievement('streak_master');
+  }, [unlockEventAchievement]);
 
   const recordLearningAction = useCallback(() => {
     setWeeklyGoal(previous => {
@@ -545,8 +574,9 @@ export default function App() {
         saveStudyPool(newPool);
       }
       recordLearningAction();
+      unlockEventAchievement('fusion_pioneer');
     }
-  }, [elementLevels, studyPool, recordLearningAction]);
+  }, [elementLevels, studyPool, recordLearningAction, unlockEventAchievement]);
 
   const handleSelectTableElement = useCallback((z: number) => {
     setStudyZ(z);
@@ -605,7 +635,7 @@ export default function App() {
     ),
     study: <StudyScreen z={studyZ} onChange={setStudyZ} xp={totalXP} levels={elementLevels} discovered={discovered} onGoBuilder={(z) => { setStudyZ(z); setTab('builder'); }} />,
     builder: <AtomBuilder z={studyZ} found={discovered} onDiscover={handleDiscover} xp={totalXP} levels={elementLevels} />,
-    quiz: <QuizScreen z={quizZ} elementLevels={elementLevels} discovered={discovered} pool={studyPool} onCorrect={handleCorrect} onTriviaCorrect={handleTriviaCorrect} onNext={handleNextQuiz} onBlitzFinish={handleBlitzFinish} />,
+    quiz: <QuizScreen z={quizZ} elementLevels={elementLevels} discovered={discovered} pool={studyPool} onCorrect={handleCorrect} onTriviaCorrect={handleTriviaCorrect} onNext={handleNextQuiz} onBlitzFinish={handleBlitzFinish} onStreakMilestone={handleStreakMilestone} />,
     table: <PeriodicTable discovered={discovered} levels={elementLevels} xp={totalXP} onSelect={handleSelectTableElement} onGoBuilder={(z) => { setStudyZ(z); setTab('builder'); }} />,
   }[tab];
 
@@ -620,6 +650,13 @@ export default function App() {
     <View style={S.root}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
       <View style={S.content}>{screen}</View>
+      {recentAchievement && (() => {
+        const achievement = getAchievement(recentAchievement);
+        return achievement ? <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Achievement unlocked: ${achievement.title}. Tap to dismiss.`} activeOpacity={0.9} style={S.achievementToast} onPress={() => setRecentAchievement(null)}>
+          <Text style={S.achievementToastIcon}>{achievement.icon}</Text>
+          <View style={{ flex: 1 }}><Text style={S.achievementToastTag}>ACHIEVEMENT UNLOCKED</Text><Text style={S.achievementToastTitle}>{achievement.title}</Text><Text style={S.achievementToastReward}>+{achievement.xpReward} XP</Text></View>
+        </TouchableOpacity> : null;
+      })()}
       
       {/* Floating Glassmorphic Navigation Bar */}
       <View style={S.bar}>
@@ -644,6 +681,11 @@ export default function App() {
 const S = StyleSheet.create({
   root: { flex: 1, backgroundColor: COLORS.bg },
   content: { flex: 1 },
+  achievementToast: { position: 'absolute', top: 48, left: 18, right: 18, zIndex: 50, flexDirection: 'row', alignItems: 'center', gap: 13, padding: 14, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: 'rgba(251,191,36,0.55)', backgroundColor: '#171628', ...SHADOWS.glow },
+  achievementToastIcon: { fontSize: 34 },
+  achievementToastTag: { color: '#fbbf24', fontSize: 8, fontWeight: '900', letterSpacing: 1.1 },
+  achievementToastTitle: { color: COLORS.text, fontSize: 15, fontWeight: '900', marginTop: 2 },
+  achievementToastReward: { color: '#34d399', fontSize: 10, fontWeight: '800', marginTop: 2 },
   bar: {
     flexDirection: 'row',
     backgroundColor: 'rgba(10, 14, 26, 0.92)',

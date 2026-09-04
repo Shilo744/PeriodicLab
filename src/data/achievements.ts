@@ -100,6 +100,10 @@ export const ACHIEVEMENTS_LIST = [
   },
 ];
 
+export function getAchievement(id: string) {
+  return ACHIEVEMENTS_LIST.find(achievement => achievement.id === id);
+}
+
 export function checkAchievements(
   discovered: number[],
   xp: number,

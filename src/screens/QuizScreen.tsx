@@ -37,10 +37,10 @@ import SpeedBlitzScreen from './SpeedBlitzScreen';
 
 export default function QuizScreen({
   z, elementLevels, discovered, pool,
-  onCorrect, onTriviaCorrect, onNext, onBlitzFinish,
+  onCorrect, onTriviaCorrect, onNext, onBlitzFinish, onStreakMilestone,
 }: {
   z: number; elementLevels: Record<number, number>; discovered: number[];
-  pool: number[]; onCorrect: (z: number, xpGained: number) => void; onTriviaCorrect: (xpGained: number) => void; onNext: () => void; onBlitzFinish: (score: number, xpGained: number) => void;
+  pool: number[]; onCorrect: (z: number, xpGained: number) => void; onTriviaCorrect: (xpGained: number) => void; onNext: () => void; onBlitzFinish: (score: number, xpGained: number) => void; onStreakMilestone: (streak: number) => void;
 }) {
   const [mode, setMode] = useState<QuizMode>('3d_atom');
   const [showBlitz, setShowBlitz] = useState(false);
@@ -109,7 +109,7 @@ export default function QuizScreen({
       triggerHaptic('success');
       playSound('success');
       setState('correct');
-      setStreak(s => s + 1);
+      setStreak(s => { const next = s + 1; onStreakMilestone(next); return next; });
       setTimeout(() => {
         onCorrect(z, totalEarnedXP);
         locked.current = false;
@@ -128,7 +128,7 @@ export default function QuizScreen({
         onNext();
       }, 2800);
     }
-  }, [z, totalEarnedXP, onCorrect, onNext]);
+  }, [z, totalEarnedXP, onCorrect, onNext, onStreakMilestone]);
 
   // Handle trivia question guess
   const handleTriviaGuess = useCallback((optionIdx: number) => {
@@ -141,7 +141,7 @@ export default function QuizScreen({
       triggerHaptic('success');
       playSound('success');
       setState('correct');
-      setStreak(s => s + 1);
+      setStreak(s => { const next = s + 1; onStreakMilestone(next); return next; });
       setTimeout(() => {
         onTriviaCorrect(totalEarnedXP);
         setTriviaIndex(i => i + 1);
@@ -162,7 +162,7 @@ export default function QuizScreen({
         onNext();
       }, 3000);
     }
-  }, [currentTrivia, totalEarnedXP, onTriviaCorrect, onNext]);
+  }, [currentTrivia, totalEarnedXP, onTriviaCorrect, onNext, onStreakMilestone]);
 
   const atomSize = H * 0.28;
 
