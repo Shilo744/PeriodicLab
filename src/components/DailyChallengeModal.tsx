@@ -19,6 +19,12 @@ export default function DailyChallengeModal({ visible, completed, locale, onClos
   const element = getElement(challenge.z);
   const [selected, setSelected] = useState<number | null>(null);
   const isCorrect = selected === challenge.correctIndex;
+  const hebrewQuestion = {
+    'atomic-number': `מהו המספר האטומי של ${element.nameEn} (${element.sym})?`,
+    category: `לאיזו משפחה או קטגוריה שייך ${element.nameEn}?`,
+    state: `מהו מצב הצבירה הרגיל של ${element.nameEn} בתנאים תקניים?`,
+    'valence-electrons': `כמה אלקטרונים נמצאים בקליפה החיצונית של ${element.nameEn}?`,
+  }[challenge.kind];
 
   useEffect(() => {
     if (visible) setSelected(null);
@@ -39,7 +45,7 @@ export default function DailyChallengeModal({ visible, completed, locale, onClos
       <View style={S.card}>
         <LinearGradient colors={['rgba(251,191,36,0.15)', 'rgba(17,24,39,0.98)']} style={StyleSheet.absoluteFill} />
         <View style={S.header}><Text style={S.atom}>{element.sym}</Text><View style={{ flex: 1 }}><Text style={S.tag}>{locale === 'he' ? 'אתגר הזיכרון היומי' : 'DAILY RECALL'}</Text><Text style={S.title}>{locale === 'he' ? `היסוד של היום: ${element.nameEn}` : `Today's element: ${element.nameEn}`}</Text></View></View>
-        <Text style={S.question}>{locale === 'he' ? `מהו המספר האטומי של ${element.nameEn} (${element.sym})?` : challenge.question}</Text>
+        <Text style={S.question}>{locale === 'he' ? hebrewQuestion : challenge.question}</Text>
         <View style={S.options}>{challenge.options.map((answer, index) => {
           const chosen = selected === index;
           const correct = index === challenge.correctIndex;
@@ -48,7 +54,7 @@ export default function DailyChallengeModal({ visible, completed, locale, onClos
           </TouchableOpacity>;
         })}</View>
         {selected !== null && <Text accessibilityLiveRegion="polite" style={[S.feedback, isCorrect ? S.feedbackCorrect : S.feedbackWrong]}>{isCorrect
-          ? (locale === 'he' ? `נכון! ${element.nameEn} הוא יסוד מספר ${challenge.z}.` : challenge.explanation)
+          ? (locale === 'he' ? `נכון! התשובה היא ${challenge.options[challenge.correctIndex]}. ${element.desc}` : challenge.explanation)
           : (locale === 'he' ? 'לא בדיוק — נסו שוב.' : 'Not quite — try again.')}</Text>}
         <Text style={S.reward}>{completed ? (locale === 'he' ? 'כבר השלמתם היום · אפשר לתרגל שוב' : 'Completed today · replay for practice') : (locale === 'he' ? 'תשובה נכונה פותחת את הסיפור ומעניקה 100+ XP' : 'A correct answer unlocks the story and +100 XP')}</Text>
         {isCorrect && <TouchableOpacity onPress={() => onComplete(challenge.z)} style={S.continueButton} accessibilityRole="button"><Text style={S.continueText}>{completed ? (locale === 'he' ? 'לסיפור של היסוד' : 'Review element story') : (locale === 'he' ? 'קבלת הפרס ולסיפור' : 'Claim reward & explore')}</Text></TouchableOpacity>}
@@ -66,11 +72,11 @@ const S = StyleSheet.create({
   tag: { color: '#fbbf24', fontSize: 9, fontWeight: '900', letterSpacing: 1.2 },
   title: { color: COLORS.text, fontSize: 19, fontWeight: '900', marginTop: 4 },
   question: { color: COLORS.text, fontSize: 17, fontWeight: '800', lineHeight: 24, marginTop: 22 },
-  options: { flexDirection: 'row', gap: 9, marginTop: 16 },
-  option: { flex: 1, paddingVertical: 15, alignItems: 'center', borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(148,163,184,0.25)', backgroundColor: 'rgba(255,255,255,0.04)' },
+  options: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 16 },
+  option: { width: '48%', minHeight: 52, paddingHorizontal: 5, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(148,163,184,0.25)', backgroundColor: 'rgba(255,255,255,0.04)' },
   correct: { borderColor: '#34d399', backgroundColor: 'rgba(52,211,153,0.14)' },
   wrong: { borderColor: '#fb7185', backgroundColor: 'rgba(251,113,133,0.12)' },
-  optionText: { color: COLORS.text, fontSize: 17, fontWeight: '900' },
+  optionText: { color: COLORS.text, fontSize: 14, fontWeight: '900', textAlign: 'center' },
   feedback: { marginTop: 16, fontSize: 12, lineHeight: 18, fontWeight: '700' },
   feedbackCorrect: { color: '#6ee7b7' },
   feedbackWrong: { color: '#fda4af' },

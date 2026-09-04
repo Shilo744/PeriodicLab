@@ -52,6 +52,24 @@ test('daily recall is deterministic, valid, and changes with the local day', () 
   assert.notEqual(today.dateStr, tomorrow.dateStr);
   assert.equal(today.options.length, 4);
   assert.equal(new Set(today.options).size, 4);
-  assert.equal(today.options[today.correctIndex], today.z);
+  const element = getElement(today.z);
+  const expected = today.kind === 'atomic-number' ? String(today.z)
+    : today.kind === 'category' ? element.category
+      : today.kind === 'state' ? element.state
+        : String(element.shells.at(-1));
+  assert.equal(today.options[today.correctIndex], expected);
   assert.ok(today.explanation.length > 40);
+});
+
+test('daily recall rotates through every science prompt with one valid answer', () => {
+  const kinds = new Set();
+  for (let day = 1; day <= 20; day += 1) {
+    const challenge = getDailyChallenge(new Date(2026, 8, day, 12));
+    kinds.add(challenge.kind);
+    assert.equal(challenge.options.length, 4);
+    assert.equal(new Set(challenge.options).size, 4);
+    assert.ok(challenge.correctIndex >= 0 && challenge.correctIndex < 4);
+    assert.ok(challenge.options[challenge.correctIndex]);
+  }
+  assert.deepEqual([...kinds].sort(), ['atomic-number', 'category', 'state', 'valence-electrons']);
 });
