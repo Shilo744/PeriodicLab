@@ -33,6 +33,7 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
   const [n, setN] = useState(1);
   const [e, setE] = useState(1);
   const [mode, setMode] = useState<BuilderMode>('tuning');
+  const [showAdvancedExperiments, setShowAdvancedExperiments] = useState(false);
   const [fusionA, setFusionA] = useState(1);
   const [fusionB, setFusionB] = useState(Math.max(1, z - 1));
   const [showCongrats, setShowCongrats] = useState<number | null>(null);
@@ -49,6 +50,8 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
     setE(z > 1 ? z - 1 : 0);
     setFusionA(1);
     setFusionB(Math.max(1, z - 1));
+    setMode('tuning');
+    setShowAdvancedExperiments(false);
   }, [z]);
 
   const isUnlocked = isElementUnlocked(p, xp, levels);
@@ -201,8 +204,8 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
         </TouchableOpacity>
       </View>
 
-      {/* Mode Switcher Tabs */}
-      {isUnlocked && (
+      {/* Advanced experiments stay out of the first-time learning path. */}
+      {isUnlocked && showAdvancedExperiments && (
         <View style={A.modeTabContainer}>
           <TouchableOpacity 
             style={[A.modeTab, mode === 'tuning' && A.modeTabActive]} 
@@ -226,6 +229,12 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
             <Text style={[A.modeTabTxt, mode === 'compounds' && A.modeTabTxtActive]}>Molecules 🧪</Text>
           </TouchableOpacity>
         </View>
+      )}
+
+      {isUnlocked && !showAdvancedExperiments && (
+        <TouchableOpacity style={A.moreExperimentsBtn} onPress={() => setShowAdvancedExperiments(true)} activeOpacity={0.8}>
+          <Text style={A.moreExperimentsTxt}>More experiments: fusion & molecules</Text>
+        </TouchableOpacity>
       )}
 
       {/* 3D Model Stage */}
@@ -254,17 +263,30 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
         ) : mode === 'tuning' ? (
           /* Interactive Particle Tuning Mode */
           <>
+            <View style={A.missionCard}>
+              <View style={A.missionCopy}>
+                <Text style={A.missionEyebrow}>YOUR 2-STEP MISSION</Text>
+                <Text style={A.missionTitle}>
+                  {isBalanced ? `${el.nameEn} is ready!` : !isNucleusOk ? `Add ${Math.abs(deltaN)} neutron${Math.abs(deltaN) === 1 ? '' : 's'}` : `Add ${Math.abs(charge)} electron${Math.abs(charge) === 1 ? '' : 's'}`}
+                </Text>
+                <Text style={A.missionHint}>
+                  {isBalanced ? 'You made a stable, neutral atom. Synthesize it to finish.' : !isNucleusOk ? 'Neutrons help the nucleus stay stable.' : 'Match electrons to protons to make the atom neutral.'}
+                </Text>
+              </View>
+              <Text style={A.missionProgress}>{Number(isNucleusOk) + Number(isChargeOk)}/2</Text>
+            </View>
+
             {/* Live Nuclear & Charge Telemetry Header */}
             <View style={A.telemetryRow}>
               <View style={A.telemetryBadge}>
-                <Text style={A.telemetryLabel}>NUCLEAR STABILITY</Text>
+                <Text style={A.telemetryLabel}>1. STABLE NUCLEUS</Text>
                 <Text style={[A.telemetryVal, { color: isNucleusOk ? COLORS.success : stabilityColor }]}>
-                  {isNucleusOk ? '100% Stable (Target)' : stabilityStatus}
+                  {isNucleusOk ? 'Ready ✓' : `${Math.abs(deltaN)} neutron${Math.abs(deltaN) === 1 ? '' : 's'} to go`}
                 </Text>
               </View>
               <View style={A.telemetryBadge}>
-                <Text style={A.telemetryLabel}>NET CHARGE</Text>
-                <Text style={[A.telemetryVal, { color: chargeColor }]}>{chargeLabel}</Text>
+                <Text style={A.telemetryLabel}>2. NEUTRAL ATOM</Text>
+                <Text style={[A.telemetryVal, { color: chargeColor }]}>{isChargeOk ? 'Ready ✓' : `${Math.abs(charge)} electron${Math.abs(charge) === 1 ? '' : 's'} to go`}</Text>
               </View>
             </View>
 
@@ -330,7 +352,7 @@ export default function AtomBuilder({ z, onDiscover, found, xp, levels }: AtomBu
                   style={A.discoverBtn}
                 >
                   <Text style={[A.discoverTxt, { color: isBalanced ? '#FFFFFF' : COLORS.textTertiary }]}>
-                    {isBalanced ? `Synthesize ${el.sym} (+50 XP)` : 'Balance Nucleus & Electron Shell'}
+                    {isBalanced ? `Finish & discover ${el.nameEn} → +50 XP` : 'Complete the two steps above'}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -631,6 +653,21 @@ const A = StyleSheet.create({
   modeTabTxtActive: {
     color: COLORS.primaryLight,
   },
+  moreExperimentsBtn: {
+    alignSelf: 'center',
+    marginTop: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(255,255,255,0.035)',
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+  },
+  moreExperimentsTxt: {
+    color: COLORS.textSecondary,
+    fontSize: 10.5,
+    fontWeight: '700',
+  },
 
   bottom: {
     borderRadius: RADIUS.xl,
@@ -638,6 +675,34 @@ const A = StyleSheet.create({
     padding: 12, overflow: 'hidden',
     ...SHADOWS.card,
     zIndex: 10,
+  },
+  missionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 11,
+    marginBottom: 9,
+    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(99, 102, 241, 0.09)',
+    borderWidth: 1,
+    borderColor: 'rgba(129, 140, 248, 0.22)',
+  },
+  missionCopy: { flex: 1 },
+  missionEyebrow: {
+    color: COLORS.primaryLight,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    marginBottom: 3,
+  },
+  missionTitle: { color: COLORS.text, fontSize: 15, fontWeight: '800' },
+  missionHint: { color: COLORS.textSecondary, fontSize: 10.5, lineHeight: 15, marginTop: 3 },
+  missionProgress: {
+    color: COLORS.primaryLight,
+    fontSize: 17,
+    fontWeight: '900',
+    minWidth: 34,
+    textAlign: 'center',
   },
 
   // Lock panel
