@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { getElement } from '../data/elements';
 import { COLORS, RADIUS, getCategoryColor, SHADOWS } from '../theme';
@@ -50,9 +50,7 @@ export default function QuizScreen({
   const [selectedOpt, setSelectedOpt] = useState<number | null>(null);
   const [state, setState] = useState<'playing' | 'correct' | 'wrong'>('playing');
   const [streak, setStreak] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(15);
   const locked = useRef(false);
-  const timerRef = useRef<any>(null);
 
   const filteredQuizzes = React.useMemo(() => {
     const questions = triviaCategory === 'all' ? QUIZZES : QUIZZES.filter(q => q.category === triviaCategory);
@@ -70,100 +68,66 @@ export default function QuizScreen({
     return [z, ...dists].sort(() => Math.random() - 0.5);
   }, [z, pool]);
 
-  // Countdown timer for speed bonus
-  useEffect(() => {
-    if (state !== 'playing') {
-      if (timerRef.current) clearInterval(timerRef.current);
-      return;
-    }
-    setTimeLeft(15);
-    timerRef.current = setInterval(() => {
-      setTimeLeft(t => {
-        if (t <= 1) {
-          clearInterval(timerRef.current);
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [z, triviaIndex, mode, state]);
-
   // Multiplier based on streak
   const streakMultiplier = streak >= 5 ? 2.5 : streak >= 3 ? 2.0 : streak >= 1 ? 1.5 : 1.0;
-  const speedBonus = timeLeft > 10 ? 15 : timeLeft > 5 ? 10 : timeLeft > 0 ? 5 : 0;
   const level = elementLevels[z] || 0;
   const baseXP = mode === '3d_atom' ? xpForLevel(level) : currentTrivia.rewardPoints;
-  const totalEarnedXP = Math.round(baseXP * streakMultiplier) + speedBonus;
+  const totalEarnedXP = Math.round(baseXP * streakMultiplier);
 
   // Handle 3D atom guess
   const handleAtomGuess = useCallback((guessZ: number) => {
     if (locked.current) return;
     locked.current = true;
     setSelectedOpt(guessZ);
-    if (timerRef.current) clearInterval(timerRef.current);
 
     if (guessZ === z) {
       triggerHaptic('success');
       playSound('success');
       setState('correct');
       setStreak(s => { const next = s + 1; onStreakMilestone(next); return next; });
-      setTimeout(() => {
-        onCorrect(z, totalEarnedXP);
-        locked.current = false;
-        setSelectedOpt(null);
-        setState('playing');
-      }, 2200);
     } else {
       triggerHaptic('error');
       playSound('error');
       setState('wrong');
       setStreak(0);
-      setTimeout(() => {
-        locked.current = false;
-        setSelectedOpt(null);
-        setState('playing');
-        onNext();
-      }, 2800);
     }
-  }, [z, totalEarnedXP, onCorrect, onNext, onStreakMilestone]);
+  }, [z, onStreakMilestone]);
 
   // Handle trivia question guess
   const handleTriviaGuess = useCallback((optionIdx: number) => {
     if (locked.current) return;
     locked.current = true;
     setSelectedOpt(optionIdx);
-    if (timerRef.current) clearInterval(timerRef.current);
 
     if (optionIdx === currentTrivia.correctIndex) {
       triggerHaptic('success');
       playSound('success');
       setState('correct');
       setStreak(s => { const next = s + 1; onStreakMilestone(next); return next; });
-      setTimeout(() => {
-        onTriviaCorrect(totalEarnedXP);
-        setTriviaIndex(i => i + 1);
-        locked.current = false;
-        setSelectedOpt(null);
-        setState('playing');
-      }, 2400);
     } else {
       triggerHaptic('error');
       playSound('error');
       setState('wrong');
       setStreak(0);
-      setTimeout(() => {
-        setTriviaIndex(i => i + 1);
-        locked.current = false;
-        setSelectedOpt(null);
-        setState('playing');
-        onNext();
-      }, 3000);
     }
-  }, [currentTrivia, totalEarnedXP, onTriviaCorrect, onNext, onStreakMilestone]);
+  }, [currentTrivia, onStreakMilestone]);
+
+  const continueAfterFeedback = useCallback(() => {
+    const wasCorrect = state === 'correct';
+    locked.current = false;
+    setSelectedOpt(null);
+    setState('playing');
+
+    if (mode === '3d_atom') {
+      if (wasCorrect) onCorrect(z, totalEarnedXP);
+      else onNext();
+      return;
+    }
+
+    if (wasCorrect) onTriviaCorrect(totalEarnedXP);
+    else onNext();
+    setTriviaIndex(i => i + 1);
+  }, [mode, onCorrect, onNext, onTriviaCorrect, state, totalEarnedXP, z]);
 
   const atomSize = H * 0.28;
 
@@ -216,14 +180,7 @@ export default function QuizScreen({
         </View>
       </View>
 
-      {/* Speed Timer Bar */}
-      <View style={Q.timerBarContainer}>
-        <LinearGradient
-          colors={timeLeft > 5 ? ['#34d399', '#60a5fa'] : ['#f87171', '#fbbf24']}
-          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-          style={[Q.timerFill, { width: `${(timeLeft / 15) * 100}%` }]}
-        />
-      </View>
+      <Text style={Q.practiceHint}>Take your time — every answer teaches you something.</Text>
 
       {mode === '3d_atom' ? (
         /* --- 3D Atom Identification Challenge --- */
@@ -346,13 +303,12 @@ export default function QuizScreen({
             <LinearGradient colors={['rgba(10, 14, 26, 0.96)', 'rgba(10, 14, 26, 1.0)']} style={StyleSheet.absoluteFill} />
             {state === 'correct' ? (
               <View style={{ alignItems: 'center' }}>
-                <Text style={[Q.fbTitle, { color: '#34d399' }]}>Correct!</Text>
-                <Text style={Q.fbXp}>+{totalEarnedXP} XP Gained</Text>
-                {speedBonus > 0 && <Text style={Q.speedBonusText}>⚡ +{speedBonus} XP Speed Bonus!</Text>}
+                <Text style={[Q.fbTitle, { color: '#34d399' }]}>You got it!</Text>
+                <Text style={Q.fbXp}>+{totalEarnedXP} XP</Text>
                 
                 {/* Science Explanation */}
                 <View style={Q.explanationCard}>
-                  <Text style={Q.explanationTitle}>SCIENTIFIC EXPLANATION</Text>
+                  <Text style={Q.explanationTitle}>WHY THAT WORKS</Text>
                   <Text style={Q.explanationText}>
                     {mode === '3d_atom'
                       ? `${el.nameEn} (${el.sym}) has Z=${z} protons, ${el.stableNeutrons} neutrons, and mass ${el.mass.toFixed(2)} u. ${el.desc}`
@@ -362,7 +318,7 @@ export default function QuizScreen({
               </View>
             ) : (
               <View style={{ alignItems: 'center' }}>
-                <Text style={[Q.fbTitle, { color: '#ef4444' }]}>Incorrect</Text>
+                <Text style={[Q.fbTitle, { color: '#fbbf24' }]}>Good try — now you know</Text>
                 <Text style={Q.fbAns}>
                   Correct: <Text style={{ color: cat, fontWeight: '800' }}>
                     {mode === '3d_atom' ? `${el.sym} (${el.nameEn})` : currentTrivia.options[currentTrivia.correctIndex]}
@@ -371,7 +327,7 @@ export default function QuizScreen({
 
                 {/* Science Explanation */}
                 <View style={Q.explanationCard}>
-                  <Text style={Q.explanationTitle}>SCIENTIFIC EXPLANATION</Text>
+                  <Text style={Q.explanationTitle}>REMEMBER THIS</Text>
                   <Text style={Q.explanationText}>
                     {mode === '3d_atom'
                       ? `Atomic number ${z} corresponds to ${el.nameEn} with ${el.electronConfig} configuration.`
@@ -380,6 +336,9 @@ export default function QuizScreen({
                 </View>
               </View>
             )}
+            <TouchableOpacity style={Q.continueBtn} onPress={continueAfterFeedback} accessibilityRole="button">
+              <Text style={Q.continueBtnText}>Continue when you’re ready →</Text>
+            </TouchableOpacity>
           </View>
         </View>
       )}
@@ -449,16 +408,11 @@ const Q = StyleSheet.create({
     color: '#fbbf24',
   },
 
-  timerBarContainer: {
-    height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 2,
-    overflow: 'hidden',
+  practiceHint: {
+    color: COLORS.textTertiary,
+    fontSize: 10.5,
+    textAlign: 'center',
     marginBottom: 10,
-  },
-  timerFill: {
-    height: '100%',
-    borderRadius: 2,
   },
 
   // 3D Mode styles
@@ -588,7 +542,6 @@ const Q = StyleSheet.create({
   },
   fbTitle: { fontSize: 24, fontWeight: '900', marginBottom: 4, letterSpacing: -0.5 },
   fbXp: { fontSize: 16, color: '#34d399', fontWeight: '800', marginBottom: 2 },
-  speedBonusText: { fontSize: 11, color: '#fbbf24', fontWeight: '700', marginBottom: 6 },
   fbAns: { fontSize: 13, color: COLORS.textSecondary, marginBottom: 8, textAlign: 'center' },
 
   explanationCard: {
@@ -612,4 +565,13 @@ const Q = StyleSheet.create({
     color: COLORS.textSecondary,
     lineHeight: 15,
   },
+  continueBtn: {
+    width: '100%',
+    marginTop: 14,
+    paddingVertical: 12,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+  },
+  continueBtnText: { color: '#fff', fontSize: 12, fontWeight: '800' },
 });
