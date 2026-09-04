@@ -146,6 +146,9 @@ function HomeScreen({
 }) {
   const [showProfile, setShowProfile] = useState(false);
   const [showDailyChallenge, setShowDailyChallenge] = useState(false);
+  const [showMoreActivities, setShowMoreActivities] = useState(false);
+  const [showAllChapters, setShowAllChapters] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
   const [mutedState, setMutedState] = useState(isAudioMuted());
   const league = getLeague(xp);
   const nextXP = xp < 100 ? 100 : xp < 500 ? 500 : xp < 1500 ? 1500 : xp < 5000 ? 5000 : 0;
@@ -154,6 +157,9 @@ function HomeScreen({
   const poolPct = Math.round((poolDone / Math.max(1, studyPool.length)) * 100);
   const daily = getDailyFeaturedElement();
   const dailyEl = getElement(daily.z);
+  const currentChapter = [...CHAPTERS].reverse().find(chapter => xp >= chapter.requiredXP) ?? CHAPTERS[0];
+  const nextLearningZ = getNextChapterElement(currentChapter, levels);
+  const nextLearningEl = getElement(nextLearningZ);
 
   if (showProfile) {
     return (
@@ -228,6 +234,21 @@ function HomeScreen({
         </TouchableOpacity>
       </LinearGradient>
 
+      <View style={HS.nextStepCard}>
+        <View style={HS.nextStepTop}>
+          <View style={HS.nextStepNumber}><Text style={HS.nextStepNumberText}>{nextLearningEl.sym}</Text></View>
+          <View style={{ flex: 1 }}>
+            <Text style={HS.nextStepTag}>{locale === 'he' ? 'הצעד הבא שלכם' : 'YOUR NEXT STEP'}</Text>
+            <Text style={HS.nextStepTitle}>{locale === 'he' ? `לומדים את ${nextLearningEl.nameEn}` : `Master ${nextLearningEl.nameEn}`}</Text>
+            <Text style={HS.nextStepMeta}>{locale === 'he' ? `כ־3 דקות · פרק ${currentChapter.id}` : `About 3 min · Chapter ${currentChapter.id}`}</Text>
+          </View>
+        </View>
+        <Text style={HS.nextStepDesc} numberOfLines={2}>{nextLearningEl.desc}</Text>
+        <TouchableOpacity style={HS.nextStepButton} onPress={() => onStartChapter(nextLearningZ)} activeOpacity={0.82} accessibilityRole="button" accessibilityLabel={`Start learning ${nextLearningEl.nameEn}`}>
+          <Text style={HS.nextStepButtonText}>{locale === 'he' ? 'התחלת השיעור' : 'Start lesson'}</Text><Text style={HS.nextStepArrow}>→</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Daily Quest Banner */}
       <View style={HS.dailyCard}>
         <LinearGradient colors={['rgba(251, 191, 36, 0.12)', 'rgba(10, 14, 26, 0.4)']} style={StyleSheet.absoluteFill} />
@@ -283,24 +304,6 @@ function HomeScreen({
             <Text style={HS.moduleDesc}>{t('builderDesc', locale)}</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={HS.moduleCard} onPress={onGoReactions} activeOpacity={0.85}>
-          <LinearGradient colors={['rgba(251, 146, 60, 0.10)', 'rgba(251, 146, 60, 0.01)']} style={StyleSheet.absoluteFill} />
-          <View style={[HS.iconWrapper, { backgroundColor: 'rgba(251, 146, 60, 0.12)' }]}><Text style={{ fontSize: 18 }}>⚗️</Text></View>
-          <View style={HS.moduleTextContainer}><Text style={HS.moduleLabel}>Reaction Lab</Text><Text style={HS.moduleDesc}>Run and inspect balanced equations</Text></View>
-        </TouchableOpacity>
-      </View>
-
-      <View style={HS.actionRow}>
-        <TouchableOpacity style={HS.moduleCard} onPress={onGoFlashcards} activeOpacity={0.85}>
-          <LinearGradient colors={['rgba(52, 211, 153, 0.10)', 'rgba(52, 211, 153, 0.01)']} style={StyleSheet.absoluteFill} />
-          <View style={[HS.iconWrapper, { backgroundColor: 'rgba(52, 211, 153, 0.12)' }]}>
-            <Text style={{ fontSize: 18 }}>🧠</Text>
-          </View>
-          <View style={HS.moduleTextContainer}>
-            <Text style={HS.moduleLabel}>Flashcards</Text>
-            <Text style={HS.moduleDesc}>Recall element facts and track mastery</Text>
-          </View>
-        </TouchableOpacity>
       </View>
 
       <View style={HS.actionRow}>
@@ -326,10 +329,26 @@ function HomeScreen({
         </TouchableOpacity>
       </View>
 
+      <TouchableOpacity style={HS.revealButton} onPress={() => setShowMoreActivities(value => !value)} accessibilityRole="button" accessibilityState={{ expanded: showMoreActivities }}>
+        <Text style={HS.revealButtonText}>{showMoreActivities ? (locale === 'he' ? 'הצגת פחות' : 'Show less') : (locale === 'he' ? 'פעילויות נוספות' : 'More activities')}</Text>
+      </TouchableOpacity>
+      {showMoreActivities && <View style={HS.actionRow}>
+        <TouchableOpacity style={HS.moduleCard} onPress={onGoReactions} activeOpacity={0.85}>
+          <LinearGradient colors={['rgba(251, 146, 60, 0.10)', 'rgba(251, 146, 60, 0.01)']} style={StyleSheet.absoluteFill} />
+          <View style={[HS.iconWrapper, { backgroundColor: 'rgba(251, 146, 60, 0.12)' }]}><Text style={{ fontSize: 18 }}>⚗️</Text></View>
+          <View style={HS.moduleTextContainer}><Text style={HS.moduleLabel}>Reaction Lab</Text><Text style={HS.moduleDesc}>Run balanced equations</Text></View>
+        </TouchableOpacity>
+        <TouchableOpacity style={HS.moduleCard} onPress={onGoFlashcards} activeOpacity={0.85}>
+          <LinearGradient colors={['rgba(52, 211, 153, 0.10)', 'rgba(52, 211, 153, 0.01)']} style={StyleSheet.absoluteFill} />
+          <View style={[HS.iconWrapper, { backgroundColor: 'rgba(52, 211, 153, 0.12)' }]}><Text style={{ fontSize: 18 }}>🧠</Text></View>
+          <View style={HS.moduleTextContainer}><Text style={HS.moduleLabel}>Flashcards</Text><Text style={HS.moduleDesc}>Practice active recall</Text></View>
+        </TouchableOpacity>
+      </View>}
+
       {/* Chapters & Mastery Progression */}
-      <Text style={HS.sectionLabel}>{t('chapters', locale)}</Text>
+      <View style={HS.sectionHeading}><Text style={[HS.sectionLabel, { marginHorizontal: 0, marginBottom: 0 }]}>{t('chapters', locale)}</Text><TouchableOpacity onPress={() => setShowAllChapters(value => !value)}><Text style={HS.sectionLink}>{showAllChapters ? (locale === 'he' ? 'פחות' : 'Less') : (locale === 'he' ? 'כל הפרקים' : 'View all')}</Text></TouchableOpacity></View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={HS.chapterScroll}>
-        {CHAPTERS.map(ch => {
+        {CHAPTERS.filter(ch => showAllChapters || ch.id === currentChapter.id).map(ch => {
           const chMastered = ch.elements.filter(z => (levels[z] || 0) >= 2).length;
           const chPct = Math.round((chMastered / ch.elements.length) * 100);
           const isUnlocked = xp >= ch.requiredXP;
@@ -356,8 +375,11 @@ function HomeScreen({
       </ScrollView>
 
       {/* Achievements Showcase */}
-      <Text style={HS.sectionLabel}>{t('achievements', locale)} ({unlockedAchievements.length}/{ACHIEVEMENTS_LIST.length})</Text>
-      <View style={HS.achievementsGrid}>
+      <TouchableOpacity style={HS.achievementSummary} onPress={() => setShowAchievements(value => !value)} accessibilityRole="button" accessibilityState={{ expanded: showAchievements }}>
+        <View><Text style={HS.achievementSummaryTag}>{t('achievements', locale)}</Text><Text style={HS.achievementSummaryTitle}>{locale === 'he' ? `${unlockedAchievements.length} מתוך ${ACHIEVEMENTS_LIST.length} נפתחו` : `${unlockedAchievements.length} of ${ACHIEVEMENTS_LIST.length} unlocked`}</Text></View>
+        <Text style={HS.achievementSummaryIcon}>{showAchievements ? '−' : '＋'}</Text>
+      </TouchableOpacity>
+      {showAchievements && <View style={HS.achievementsGrid}>
         {ACHIEVEMENTS_LIST.map(ach => {
           const isUnlocked = unlockedAchievements.includes(ach.id);
           return (
@@ -375,7 +397,7 @@ function HomeScreen({
             </View>
           );
         })}
-      </View>
+      </View>}
     </ScrollView>
   );
 }
@@ -618,7 +640,7 @@ export default function App() {
   }
 
   if (!onboardingComplete) {
-    return <OnboardingScreen locale={locale} onLocaleChange={next => { setLocale(next); void savePreferences({ locale: next }); }} onComplete={() => { setOnboardingComplete(true); void saveOnboardingComplete(); }} />;
+    return <OnboardingScreen locale={locale} onLocaleChange={next => { setLocale(next); void savePreferences({ locale: next }); }} onComplete={() => { setOnboardingComplete(true); setStudyZ(1); setTab('study'); void saveLastElement(1); void saveLastTab('study'); void saveOnboardingComplete(); }} />;
   }
 
   const screen = {
@@ -906,7 +928,23 @@ const HS = StyleSheet.create({
   weeklyFill: { height: '100%', borderRadius: 4 },
   weeklyMeta: { color: COLORS.textSecondary, fontSize: 9.5, marginTop: 7 },
 
+  nextStepCard: { marginHorizontal: 16, marginBottom: 14, padding: 16, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: 'rgba(99,102,241,0.45)', backgroundColor: 'rgba(99,102,241,0.10)', ...SHADOWS.card },
+  nextStepTop: { flexDirection: 'row', alignItems: 'center', gap: 13 },
+  nextStepNumber: { width: 52, height: 52, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(129,140,248,0.16)', borderWidth: 1, borderColor: 'rgba(129,140,248,0.35)' },
+  nextStepNumberText: { color: '#a5b4fc', fontSize: 21, fontWeight: '900' },
+  nextStepTag: { color: '#818cf8', fontSize: 8.5, fontWeight: '900', letterSpacing: 1.1 },
+  nextStepTitle: { color: COLORS.text, fontSize: 19, fontWeight: '900', marginTop: 2 },
+  nextStepMeta: { color: COLORS.textSecondary, fontSize: 10, marginTop: 2 },
+  nextStepDesc: { color: COLORS.textSecondary, fontSize: 11, lineHeight: 17, marginTop: 12 },
+  nextStepButton: { minHeight: 48, marginTop: 14, paddingHorizontal: 16, borderRadius: RADIUS.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#6366f1' },
+  nextStepButtonText: { color: '#fff', fontSize: 13, fontWeight: '900' },
+  nextStepArrow: { color: '#fff', fontSize: 19, fontWeight: '700' },
+
   sectionLabel: { fontSize: 9.5, fontWeight: '800', color: COLORS.textSecondary, letterSpacing: 1.0, marginHorizontal: 20, marginBottom: 8, marginTop: 4 },
+  sectionHeading: { marginHorizontal: 20, marginBottom: 8, marginTop: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sectionLink: { color: COLORS.primaryLight, fontSize: 10, fontWeight: '800' },
+  revealButton: { alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 9, marginTop: -2, marginBottom: 14, borderRadius: 18, borderWidth: 1, borderColor: COLORS.borderLight },
+  revealButtonText: { color: COLORS.textSecondary, fontSize: 10, fontWeight: '800' },
 
   actionRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 10, marginBottom: 10 },
   moduleCard: {
@@ -993,6 +1031,10 @@ const HS = StyleSheet.create({
   chapterCta: { color: COLORS.primaryLight, fontSize: 10, fontWeight: '900', marginTop: 9 },
 
   // Achievements
+  achievementSummary: { marginHorizontal: 16, marginBottom: 22, padding: 14, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.borderLight, backgroundColor: 'rgba(255,255,255,0.025)', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  achievementSummaryTag: { color: COLORS.textSecondary, fontSize: 8.5, fontWeight: '900', letterSpacing: 0.9 },
+  achievementSummaryTitle: { color: COLORS.text, fontSize: 13, fontWeight: '800', marginTop: 3 },
+  achievementSummaryIcon: { color: '#fbbf24', fontSize: 22, fontWeight: '700' },
   achievementsGrid: {
     paddingHorizontal: 16,
     gap: 8,

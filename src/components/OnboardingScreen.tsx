@@ -8,12 +8,12 @@ const COPY = {
   en: [
     { icon: '⚛️', eyebrow: 'WELCOME, SCIENTIST', title: 'Chemistry you can touch', body: 'Explore all 118 elements through atoms, isotopes, spectra, phase changes, and a searchable periodic table.' },
     { icon: '🧪', eyebrow: 'LEARN BY DOING', title: 'Build, react, remember', body: 'Construct atoms, inspect balanced reactions, then lock in what you learned with quizzes and focused flashcards.' },
-    { icon: '🔥', eyebrow: 'A REASON TO RETURN', title: 'Your daily research mission', body: 'Discover the featured element, earn XP, build a streak, unlock chapters, and share your find with friends.' },
+    { icon: '🚀', eyebrow: 'YOUR FIRST 3-MINUTE MISSION', title: 'Meet Hydrogen', body: 'Start with the simplest atom. Explore its story, see its single electron, then build it yourself.' },
   ],
   he: [
     { icon: '⚛️', eyebrow: 'ברוכים הבאים, מדענים', title: 'כימיה שאפשר לגעת בה', body: 'חקרו את כל 118 היסודות דרך אטומים, איזוטופים, ספקטרום, מעברי פאזה וטבלה מחזורית חכמה.' },
     { icon: '🧪', eyebrow: 'לומדים דרך עשייה', title: 'בונים, מגיבים וזוכרים', body: 'בנו אטומים, בדקו תגובות מאוזנות, ואז חזקו את הידע בחידונים ובכרטיסיות ממוקדות.' },
-    { icon: '🔥', eyebrow: 'סיבה לחזור בכל יום', title: 'משימת המחקר היומית', body: 'גלו את יסוד היום, צברו XP ורצף, פתחו פרקים ושתפו את התגלית עם חברים.' },
+    { icon: '🚀', eyebrow: 'המשימה הראשונה: 3 דקות', title: 'הכירו את המימן', body: 'מתחילים באטום הפשוט ביותר. מכירים את הסיפור שלו, רואים את האלקטרון היחיד ואז בונים אותו בעצמכם.' },
   ],
 } as const;
 
@@ -46,7 +46,7 @@ export default function OnboardingScreen({ locale, onLocaleChange, onComplete }:
         </View>
         <TouchableOpacity accessibilityRole="button" style={O.primary} onPress={() => last ? onComplete() : setStep(value => value + 1)}>
           <LinearGradient colors={['#6366f1', '#22d3ee']} style={O.primaryGradient}>
-            <Text style={O.primaryText}>{last ? (isHebrew ? 'מתחילים לחקור' : 'Enter the lab') : (isHebrew ? 'המשך' : 'Continue')}</Text>
+            <Text style={O.primaryText}>{last ? (isHebrew ? 'התחלת השיעור הראשון' : 'Start first lesson') : (isHebrew ? 'המשך' : 'Continue')}</Text>
           </LinearGradient>
         </TouchableOpacity>
         {step > 0 && <TouchableOpacity accessibilityRole="button" style={O.back} onPress={() => setStep(value => value - 1)}><Text style={O.backText}>{isHebrew ? 'חזרה' : 'Back'}</Text></TouchableOpacity>}
