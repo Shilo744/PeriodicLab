@@ -66,11 +66,13 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
   const [selectedIsotopeIdx, setSelectedIsotopeIdx] = useState(0);
   const [highlightedShell, setHighlightedShell] = useState<number | null>(null);
   const [tempK, setTempK] = useState(298.15); // Default room temp 25°C
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     setP(z);
     setSelectedIsotopeIdx(0);
     setHighlightedShell(null);
+    setShowDetails(false);
   }, [z]);
 
   const defaultStableN = getCachedNeutrons(p);
@@ -117,7 +119,7 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
       </View>
 
       {/* Interactive Tabs (Overview | Shells | Isotopes | Spectra) */}
-      <View style={S.tabBar}>
+      {showDetails && <View style={S.tabBar}>
         <TouchableOpacity
           style={[S.tabBtn, selectedTab === 'overview' && S.tabBtnActive]}
           onPress={() => setSelectedTab('overview')}
@@ -158,7 +160,7 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
         >
           <Text style={[S.tabBtnTxt, selectedTab === 'thermal' && S.tabBtnTxtActive]}>Thermal 🌡️</Text>
         </TouchableOpacity>
-      </View>
+      </View>}
 
       {/* 3D Model Stage */}
       <View style={S.atomFull}>
@@ -174,6 +176,22 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
       {/* Bottom Panel */}
       <View style={S.bottomCard}>
         <LinearGradient colors={['rgba(10, 14, 26, 0.92)', 'rgba(10, 14, 26, 0.98)']} style={StyleSheet.absoluteFill} />
+
+        {!showDetails && <View style={S.storyCard}>
+          <Text style={S.storyEyebrow}>WHY IT MATTERS</Text>
+          <Text style={S.storyText}>{el.desc}</Text>
+          <View style={S.storyFacts}>
+            <View style={S.storyFact}><Text style={S.storyFactValue}>{p}</Text><Text style={S.storyFactLabel}>ATOMIC NO.</Text></View>
+            <View style={S.storyFact}><Text style={S.storyFactValue}>{el.state.toUpperCase()}</Text><Text style={S.storyFactLabel}>AT ROOM TEMP.</Text></View>
+            <View style={S.storyFact}><Text style={S.storyFactValue}>{shells[shells.length - 1]}</Text><Text style={S.storyFactLabel}>OUTER ELECTRONS</Text></View>
+          </View>
+          <TouchableOpacity style={S.exploreButton} onPress={() => setShowDetails(true)} accessibilityRole="button" accessibilityLabel={`Explore detailed science for ${el.nameEn}`}>
+            <Text style={S.exploreButtonText}>Explore deeper</Text><Text style={S.exploreButtonArrow}>＋</Text>
+          </TouchableOpacity>
+        </View>}
+
+        {showDetails && <>
+        <TouchableOpacity style={S.backToStory} onPress={() => { setShowDetails(false); setSelectedTab('overview'); }} accessibilityRole="button"><Text style={S.backToStoryText}>← Back to the story</Text></TouchableOpacity>
 
         {/* Navigation Slider */}
         <View style={S.sliderRow}>
@@ -420,6 +438,7 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
             </View>
           );
         })()}
+        </>}
 
         {/* Action Button for undiscovered elements */}
         {!isDiscovered && onGoBuilder && (
@@ -428,7 +447,7 @@ export default function StudyScreen({ z, onChange, xp, levels, discovered, onGoB
             onPress={() => onGoBuilder(p)}
             activeOpacity={0.8}
           >
-            <Text style={S.actionBtnTxt}>Synthesize in Builder (+50 XP)</Text>
+            <Text style={S.actionBtnTxt}>Build {el.nameEn} →  +50 XP</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -530,6 +549,19 @@ const S = StyleSheet.create({
     ...SHADOWS.card,
     zIndex: 10,
   },
+
+  storyCard: { padding: 4 },
+  storyEyebrow: { color: '#22d3ee', fontSize: 8.5, fontWeight: '900', letterSpacing: 1.1 },
+  storyText: { color: COLORS.text, fontSize: 14, lineHeight: 21, fontWeight: '600', marginTop: 7 },
+  storyFacts: { flexDirection: 'row', gap: 7, marginTop: 14 },
+  storyFact: { flex: 1, minHeight: 57, paddingHorizontal: 5, paddingVertical: 9, alignItems: 'center', justifyContent: 'center', borderRadius: RADIUS.sm, backgroundColor: 'rgba(255,255,255,0.035)', borderWidth: 1, borderColor: COLORS.borderLight },
+  storyFactValue: { color: COLORS.text, fontSize: 14, fontWeight: '900', textAlign: 'center' },
+  storyFactLabel: { color: COLORS.textTertiary, fontSize: 6.5, fontWeight: '800', letterSpacing: 0.4, textAlign: 'center', marginTop: 3 },
+  exploreButton: { minHeight: 44, marginTop: 11, paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(34,211,238,0.28)', backgroundColor: 'rgba(34,211,238,0.07)' },
+  exploreButtonText: { color: '#67e8f9', fontSize: 11, fontWeight: '900' },
+  exploreButtonArrow: { color: '#67e8f9', fontSize: 16, fontWeight: '700' },
+  backToStory: { alignSelf: 'flex-start', minHeight: 32, justifyContent: 'center', paddingHorizontal: 4, marginBottom: 3 },
+  backToStoryText: { color: COLORS.primaryLight, fontSize: 9.5, fontWeight: '800' },
 
   sliderRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
   sliderBtn: {
