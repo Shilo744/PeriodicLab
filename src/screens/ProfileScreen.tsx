@@ -103,6 +103,11 @@ export default function ProfileScreen({
           <Text style={P.achTitle}>RESEARCH RECOGNITION</Text>
           <Text style={P.achMeta}>{unlockedAchievementsCount} Badges Unlocked &bull; {xp} Total XP Accumulated</Text>
         </View>
+
+        <View style={P.privacyCard} accessible accessibilityLabel="Privacy: progress stays on this device. Periodic Lab has no account, ads, analytics, or personal data collection.">
+          <Text style={P.privacyTitle}>PRIVACY BY DESIGN</Text>
+          <Text style={P.privacyText}>Your progress stays on this device. No account, ads, analytics, location tracking, or personal-data collection.</Text>
+        </View>
       </ScrollView>
     </View>
   );
@@ -251,4 +256,7 @@ const P = StyleSheet.create({
     color: COLORS.textSecondary,
     marginTop: 4,
   },
+  privacyCard: { marginTop: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(52,211,153,0.25)', backgroundColor: 'rgba(52,211,153,0.06)', padding: 14 },
+  privacyTitle: { color: '#34d399', fontSize: 10, fontWeight: '900', letterSpacing: 0.8 },
+  privacyText: { color: COLORS.textSecondary, fontSize: 11, lineHeight: 17, marginTop: 5 },
 });
