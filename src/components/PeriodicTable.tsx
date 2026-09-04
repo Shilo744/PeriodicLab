@@ -53,6 +53,7 @@ interface PeriodicTableProps {
 export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBuilder }: PeriodicTableProps) {
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [showAllFilters, setShowAllFilters] = useState(false);
   const [selectedEl, setSelectedEl] = useState<number | null>(null);
   const [comparePair, setComparePair] = useState<[number, number] | null>(null);
 
@@ -122,7 +123,7 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
             </View>
 
             <Text style={T.modalName}>{unlocked ? el.nameEn : `Element #${selectedEl}`}</Text>
-            <Text style={T.modalMass}>Standard Atomic Mass: {el.mass.toFixed(3)} u</Text>
+            <Text style={T.modalMass}>Atomic number {selectedEl} · {el.state} at room temperature</Text>
 
             {/* Status & Mastery Bar */}
             <View style={T.masteryRow}>
@@ -131,23 +132,24 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
               </Text>
             </View>
 
-            {/* Properties Grid */}
+            <View style={T.storyCard}>
+              <Text style={T.storyLabel}>WHY IT MATTERS</Text>
+              <Text style={T.storyText}>{el.desc}</Text>
+            </View>
+
+            {/* Three memorable facts */}
             <View style={T.propsGrid}>
               <View style={T.propCell}>
-                <Text style={T.propLabel}>Configuration</Text>
-                <Text style={T.propVal}>{el.electronConfig}</Text>
+                <Text style={T.propLabel}>ATOMIC MASS</Text>
+                <Text style={T.propVal}>{el.mass.toFixed(2)} u</Text>
               </View>
               <View style={T.propCell}>
-                <Text style={T.propLabel}>Stable Neutrons</Text>
-                <Text style={T.propVal}>{el.stableNeutrons}</Text>
+                <Text style={T.propLabel}>STATE</Text>
+                <Text style={T.propVal}>{el.state}</Text>
               </View>
               <View style={T.propCell}>
-                <Text style={T.propLabel}>Discovered</Text>
+                <Text style={T.propLabel}>KNOWN SINCE</Text>
                 <Text style={T.propVal}>{el.discovered}</Text>
-              </View>
-              <View style={T.propCell}>
-                <Text style={T.propLabel}>Melting / Boiling</Text>
-                <Text style={T.propVal}>{el.meltingPoint ?? 'N/A'}°C / {el.boilingPoint ?? 'N/A'}°C</Text>
               </View>
             </View>
 
@@ -170,7 +172,7 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
                 }}
                 activeOpacity={0.8}
               >
-                <Text style={[T.actionBtnTxt, { color: '#22d3ee' }]}>⚖ Compare</Text>
+                <Text style={[T.actionBtnTxt, { color: '#22d3ee' }]}>Compare</Text>
               </TouchableOpacity>
               {onSelect && (
                 <TouchableOpacity
@@ -181,7 +183,7 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
                   }}
                   activeOpacity={0.8}
                 >
-                  <Text style={[T.actionBtnTxt, { color: COLORS.primaryLight }]}>🔍 Study in 3D</Text>
+                  <Text style={[T.actionBtnTxt, { color: COLORS.primaryLight }]}>Learn about {el.sym}</Text>
                 </TouchableOpacity>
               )}
 
@@ -194,7 +196,7 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
                   }}
                   activeOpacity={0.8}
                 >
-                  <Text style={[T.actionBtnTxt, { color: catColor }]}>⚡ Builder & Fusion</Text>
+                  <Text style={[T.actionBtnTxt, { color: catColor }]}>Build this atom</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -214,7 +216,10 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
       {/* Header with Title & Stats */}
       <View style={T.headerSection}>
         <View style={T.titleRow}>
-          <Text style={T.title}>Periodic Table</Text>
+          <View>
+            <Text style={T.title}>Explore the elements</Text>
+            <Text style={T.subtitle}>Pick any tile and discover its story.</Text>
+          </View>
           <View style={T.statsBadge}>
             <Text style={T.statsText}>{discovered.length} / 118 Discovered</Text>
           </View>
@@ -224,7 +229,7 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
         <View style={T.searchContainer}>
           <TextInput
             style={T.searchInput}
-            placeholder="Search name, symbol, category, discoverer, year, or Z..."
+            placeholder="Search an element or atomic number"
             placeholderTextColor={COLORS.textTertiary}
             value={search}
             onChangeText={setSearch}
@@ -239,7 +244,7 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
 
         {/* Filter Chips ScrollView */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={T.filterScroll}>
-          {FILTER_TAGS.map(tag => {
+          {(showAllFilters ? FILTER_TAGS : ['All', 'Discovered', 'Nonmetal', 'Transition metal']).map(tag => {
             const isActive = activeFilter === tag;
             return (
               <TouchableOpacity
@@ -256,7 +261,12 @@ export default function PeriodicTable({ discovered, levels, xp, onSelect, onGoBu
             );
           })}
         </ScrollView>
-        <Text style={T.resultSummary}>{visibleCount} elements match the current view</Text>
+        <TouchableOpacity style={T.filterToggle} onPress={() => setShowAllFilters(value => !value)} accessibilityRole="button">
+          <Text style={T.filterToggleText}>{showAllFilters ? 'Show fewer filters' : 'More ways to explore +'}</Text>
+        </TouchableOpacity>
+        <Text style={T.resultSummary}>
+          {search.length > 0 || activeFilter !== 'All' ? `${visibleCount} elements match` : 'Tip: colors show element families. Swipe sideways to see the full table.'}
+        </Text>
         {(search.length > 0 || activeFilter !== 'All') && (
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Reset periodic table view" onPress={() => { setSearch(''); setActiveFilter('All'); }}>
             <Text style={T.resultSummary}>Reset search and filters</Text>
@@ -421,6 +431,7 @@ const T = StyleSheet.create({
     color: COLORS.text,
     letterSpacing: -0.5,
   },
+  subtitle: { color: COLORS.textSecondary, fontSize: 10.5, marginTop: 2 },
   statsBadge: {
     backgroundColor: 'rgba(52, 211, 153, 0.12)',
     paddingHorizontal: 10,
@@ -465,6 +476,8 @@ const T = StyleSheet.create({
     flexDirection: 'row',
     gap: 6,
   },
+  filterToggle: { alignSelf: 'flex-start', paddingVertical: 5 },
+  filterToggleText: { color: COLORS.primaryLight, fontSize: 10.5, fontWeight: '700' },
   resultSummary: { color: COLORS.textTertiary, fontSize: 10, fontWeight: '700', marginTop: 6 },
   filterChip: {
     paddingHorizontal: 10,
@@ -634,6 +647,17 @@ const T = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.accent,
   },
+  storyCard: {
+    width: '100%',
+    padding: 10,
+    marginBottom: 8,
+    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(99, 102, 241, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(129, 140, 248, 0.2)',
+  },
+  storyLabel: { color: COLORS.primaryLight, fontSize: 8.5, fontWeight: '800', letterSpacing: 0.6, marginBottom: 4 },
+  storyText: { color: COLORS.textSecondary, fontSize: 10.5, lineHeight: 15 },
 
   propsGrid: {
     flexDirection: 'row',
@@ -643,7 +667,8 @@ const T = StyleSheet.create({
     marginBottom: 14,
   },
   propCell: {
-    width: '48%',
+    flex: 1,
+    minWidth: '30%',
     backgroundColor: 'rgba(255, 255, 255, 0.02)',
     padding: 8,
     borderRadius: RADIUS.sm,
@@ -687,12 +712,14 @@ const T = StyleSheet.create({
 
   modalActions: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
     width: '100%',
     marginBottom: 10,
   },
   actionBtn: {
     flex: 1,
+    minWidth: '46%',
     paddingVertical: 10,
     borderRadius: RADIUS.md,
     borderWidth: 1,
