@@ -49,11 +49,15 @@ export const CHAPTERS: Chapter[] = [
   {
     id: 5,
     title: 'Chapter 5: Superheavy Frontiers',
-    subtitle: 'Actinides & Transactinides (Fr to Og)',
+    subtitle: 'Period 7 & Transactinides (Fr to Og)',
     elements: Array.from({ length: 32 }, (_, i) => 87 + i),
     requiredXP: 5000,
   },
 ];
+
+export function getNextChapterElement(chapter: Chapter, levels: Record<number, number>): number {
+  return chapter.elements.find(z => (levels[z] || 0) < 2) ?? chapter.elements[0];
+}
 
 export const ACHIEVEMENTS_LIST = [
   {

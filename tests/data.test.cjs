@@ -5,7 +5,7 @@ const { ELEMENTS, getElement } = require('../src/data/elements.ts');
 const { REACTIONS } = require('../src/data/reactions.ts');
 const { validateScientificData } = require('../src/data/validation.ts');
 const { QUIZZES } = require('../src/data/quiz.ts');
-const { ACHIEVEMENTS_LIST, getAchievement } = require('../src/data/achievements.ts');
+const { ACHIEVEMENTS_LIST, CHAPTERS, getAchievement, getNextChapterElement } = require('../src/data/achievements.ts');
 const { getDailyChallenge } = require('../src/data/dailyChallenge.ts');
 
 test('catalog contains every atomic number exactly once', () => {
@@ -42,6 +42,14 @@ test('achievement catalog has unique ids and event-driven rewards', () => {
     assert.ok(achievement, id);
     assert.ok(achievement.xpReward > 0, id);
   }
+});
+
+test('chapters cover the full table once and resume the next unmastered element', () => {
+  const chapterElements = CHAPTERS.flatMap(chapter => chapter.elements);
+  assert.deepEqual(chapterElements, Array.from({ length: 118 }, (_, index) => index + 1));
+  assert.equal(new Set(chapterElements).size, 118);
+  assert.equal(getNextChapterElement(CHAPTERS[0], { 1: 2, 2: 2, 3: 1 }), 3);
+  assert.equal(getNextChapterElement(CHAPTERS[0], Object.fromEntries(CHAPTERS[0].elements.map(z => [z, 2]))), 1);
 });
 
 test('daily recall is deterministic, valid, and changes with the local day', () => {

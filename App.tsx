@@ -21,7 +21,7 @@ import {
 } from './src/data/storage';
 import { 
   ACHIEVEMENTS_LIST, CHAPTERS, 
-  checkAchievements, getDailyFeaturedElement, getAchievement
+  checkAchievements, getDailyFeaturedElement, getAchievement, getNextChapterElement
 } from './src/data/achievements';
 import { Locale, t } from './src/data/i18n';
 import { triggerHaptic, playSound, isAudioMuted, setAudioMuted, toggleAudioMuted } from './src/services/feedback';
@@ -133,7 +133,7 @@ import ProfileScreen from './src/screens/ProfileScreen';
 
 function HomeScreen({ 
   xp, discovered, levels, studyPool, unlockedAchievements, dailyStreak, dailyQuestCompleted, weeklyGoal, locale, onToggleLocale,
-  onGoStudy, onGoQuiz, onGoBuilder, onGoTable, onGoFlashcards, onGoReactions, onSelectElement
+  onGoStudy, onGoQuiz, onGoBuilder, onGoTable, onGoFlashcards, onGoReactions, onSelectElement, onStartChapter
 }: {
   xp: number; discovered: number[]; levels: Record<number, number>; studyPool: number[];
   unlockedAchievements: string[]; dailyStreak: number; dailyQuestCompleted: boolean; weeklyGoal: WeeklyGoal; locale: Locale; onToggleLocale: () => void;
@@ -141,6 +141,7 @@ function HomeScreen({
   onGoFlashcards: () => void;
   onGoReactions: () => void;
   onSelectElement: (z: number) => void;
+  onStartChapter: (z: number) => void;
 }) {
   const [showProfile, setShowProfile] = useState(false);
   const [showDailyChallenge, setShowDailyChallenge] = useState(false);
@@ -328,12 +329,13 @@ function HomeScreen({
       <Text style={HS.sectionLabel}>{t('chapters', locale)}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={HS.chapterScroll}>
         {CHAPTERS.map(ch => {
-          const chDiscovered = ch.elements.filter(z => discovered.includes(z)).length;
-          const chPct = Math.round((chDiscovered / ch.elements.length) * 100);
+          const chMastered = ch.elements.filter(z => (levels[z] || 0) >= 2).length;
+          const chPct = Math.round((chMastered / ch.elements.length) * 100);
           const isUnlocked = xp >= ch.requiredXP;
+          const nextElement = getNextChapterElement(ch, levels);
 
           return (
-            <View key={ch.id} style={[HS.chapterCard, !isUnlocked && HS.chapterCardLocked]}>
+            <TouchableOpacity key={ch.id} disabled={!isUnlocked} onPress={() => onStartChapter(nextElement)} activeOpacity={0.82} accessibilityRole="button" accessibilityState={{ disabled: !isUnlocked }} accessibilityLabel={isUnlocked ? `Continue ${ch.title}` : `${ch.title}, locked until ${ch.requiredXP} XP`} style={[HS.chapterCard, !isUnlocked && HS.chapterCardLocked]}>
               <Text style={HS.chapterNum}>{ch.title.toUpperCase()}</Text>
               <Text style={HS.chapterSubtitle}>{ch.subtitle}</Text>
               <View style={HS.chapterBar}>
@@ -344,9 +346,10 @@ function HomeScreen({
                 />
               </View>
               <Text style={HS.chapterMeta}>
-                {isUnlocked ? `${chDiscovered}/${ch.elements.length} ${t('discovered', locale)} (${chPct}%)` : `Requires ${ch.requiredXP} XP`}
+                {isUnlocked ? `${chMastered}/${ch.elements.length} ${locale === 'he' ? 'הושלמו' : 'mastered'} (${chPct}%)` : (locale === 'he' ? `נדרשים ${ch.requiredXP} XP` : `Requires ${ch.requiredXP} XP`)}
               </Text>
-            </View>
+              {isUnlocked && <Text style={HS.chapterCta}>{chMastered === ch.elements.length ? (locale === 'he' ? 'חזרה על הפרק ←' : 'Review chapter →') : (locale === 'he' ? `המשך ל־${getElement(nextElement).sym} ←` : `Continue with ${getElement(nextElement).sym} →`)}</Text>}
+            </TouchableOpacity>
           );
         })}
       </ScrollView>
@@ -637,6 +640,7 @@ export default function App() {
         onGoFlashcards={() => setShowFlashcards(true)}
         onGoReactions={() => setShowReactions(true)}
         onSelectElement={handleDailyQuest}
+        onStartChapter={handleSelectTableElement}
       />
     ),
     study: <StudyScreen z={studyZ} onChange={setStudyZ} xp={totalXP} levels={elementLevels} discovered={discovered} onGoBuilder={(z) => { setStudyZ(z); setTab('builder'); }} />,
@@ -985,6 +989,7 @@ const HS = StyleSheet.create({
     fontSize: 9,
     color: COLORS.textTertiary,
   },
+  chapterCta: { color: COLORS.primaryLight, fontSize: 10, fontWeight: '900', marginTop: 9 },
 
   // Achievements
   achievementsGrid: {
