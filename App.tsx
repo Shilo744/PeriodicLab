@@ -699,9 +699,7 @@ export default function App() {
             <TouchableOpacity key={tTab.key} style={S.tab} onPress={() => setTab(tTab.key)} activeOpacity={0.75} accessibilityRole="tab" accessibilityLabel={`${t(tTab.labelKey, locale)} module`} accessibilityState={{ selected: active }}>
               <View style={[S.tabInner, active && S.tabInnerActive]}>
                 <TabIcon name={tTab.key} color={active ? COLORS.tabActive : COLORS.tabInactive} />
-                {active ? (
-                  <Text style={S.tabLabelActive}>{t(tTab.labelKey, locale)}</Text>
-                ) : null}
+                <Text style={[S.tabLabel, active && S.tabLabelActive]}>{t(tTab.labelKey, locale)}</Text>
               </View>
             </TouchableOpacity>
           );
@@ -741,21 +739,25 @@ const S = StyleSheet.create({
   },
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   tabInner: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
     borderRadius: 16,
+    minWidth: 54,
   },
   tabInnerActive: {
     backgroundColor: 'rgba(99, 102, 241, 0.12)',
   },
+  tabLabel: {
+    fontSize: 8.5,
+    fontWeight: '700',
+    color: COLORS.tabInactive,
+    marginTop: 3,
+  },
   tabLabelActive: {
-    fontSize: 11,
     fontWeight: '800',
     color: COLORS.tabActive,
-    marginLeft: 6,
   },
 });
 
